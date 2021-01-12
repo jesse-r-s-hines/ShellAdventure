@@ -85,28 +85,8 @@ class FileSystem:
 
 
 if __name__ == "__main__":
-
-    fs = FileSystem()
-    fs._container.start()
+    pass
+    # fs = FileSystem()
+    # fs._container.start()
   
-    commands = [
-        (r"echo hello world", 0, "hello world\n"),
-        (r"echo 'hello world'", 0, "hello world\n"),
-        (r'echo "hello world"', 0, "hello world\n"),
-        (r'echo "\"quotes\""', 0, '"quotes"\n'),
-        (r'echo \"quotes\"', 0, '"quotes"\n'),
-        (r'echo "\\"', 0, "\\\n"), # Literal /
-        (r'echo $SHELL', 0, "/bin/bash\n"),
-        (r'pwd', 0, "\n"),
-        (r'cd /tmp; echo "stuff" > myfile.txt', 0, "\n"),
-        (r'pwd', 0, "\n"),
-        (r'cd /tmp; cat myfile.txt', 0, "\n"),
-        (r'for i in {1..5}; do echo $i; done;', 0, "\n"),
-    ]
-
-    for command, expected_exit_code, expected_output in commands:
-        exit_code, output = fs.run_command(command)
-        print(exit_code == expected_exit_code, output.decode() == expected_output)
-        print(output)
-
     # dockerpty.start(client.api, container.id)
