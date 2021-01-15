@@ -52,7 +52,7 @@ class Puzzle:
     """
     checker: Callable[..., Union[str,bool]] 
 
-    def __init__(self, question: str, checker: Callable[..., Union[str,bool]] , score):
+    def __init__(self, question: str, checker: Callable[..., Union[str,bool]] , score = 1):
         self.question = question 
         self.score = score
         self.checker = checker
@@ -105,7 +105,10 @@ class Tutorial:
         self.modules = [self._get_module(file) for file in files]
 
     def _get_module(self, file_path):
-        """ Gets a module object from a file path to the module. The file path is relative to the config file. """
+        """
+        Gets a module object from a file path to the module. The file path is relative to the config file.
+        Injects some functions and classes into the module's namespace. TODO doc which classes and functions
+        """
         file_path = Path(file_path)
         if (not file_path.is_absolute()): # Files are relative to the config file
             file_path = Path(self.config_file).parent / file_path
@@ -113,6 +116,7 @@ class Tutorial:
         module_name = file_path.stem # strip ".py"
         spec = importlib.util.spec_from_file_location(module_name, file_path)
         module = importlib.util.module_from_spec(spec)
+        module.Puzzle = Puzzle
         spec.loader.exec_module(module)
         return module
 
@@ -128,4 +132,3 @@ class Tutorial:
 
 if __name__ == "__main__":
     tutorial = Tutorial(pkg_dir / "tutorials/default.yaml")
-    print(tutorial.modules)
