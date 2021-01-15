@@ -1,8 +1,16 @@
-from typing import *
-import sys, threading, shlex
+from typing import Dict, List, Callable, Union
+from types import ModuleType
+import shlex
+from os import PathLike
+from pathlib import Path;
 import docker, dockerpty
 from docker.models.containers import Container
 from docker.client import DockerClient
+import yaml
+import importlib.util, inspect;
+
+# Absolute path to the package folder
+pkg_dir: Path = Path(__file__).parent.resolve()
 
 class CommandOutput:
     """ Represents the output of a command. """
@@ -76,17 +84,48 @@ class FileSystem:
         """ Stop the container. """
         self._container.stop(timeout = 0)
 
-
 class Tutorial:
     """ Contains the information for a running tutorial. """
+
+    config_file: str
+
+    """ List of modules containing generator functions """
+    modules: List[ModuleType]
+
+    """ List of generator functions """
+    generators: List[Callable[[FileSystem], Puzzle]]
+
+    def __init__(self, config_file: str):
+        self.config_file = config_file
+        # TODO add validation and error checking, document config options
+        config = yaml.safe_load(open(config_file))
+
+        # Load modules
+        files = [pkg_dir / "puzzles/default.py"] + config.get('modules', [])
+        self.modules = [self._get_module(file) for file in files]
+
+    def _get_module(self, file_path):
+        """ Gets a module object from a file path to the module. The file path is relative to the config file. """
+        file_path = Path(file_path)
+        if (not file_path.is_absolute()): # Files are relative to the config file
+            file_path = Path(self.config_file).parent / file_path
+
+        module_name = file_path.stem # strip ".py"
+        spec = importlib.util.spec_from_file_location(module_name, file_path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+
+    # def _get_puzzle_generators(self):
+    #     """ Returns the puzzle generators to run as a list of functions. """
+    #     # import shell_adventure.puzzles
+    #     puzzles = self.config.puzzles
+    #     print(inspect.getmembers(module, inspect.isfunction))
 
     def start():
         """ Starts the tutorial. """
 
 
 if __name__ == "__main__":
-    pass
-    # fs = FileSystem()
-    # fs._container.start()
-  
-    # dockerpty.start(client.api, container.id)
+    tutorial = Tutorial(pkg_dir / "tutorials/default.yaml")
+    print(tutorial.modules)
