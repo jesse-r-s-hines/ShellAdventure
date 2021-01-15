@@ -77,11 +77,11 @@ class FileSystem:
         self._container.stop(timeout = 0)
 
 
-# class Tutorial:
-#     """ Contains the information for a running tutorial. """
+class Tutorial:
+    """ Contains the information for a running tutorial. """
 
-#     def start():
-#         """ Starts the tutorial. """
+    def start():
+        """ Starts the tutorial. """
 
 
 if __name__ == "__main__":
