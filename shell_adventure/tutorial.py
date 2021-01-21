@@ -114,6 +114,14 @@ class Tutorial:
             module_list = [self._get_module(Path(file)) for file in files]
             self.modules = {module.__name__: module for module in module_list}
 
+            # Get puzzle generators from the modules
+            self.generators = {}
+            for module_name, module in self.modules.items():
+                for func_name, func in inspect.getmembers(module, inspect.isfunction):
+                    # Exclude imported functions, lambdas, and private functions 
+                    if func.__module__ == module_name and func_name != "<lambda>" and not func_name.startswith("_"):
+                        self.generators[f"{module_name}.{func_name}"] = func
+
     def _get_module(self, file_path: Path):
         """
         Gets a module object from a file path to the module. The file path is relative to the config file.
@@ -134,12 +142,6 @@ class Tutorial:
 
         return module
 
-    # def _get_puzzle_generators(self):
-    #     """ Returns the puzzle generators to run as a list of functions. """
-    #     # import shell_adventure.puzzles
-    #     puzzles = self.config.puzzles
-    #     print(inspect.getmembers(module, inspect.isfunction))
-
     def start(self):
         """ Starts the tutorial. """
 
@@ -147,3 +149,4 @@ class Tutorial:
 if __name__ == "__main__":
     tutorial = Tutorial(pkg_dir / "tutorials/default.yaml")
     print(tutorial.modules)
+    print(tutorial.generators)
