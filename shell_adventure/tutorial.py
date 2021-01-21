@@ -1,13 +1,14 @@
-from typing import Dict, List, Callable, Union
+from typing import Dict, List, Callable, Union, ClassVar
 from types import ModuleType
-import shlex
-from os import PathLike
+import os, shlex
 from pathlib import Path;
 import docker, dockerpty
 from docker.models.containers import Container
 from docker.client import DockerClient
 import yaml
-import importlib.util, inspect;
+import importlib.util, inspect
+
+PathLike = Union[str, os.PathLike] # Type for a string representing a path or a PathLike object.
 
 # Absolute path to the package folder
 pkg_dir: Path = Path(__file__).parent.resolve()
@@ -24,8 +25,8 @@ class CommandOutput:
     # """ Output to std error """
     # error: str
 
-    def __init__(self, exitCode: int, output: str):
-        self.exit_code = exitCode
+    def __init__(self, exit_code: int, output: str):
+        self.exit_code = exit_code
         self.output = output
 
 class Puzzle:
@@ -78,7 +79,7 @@ class FileSystem:
     def run_command(self, command: str) -> CommandOutput:
         """ Runs the given command in the tutorial environment. Returns a tuple containing (exit_code, output). """
         exit_code, output = self._container.exec_run(shlex.join(['/bin/bash', '-c', command]))
-        return (exit_code, output.decode())
+        return CommandOutput(exit_code, output.decode())
 
     def __del__(self):
         """ Stop the container. """
@@ -87,37 +88,50 @@ class FileSystem:
 class Tutorial:
     """ Contains the information for a running tutorial. """
 
-    config_file: str
+    """ The classes/modules/packages to inject into the puzzle generator modules. """
+    _puzzle_module_inject: ClassVar[Dict[str, object]] = {
+        "Puzzle": Puzzle,
+    }
 
-    """ List of modules containing generator functions """
-    modules: List[ModuleType]
+    """ The path to the config file for this tutorial """
+    config_file: Path
 
-    """ List of generator functions """
-    generators: List[Callable[[FileSystem], Puzzle]]
+    """ Puzzle modules mapped to their name. """
+    modules: Dict[str, ModuleType]
 
-    def __init__(self, config_file: str):
-        self.config_file = config_file
+    """ Generator functions mapped to their name. """
+    generators: Dict[str, Callable[[FileSystem], Puzzle]]
+
+    def __init__(self, config_file: PathLike):
+        self.config_file = Path(config_file)
+
         # TODO add validation and error checking, document config options
-        config = yaml.safe_load(open(config_file))
+        with open(config_file) as temp:
+            config = yaml.safe_load(temp)
 
-        # Load modules
-        files = [pkg_dir / "puzzles/default.py"] + config.get('modules', [])
-        self.modules = [self._get_module(file) for file in files]
+            # Load modules
+            files = [pkg_dir / "puzzles/default.py"] + config.get('modules', [])
+            module_list = [self._get_module(Path(file)) for file in files]
+            self.modules = {module.__name__: module for module in module_list}
 
-    def _get_module(self, file_path):
+    def _get_module(self, file_path: Path):
         """
         Gets a module object from a file path to the module. The file path is relative to the config file.
         Injects some functions and classes into the module's namespace. TODO doc which classes and functions
         """
-        file_path = Path(file_path)
         if (not file_path.is_absolute()): # Files are relative to the config file
-            file_path = Path(self.config_file).parent / file_path
+            file_path = self.config_file.parent / file_path
 
         module_name = file_path.stem # strip ".py"
         spec = importlib.util.spec_from_file_location(module_name, file_path)
         module = importlib.util.module_from_spec(spec)
-        module.Puzzle = Puzzle
+        
+        # Inject names into the modules
+        for name, obj in Tutorial._puzzle_module_inject.items():
+            setattr(module, name, obj)
+
         spec.loader.exec_module(module)
+
         return module
 
     # def _get_puzzle_generators(self):
@@ -126,9 +140,10 @@ class Tutorial:
     #     puzzles = self.config.puzzles
     #     print(inspect.getmembers(module, inspect.isfunction))
 
-    def start():
+    def start(self):
         """ Starts the tutorial. """
 
 
 if __name__ == "__main__":
     tutorial = Tutorial(pkg_dir / "tutorials/default.yaml")
+    print(tutorial.modules)
