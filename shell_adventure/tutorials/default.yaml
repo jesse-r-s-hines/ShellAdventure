@@ -1,3 +1,3 @@
 puzzles:
-  - move_1
-  - move_2
+  - default.move_1
+  - default.move_2

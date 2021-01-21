@@ -99,8 +99,11 @@ class Tutorial:
     """ Puzzle modules mapped to their name. """
     modules: Dict[str, ModuleType]
 
-    """ Generator functions mapped to their name. """
-    generators: Dict[str, Callable[[FileSystem], Puzzle]]
+    """ All available puzzle generator functions mapped to their name. """
+    available_generators: Dict[str, Callable[[FileSystem], Puzzle]]
+
+    """ The list of puzzle generator function names that are going to be used in this tutorial. """
+    generators: List[str]
 
     def __init__(self, config_file: PathLike):
         self.config_file = Path(config_file)
@@ -115,12 +118,15 @@ class Tutorial:
             self.modules = {module.__name__: module for module in module_list}
 
             # Get puzzle generators from the modules
-            self.generators = {}
+            self.available_generators = {}
             for module_name, module in self.modules.items():
                 for func_name, func in inspect.getmembers(module, inspect.isfunction):
                     # Exclude imported functions, lambdas, and private functions 
                     if func.__module__ == module_name and func_name != "<lambda>" and not func_name.startswith("_"):
-                        self.generators[f"{module_name}.{func_name}"] = func
+                        self.available_generators[f"{module_name}.{func_name}"] = func
+
+            self.generators = config.get('puzzles')
+            for gen in self.generators: assert gen in self.available_generators, f"Unknown puzzle generator {gen}."
 
     def _get_module(self, file_path: Path):
         """
@@ -149,4 +155,5 @@ class Tutorial:
 if __name__ == "__main__":
     tutorial = Tutorial(pkg_dir / "tutorials/default.yaml")
     print(tutorial.modules)
+    print(tutorial.available_generators)
     print(tutorial.generators)
