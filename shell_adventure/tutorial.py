@@ -1,6 +1,6 @@
-from typing import Dict, List, Callable, Union, ClassVar
+from typing import Dict, List, Tuple, Callable, Union, ClassVar
 from types import ModuleType
-import os, shlex
+import os, sys, shlex
 from pathlib import Path;
 import docker, dockerpty
 from docker.models.containers import Container
@@ -62,28 +62,33 @@ class FileSystem:
     """ Handles the docker container and the filesystem in it. """
 
     """ The docker daemon. """
-    _client: DockerClient
+    docker_client: DockerClient
 
     """ The docker container running the tutorial. """
-    _container: Container
+    container: Container
 
     def __init__(self):
-        self._client = docker.from_env()
-        self._container = self._client.containers.create('shell-adventure',
-            command = 'tail -f /dev/null',
+        self.docker_client = docker.from_env()
+        self.container = self.docker_client.containers.run('shell-adventure',
+            # Keep the container running so we can exec into it. 
+            # We could run the bash session directly, but then we'd have to hide the terminal until after puzzle generation finishes.
+            command = 'sleep infinity',
             tty = True,
             stdin_open = True,
             auto_remove = True,
+            detach = True,
         )
 
     def run_command(self, command: str) -> CommandOutput:
         """ Runs the given command in the tutorial environment. Returns a tuple containing (exit_code, output). """
-        exit_code, output = self._container.exec_run(shlex.join(['/bin/bash', '-c', command]))
+        exit_code, output = self.container.exec_run(shlex.join(['/bin/bash', '-c', command]))
         return CommandOutput(exit_code, output.decode())
 
+    # TODO Move this into a context manager, or make the container run the bash command directly so that it quits when the session quits.
     def __del__(self):
         """ Stop the container. """
-        self._container.stop(timeout = 0)
+        if hasattr(self, "container"):
+            self.container.stop(timeout = 0)
 
 class Tutorial:
     """ Contains the information for a running tutorial. """
@@ -105,7 +110,11 @@ class Tutorial:
     """ The list of puzzle generator function names that are going to be used in this tutorial. """
     generators: List[str]
 
+    """ The FileSystem object containing the Docker container for the tutorial. """
+    filesystem: FileSystem
+
     def __init__(self, config_file: PathLike):
+        self.filesystem = None
         self.config_file = Path(config_file)
 
         # TODO add validation and error checking, document config options
@@ -128,7 +137,7 @@ class Tutorial:
             self.generators = config.get('puzzles')
             for gen in self.generators: assert gen in self.available_generators, f"Unknown puzzle generator {gen}."
 
-    def _get_module(self, file_path: Path):
+    def _get_module(self, file_path: Path) -> ModuleType:
         """
         Gets a module object from a file path to the module. The file path is relative to the config file.
         Injects some functions and classes into the module's namespace. TODO doc which classes and functions
@@ -148,12 +157,19 @@ class Tutorial:
 
         return module
 
-    def start(self):
+    def run(self):
         """ Starts the tutorial. """
+        self.filesystem = FileSystem()
 
+        for func in self.generators:
+            self.available_generators[func](self.filesystem)
+
+        dockerpty.exec_command(self.filesystem.docker_client.api, self.filesystem.container.id, 'bash')
 
 if __name__ == "__main__":
-    tutorial = Tutorial(pkg_dir / "tutorials/default.yaml")
-    print(tutorial.modules)
-    print(tutorial.available_generators)
-    print(tutorial.generators)
+    if len(sys.argv) != 2:
+        print("No tutorial config file given.")
+    else:
+        config_file = sys.argv[1]
+        tutorial = Tutorial(config_file)
+        tutorial.run()
