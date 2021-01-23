@@ -29,6 +29,10 @@ class CommandOutput:
         self.exit_code = exit_code
         self.output = output
 
+    def __iter__(self):
+        """ Make it iterable so we can unpack it. """
+        return iter((self.exit_code, self.output))
+
 class Puzzle:
     """ Represents a single puzzle in the tutorial. """
 
