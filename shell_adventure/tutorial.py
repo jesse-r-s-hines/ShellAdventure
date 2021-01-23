@@ -105,10 +105,15 @@ class Tutorial:
     modules: Dict[str, ModuleType]
 
     """ All available puzzle generator functions mapped to their name. """
-    available_generators: Dict[str, Callable[[FileSystem], Puzzle]]
+    generators: Dict[str, Callable[[FileSystem], Puzzle]]
 
-    """ The list of puzzle generator function names that are going to be used in this tutorial. """
-    generators: List[str]
+    class PuzzleTree:
+        def __init__(self, generator: str, puzzle: Puzzle = None, dependents: List[Puzzle] = None):
+            self.generator = generator; self.puzzle = puzzle
+            self.dependents = dependents if dependents else None
+
+    """ The tree of puzzles in this tutorial. """
+    puzzles: List[PuzzleTree]
 
     """ The FileSystem object containing the Docker container for the tutorial. """
     filesystem: FileSystem
@@ -127,15 +132,17 @@ class Tutorial:
             self.modules = {module.__name__: module for module in module_list}
 
             # Get puzzle generators from the modules
-            self.available_generators = {}
+            self.generators = {}
             for module_name, module in self.modules.items():
                 for func_name, func in inspect.getmembers(module, inspect.isfunction):
                     # Exclude imported functions, lambdas, and private functions 
                     if func.__module__ == module_name and func_name != "<lambda>" and not func_name.startswith("_"):
-                        self.available_generators[f"{module_name}.{func_name}"] = func
+                        self.generators[f"{module_name}.{func_name}"] = func
 
-            self.generators = config.get('puzzles')
-            for gen in self.generators: assert gen in self.available_generators, f"Unknown puzzle generator {gen}."
+            self.puzzles = []
+            for gen in config.get('puzzles', []):
+                assert gen in self.generators, f"Unknown puzzle generator {gen}."
+                self.puzzles.append(Tutorial.PuzzleTree(gen))
 
     def _get_module(self, file_path: Path) -> ModuleType:
         """
@@ -161,8 +168,9 @@ class Tutorial:
         """ Starts the tutorial. """
         self.filesystem = FileSystem()
 
-        for func in self.generators:
-            self.available_generators[func](self.filesystem)
+        # Generate the puzzles
+        for puzzle_tree in self.puzzles:
+            puzzle_tree.puzzle = self.generators[puzzle_tree.generator](self.filesystem)
 
         dockerpty.exec_command(self.filesystem.docker_client.api, self.filesystem.container.id, 'bash')
 
