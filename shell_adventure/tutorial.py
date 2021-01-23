@@ -51,12 +51,19 @@ class Puzzle:
     filesystem: FileSystem
         A frozen FileSystem object. Most methods that modify the file system will be disabled.
     """
-    checker: Callable[..., Union[str,bool]] 
+    checker: Callable[..., Union[str,bool]]
+
+    """ Whether the puzzle is solved yet """
+    solved: bool
 
     def __init__(self, question: str, checker: Callable[..., Union[str,bool]] , score = 1):
         self.question = question 
         self.score = score
         self.checker = checker
+        self.solved = False
+
+    def get_checker_params(self):
+        return inspect.getfullargspec(self.checker).args
 
 class FileSystem:
     """ Handles the docker container and the filesystem in it. """
@@ -163,6 +170,25 @@ class Tutorial:
         spec.loader.exec_module(module)
 
         return module
+
+    def solve_puzzle(self, puzzle: Puzzle, flag: str = None) -> Union[bool,str]:
+        """ Tries to solve the puzzle. Returns the result of the checker function and sets the Puzzle as solved if the checker succeeded. """
+        args = {
+            # "output": output,
+            "flag": flag,
+            "filesystem": self.filesystem,
+        }
+        # Only pass the args that the checker function has
+        checker_params = puzzle.get_checker_params()
+        assert set(args.keys()).issubset(checker_params), 'Only paramaters, "flag", "filesystem" and "output" are allowed in checker functions.'
+        args = {param: args[param] for param in checker_params}
+
+        feedback = puzzle.checker(**args)
+
+        if feedback:
+            puzzle.solved = True
+
+        return feedback
 
     def run(self):
         """ Starts the tutorial. """
