@@ -184,7 +184,7 @@ class Tutorial:
         }
         # Only pass the args that the checker function has
         checker_params = puzzle.get_checker_params()
-        assert set(args.keys()).issubset(checker_params), 'Only paramaters, "flag", "filesystem" and "output" are allowed in checker functions.'
+        assert set(checker_params).issubset(args.keys()), 'Only paramaters, "flag", "file_system" and "output" are allowed in checker functions.'
         args = {param: args[param] for param in checker_params}
 
         feedback = puzzle.checker(**args)
