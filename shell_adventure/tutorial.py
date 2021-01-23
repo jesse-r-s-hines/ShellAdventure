@@ -48,7 +48,7 @@ class Puzzle:
     flag: str
         If the flag parameter is present, an input dialog will be shown to the student when sumbitting a puzzle,
         and their input will be passed to this parameter.
-    filesystem: FileSystem
+    file_system: FileSystem
         A frozen FileSystem object. Most methods that modify the file system will be disabled.
     """
     checker: Callable[..., Union[str,bool]]
@@ -66,7 +66,7 @@ class Puzzle:
         return inspect.getfullargspec(self.checker).args
 
 class FileSystem:
-    """ Handles the docker container and the filesystem in it. """
+    """ Handles the docker container and the file system in it. """
 
     """ The docker daemon. """
     docker_client: DockerClient
@@ -123,10 +123,10 @@ class Tutorial:
     puzzles: List[PuzzleTree]
 
     """ The FileSystem object containing the Docker container for the tutorial. """
-    filesystem: FileSystem
+    file_system: FileSystem
 
     def __init__(self, config_file: PathLike):
-        self.filesystem = None
+        self.file_system = None
         self.config_file = Path(config_file)
 
         # TODO add validation and error checking, document config options
@@ -176,7 +176,7 @@ class Tutorial:
         args = {
             # "output": output,
             "flag": flag,
-            "filesystem": self.filesystem,
+            "file_system": self.file_system,
         }
         # Only pass the args that the checker function has
         checker_params = puzzle.get_checker_params()
@@ -192,13 +192,13 @@ class Tutorial:
 
     def run(self):
         """ Starts the tutorial. """
-        self.filesystem = FileSystem()
+        self.file_system = FileSystem()
 
         # Generate the puzzles
         for puzzle_tree in self.puzzles:
-            puzzle_tree.puzzle = self.generators[puzzle_tree.generator](self.filesystem)
+            puzzle_tree.puzzle = self.generators[puzzle_tree.generator](self.file_system)
 
-        dockerpty.exec_command(self.filesystem.docker_client.api, self.filesystem.container.id, 'bash')
+        dockerpty.exec_command(self.file_system.docker_client.api, self.file_system.container.id, 'bash')
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
