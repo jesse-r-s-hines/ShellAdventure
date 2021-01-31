@@ -92,7 +92,7 @@ class FileSystem:
 
     def run_command(self, command: str) -> CommandOutput:
         """ Runs the given command in the tutorial environment. Returns a tuple containing (exit_code, output). """
-        exit_code, output = self.container.exec_run(shlex.join(['/bin/bash', '-c', command]))
+        exit_code, output = self.container.exec_run(f'/bin/bash -c {shlex.quote(command)}')
         return CommandOutput(exit_code, output.decode())
 
     # TODO Move this into a context manager, or make the container run the bash command directly so that it quits when the session quits.
