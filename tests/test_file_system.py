@@ -1,15 +1,13 @@
 import pytest
-from pytest import mark
-from shell_adventure.shell_adventure import *
+from shell_adventure.tutorial import *
 
-@mark.filterwarnings("ignore:Using or importing the ABCs from")
-class TestClass:
+class TestFileSystem:
 
     def test_run_command(self):
         fs = FileSystem()
-        fs._container.start()
   
         commands = [
+            # command, exit_code, output
             (r"echo hello world", 0, "hello world"),
             (r"echo 'hello world'", 0, "hello world"),
             (r'echo "hello world"', 0, "hello world"),

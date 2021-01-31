@@ -120,8 +120,9 @@ class Tutorial:
 
     class PuzzleTree:
         def __init__(self, generator: str, puzzle: Puzzle = None, dependents: List[Puzzle] = None):
-            self.generator = generator; self.puzzle = puzzle
-            self.dependents = dependents if dependents else None
+            self.generator = generator
+            self.puzzle = puzzle
+            self.dependents = dependents if dependents else []
 
     """ The tree of puzzles in this tutorial. """
     puzzles: List[PuzzleTree]
@@ -189,7 +190,7 @@ class Tutorial:
 
         feedback = puzzle.checker(**args)
 
-        if feedback:
+        if feedback == True:
             puzzle.solved = True
 
         return feedback
@@ -202,12 +203,8 @@ class Tutorial:
         for puzzle_tree in self.puzzles:
             puzzle_tree.puzzle = self.generators[puzzle_tree.generator](self.file_system)
 
-        dockerpty.exec_command(self.file_system.docker_client.api, self.file_system.container.id, 'bash')
-
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("No tutorial config file given.")
-    else:
-        config_file = sys.argv[1]
-        tutorial = Tutorial(config_file)
-        tutorial.run()
+    def attach(self, stdout = None, stderr = None, stdin = None):
+        """ Attaches a the container to terminal for a bash session. """
+        dockerpty.exec_command(self.file_system.docker_client.api, self.file_system.container.id, 'bash',
+            stdout = stdout, stderr = stderr, stdin = stdin
+        )
