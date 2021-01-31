@@ -95,11 +95,14 @@ class FileSystem:
         exit_code, output = self.container.exec_run(f'/bin/bash -c {shlex.quote(command)}')
         return CommandOutput(exit_code, output.decode())
 
+    def stop(self):
+        """ Stops the container. """
+        self.container.stop(timeout = 0)
+
     # TODO Move this into a context manager, or make the container run the bash command directly so that it quits when the session quits.
     def __del__(self):
-        """ Stop the container. """
         if hasattr(self, "container"):
-            self.container.stop(timeout = 0)
+            self.stop()
 
 class Tutorial:
     """ Contains the information for a running tutorial. """
