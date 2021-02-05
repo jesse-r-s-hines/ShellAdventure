@@ -206,8 +206,8 @@ class Tutorial:
         for puzzle_tree in self.puzzles:
             puzzle_tree.puzzle = self.generators[puzzle_tree.generator](self.file_system)
 
-    def attach(self, stdout = None, stderr = None, stdin = None):
-        """ Attaches a the container to terminal for a bash session. """
-        dockerpty.exec_command(self.file_system.docker_client.api, self.file_system.container.id, 'bash',
-            stdout = stdout, stderr = stderr, stdin = stdin
-        )
+    # def attach(self, stdout = None, stderr = None, stdin = None):
+    #     """ Attaches a the container to terminal for a bash session. """
+    #     dockerpty.exec_command(self.file_system.docker_client.api, self.file_system.container.id, 'bash',
+    #         stdout = stdout, stderr = stderr, stdin = stdin
+    #     )
