@@ -46,8 +46,6 @@ class GUI:
             if all((p.solved for p in self.puzzles.keys())): # If all puzzles are solved quit.
                 self.root.destroy()
 
-
-
 if __name__ == "__main__":
     if len(sys.argv) != 2:
         print("No tutorial config file given.")
@@ -56,7 +54,7 @@ if __name__ == "__main__":
         tutorial = Tutorial(config)
         tutorial.run()
 
-        bash_session = threading.Thread( 
+        bash_session = threading.Thread(
             # TODO I this will only work if you happen to have gnome-terminal. Change this once I have an embedded terminal
             # TODO I'd prefer not to call processes from the command line. At the very least I should use the array format instead
             # of raw shell. And I'd prefer if I could use dockerpty.

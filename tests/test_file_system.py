@@ -5,7 +5,7 @@ class TestFileSystem:
 
     def test_run_command(self):
         fs = FileSystem()
-  
+
         commands = [
             # command, exit_code, output
             (r"echo hello world", 0, "hello world"),

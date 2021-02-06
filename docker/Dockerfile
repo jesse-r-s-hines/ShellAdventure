@@ -37,7 +37,7 @@ RUN apt-get update && \
     # Remove the cache made by apt update to save space
     && rm -r /var/lib/apt/lists/*
 
-ARG username=student 
+ARG username=student
 ARG password=${username}
 
 # Make new user and allow them to use sudo

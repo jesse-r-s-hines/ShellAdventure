@@ -129,7 +129,7 @@ class TestContainer:
     @classmethod
     def setup_class(cls):
         cls.fs = FileSystem()
-    
+
     @classmethod
     def teardown_class(cls):
         cls.fs.stop()

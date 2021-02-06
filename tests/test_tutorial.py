@@ -6,12 +6,12 @@ from shell_adventure.tutorial import *
 SIMPLE_PUZZLES = """
 def move(file_system):
     file_system.run_command("echo 'move1' > A.txt")
-    
+
     def checker(file_system):
         aCode, _ = file_system.run_command("test -f A.txt")
         bCode, _ = file_system.run_command("test -f B.txt")
         return (aCode == 1) and (bCode == 0)
-            
+
     return Puzzle(
         question = f"Rename A.txt to B.txt",
         checker = checker
@@ -56,7 +56,7 @@ class TestTutorial:
 
         tutorial = Tutorial(f"{config}") # Strings should also work for path
         assert "mypuzzles.move" in tutorial.generators
-    
+
     def test_multiple_modules(self, tmp_path):
         (tmp_path / "mypuzzles1.py").write_text(SIMPLE_PUZZLES)
         (tmp_path / "mypuzzles2.py").write_text(SIMPLE_PUZZLES)
@@ -114,7 +114,7 @@ class TestTutorial:
         tutorial.file_system.run_command("mv A.txt B.txt")
         assert tutorial.solve_puzzle(puzzle) == (True, "Correct!")
         assert puzzle.solved == True
-        
+
     def test_solve_puzzle_feedback(self, tmp_path):
         (tmp_path / "mypuzzles.py").write_text("""
 def unsolvable(file_system):

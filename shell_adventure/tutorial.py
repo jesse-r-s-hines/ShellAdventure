@@ -18,7 +18,7 @@ class CommandOutput:
 
     exit_code: int
     """ The exit code that the command returned """
-    
+
     output: str
     """ The printed output of the command """
 
@@ -38,16 +38,16 @@ class Puzzle:
 
     question: str
     """ The question to be asked. """
-    
+
     score: int
     """ The score given on success. Defaults to 1. """
 
     checker: Callable[..., Union[str,bool]]
     """
     The function that will grade whether the puzzle was completed correctly or not.
-    The function can take the following parameters. All parameters are optional, and order does not matter, 
+    The function can take the following parameters. All parameters are optional, and order does not matter,
     but must have the same name as listed here.
-    
+
     output: Dict[str, CommandOutput]
         A dict of all commands entered to their outputs, in the order they were entered.
     flag: str
@@ -61,7 +61,7 @@ class Puzzle:
     """ Whether the puzzle is solved yet """
 
     def __init__(self, question: str, checker: Callable[..., Union[str,bool]] , score = 1):
-        self.question = question 
+        self.question = question
         self.score = score
         self.checker = checker # type: ignore # MyPy fusses about "Cannot assign to a method"
         self.solved = False
@@ -81,7 +81,7 @@ class FileSystem:
     def __init__(self):
         self.docker_client = docker.from_env()
         self.container = self.docker_client.containers.run('shell-adventure',
-            # Keep the container running so we can exec into it. 
+            # Keep the container running so we can exec into it.
             # We could run the bash session directly, but then we'd have to hide the terminal until after puzzle generation finishes.
             command = 'sleep infinity',
             tty = True,
@@ -151,7 +151,7 @@ class Tutorial:
             self.generators = {}
             for module_name, module in self.modules.items():
                 for func_name, func in inspect.getmembers(module, inspect.isfunction):
-                    # Exclude imported functions, lambdas, and private functions 
+                    # Exclude imported functions, lambdas, and private functions
                     if func.__module__ == module_name and func_name != "<lambda>" and not func_name.startswith("_"):
                         self.generators[f"{module_name}.{func_name}"] = func
 
@@ -171,7 +171,7 @@ class Tutorial:
         module_name = file_path.stem # strip ".py"
         spec = importlib.util.spec_from_file_location(module_name, file_path)
         module = importlib.util.module_from_spec(spec)
-        
+
         # Inject names into the modules
         for name, obj in Tutorial._puzzle_module_inject.items():
             setattr(module, name, obj)
@@ -203,7 +203,7 @@ class Tutorial:
             feedback = checker_result
         else:
             raise Exception(f'Checker function for puzzle "{puzzle.question}" returned {type(checker_result).__name__}, bool or str expected.')
- 
+
         return (puzzle.solved, feedback)
 
     def run(self):
