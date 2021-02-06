@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple, Callable, Union, ClassVar
+from typing import Dict, List, Tuple, Union, Optional, Callable, ClassVar
 from types import ModuleType
 import os, sys, shlex
 from pathlib import Path;
@@ -63,7 +63,7 @@ class Puzzle:
     def __init__(self, question: str, checker: Callable[..., Union[str,bool]] , score = 1):
         self.question = question 
         self.score = score
-        self.checker = checker
+        self.checker = checker # type: ignore # MyPy fusses about "Cannot assign to a method"
         self.solved = False
 
     def get_checker_params(self):
@@ -132,7 +132,7 @@ class Tutorial:
     """ The tree of puzzles in this tutorial. """
 
     file_system: FileSystem
-    """ The FileSystem object containing the Docker container for the tutorial. """
+    """ The FileSystem object containing the Docker container for the tutorial (when the tutorial is running). """
 
     def __init__(self, config_file: PathLike):
         self.file_system = None
@@ -176,7 +176,7 @@ class Tutorial:
         for name, obj in Tutorial._puzzle_module_inject.items():
             setattr(module, name, obj)
 
-        spec.loader.exec_module(module)
+        spec.loader.exec_module(module) # type: ignore # MyPy is confused about the types here
 
         return module
 

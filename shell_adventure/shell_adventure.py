@@ -24,24 +24,32 @@ class GUI:
         puzzlePanel.grid(column = 0, row = 0, sticky = 'WENS')
 
         for i, pt in enumerate(self.tutorial.puzzles):
-            label = ttk.Label(puzzlePanel, text = pt.puzzle.question).grid(column = 0, row = i)
+            label = ttk.Label(puzzlePanel, text = pt.puzzle.question)
+            label.grid(column = 0, row = i)
+
             button = ttk.Button(puzzlePanel, text = "Solve",
-                command = lambda p=pt.puzzle: self.solve(p)
+                command = lambda p=pt.puzzle: self.solve(p) # type: ignore
             )
-            button.bind('<Return>', lambda e, p=pt.puzzle: self.solve(p))
+            button.bind('<Return>', lambda e, p=pt.puzzle: self.solve(p)) # type: ignore
             button.grid(column = 1, row = i)
+
             self.puzzles[pt.puzzle] = (label, button)
 
         self.root.mainloop()
 
     def solve(self, puzzle: Puzzle):
-        feedback = self.tutorial.solve_puzzle(puzzle)
-        if feedback == True:
+        rtrn = self.tutorial.solve_puzzle(puzzle)
+        print(rtrn)
+        if rtrn == True:
             feedback = "Correct!"
             # Mark puzzle as solved
-        elif feedback == False:
+        elif rtrn == False:
             feedback = "Incorrect!"
-        # else its a string
+        elif isinstance(rtrn, str):
+            feedback = rtrn
+        else:
+            raise Exception(f'Checker function for puzzle "{puzzle.question}" returned {type(rtrn).__name__}, bool or str expected.')
+ 
         tkinter.messagebox.showinfo("Feedback", feedback)
 
         if puzzle.solved:

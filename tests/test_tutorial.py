@@ -10,7 +10,6 @@ def move(file_system):
     def checker(file_system):
         aCode, _ = file_system.run_command("test -f A.txt")
         bCode, _ = file_system.run_command("test -f B.txt")
-        print(aCode, bCode)
         return (aCode == 1) and (bCode == 0)
             
     return Puzzle(
