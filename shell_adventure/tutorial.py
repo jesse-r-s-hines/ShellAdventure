@@ -16,14 +16,14 @@ pkg_dir: Path = Path(__file__).parent.resolve()
 class CommandOutput:
     """ Represents the output of a command. """
 
-    """ The exit code that the command returned """
     exit_code: int
+    """ The exit code that the command returned """
     
-    """ The printed output of the command """
     output: str
+    """ The printed output of the command """
 
-    # """ Output to std error """
     # error: str
+    # """ Output to std error """
 
     def __init__(self, exit_code: int, output: str):
         self.exit_code = exit_code
@@ -36,12 +36,13 @@ class CommandOutput:
 class Puzzle:
     """ Represents a single puzzle in the tutorial. """
 
-    """ The question to be asked. """
     question: str
+    """ The question to be asked. """
     
-    """ The score given on success. Defaults to 1. """
     score: int
+    """ The score given on success. Defaults to 1. """
 
+    checker: Callable[..., Union[str,bool]]
     """
     The function that will grade whether the puzzle was completed correctly or not.
     The function can take the following parameters. All parameters are optional, and order does not matter, 
@@ -55,10 +56,9 @@ class Puzzle:
     file_system: FileSystem
         A frozen FileSystem object. Most methods that modify the file system will be disabled.
     """
-    checker: Callable[..., Union[str,bool]]
 
-    """ Whether the puzzle is solved yet """
     solved: bool
+    """ Whether the puzzle is solved yet """
 
     def __init__(self, question: str, checker: Callable[..., Union[str,bool]] , score = 1):
         self.question = question 
@@ -72,11 +72,11 @@ class Puzzle:
 class FileSystem:
     """ Handles the docker container and the file system in it. """
 
-    """ The docker daemon. """
     docker_client: DockerClient
+    """ The docker daemon. """
 
-    """ The docker container running the tutorial. """
     container: Container
+    """ The docker container running the tutorial. """
 
     def __init__(self):
         self.docker_client = docker.from_env()
@@ -107,31 +107,32 @@ class FileSystem:
 class Tutorial:
     """ Contains the information for a running tutorial. """
 
-    """ The classes/modules/packages to inject into the puzzle generator modules. """
     _puzzle_module_inject: ClassVar[Dict[str, object]] = {
         "Puzzle": Puzzle,
     }
+    """ The classes/modules/packages to inject into the puzzle generator modules. """
 
-    """ The path to the config file for this tutorial """
     config_file: Path
+    """ The path to the config file for this tutorial """
 
-    """ Puzzle modules mapped to their name. """
     modules: Dict[str, ModuleType]
+    """ Puzzle modules mapped to their name. """
 
-    """ All available puzzle generator functions mapped to their name. """
     generators: Dict[str, Callable[[FileSystem], Puzzle]]
+    """ All available puzzle generator functions mapped to their name. """
 
     class PuzzleTree:
+        """ A tree node so that puzzles can be unlocked after other puzzles are solved. """
         def __init__(self, generator: str, puzzle: Puzzle = None, dependents: List[Puzzle] = None):
             self.generator = generator
             self.puzzle = puzzle
             self.dependents = dependents if dependents else []
 
-    """ The tree of puzzles in this tutorial. """
     puzzles: List[PuzzleTree]
+    """ The tree of puzzles in this tutorial. """
 
-    """ The FileSystem object containing the Docker container for the tutorial. """
     file_system: FileSystem
+    """ The FileSystem object containing the Docker container for the tutorial. """
 
     def __init__(self, config_file: PathLike):
         self.file_system = None
