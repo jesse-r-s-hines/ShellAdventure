@@ -180,8 +180,8 @@ class Tutorial:
 
         return module
 
-    def solve_puzzle(self, puzzle: Puzzle, flag: str = None) -> Union[bool,str]:
-        """ Tries to solve the puzzle. Returns the result of the checker function and sets the Puzzle as solved if the checker succeeded. """
+    def solve_puzzle(self, puzzle: Puzzle, flag: str = None) -> Tuple[bool, str]:
+        """ Tries to solve the puzzle. Returns (success, feedback) and sets the Puzzle as solved if the checker succeeded. """
         args = {
             # "output": output,
             "flag": flag,
@@ -192,12 +192,19 @@ class Tutorial:
         assert set(checker_params).issubset(args.keys()), 'Only paramaters, "flag", "file_system" and "output" are allowed in checker functions.'
         args = {param: args[param] for param in checker_params}
 
-        feedback = puzzle.checker(**args)
+        checker_result = puzzle.checker(**args)
 
-        if feedback == True:
+        if checker_result == True:
             puzzle.solved = True
-
-        return feedback
+            feedback = "Correct!"
+        elif checker_result == False:
+            feedback = "Incorrect!"
+        elif isinstance(checker_result, str):
+            feedback = checker_result
+        else:
+            raise Exception(f'Checker function for puzzle "{puzzle.question}" returned {type(checker_result).__name__}, bool or str expected.')
+ 
+        return (puzzle.solved, feedback)
 
     def run(self):
         """ Starts the tutorial. """

@@ -17,6 +17,12 @@ def move(file_system):
         checker = checker
     )
 """
+SIMPLE_TUTORIAL = """
+    modules:
+        - mypuzzles.py
+    puzzles:
+        - mypuzzles.move
+"""
 
 class TestTutorial:
     def test_creation(self, tmp_path):
@@ -46,12 +52,7 @@ class TestTutorial:
         (tmp_path / "mypuzzles.py").write_text(SIMPLE_PUZZLES)
 
         config = tmp_path / "tutorial.yaml"
-        config.write_text(f"""
-            modules:
-                - mypuzzles.py
-            puzzles:
-                - mypuzzles.move
-        """)
+        config.write_text(SIMPLE_TUTORIAL)
 
         tutorial = Tutorial(f"{config}") # Strings should also work for path
         assert "mypuzzles.move" in tutorial.generators
@@ -75,12 +76,7 @@ class TestTutorial:
 
     def test_missing_module(self, tmp_path):
         config = tmp_path / "tutorial.yaml"
-        config.write_text(f"""
-            modules:
-                - mypuzzles.py
-            puzzles:
-                - mypuzzles.move
-        """)
+        config.write_text(SIMPLE_TUTORIAL)
 
         with pytest.raises(FileNotFoundError):
             tutorial = Tutorial(config)
@@ -109,11 +105,60 @@ class TestTutorial:
         tutorial.run()
         puzzle = tutorial.puzzles[0].puzzle
 
-        assert tutorial.solve_puzzle(puzzle) == False
+        assert tutorial.solve_puzzle(puzzle) == (False, "Incorrect!")
         assert puzzle.solved == False
 
-        tutorial.file_system.run_command("mv A.txt B.txt")
+        tutorial.file_system.run_command("cp A.txt B.txt")
+        assert tutorial.solve_puzzle(puzzle) == (False, "Incorrect!")
 
-        assert tutorial.solve_puzzle(puzzle) == True
+        tutorial.file_system.run_command("mv A.txt B.txt")
+        assert tutorial.solve_puzzle(puzzle) == (True, "Correct!")
         assert puzzle.solved == True
         
+    def test_solve_puzzle_feedback(self, tmp_path):
+        (tmp_path / "mypuzzles.py").write_text("""
+def unsolvable(file_system):
+    return Puzzle(
+        question = f"You can never solve this puzzle.",
+        checker = lambda: "Unsolvable!",
+    )
+        """)
+
+        config = tmp_path / "tutorial.yaml"
+        config.write_text(f"""
+            modules:
+                - mypuzzles.py
+            puzzles:
+                - mypuzzles.unsolvable
+        """)
+        tutorial = Tutorial(config)
+        tutorial.run()
+        puzzle = tutorial.puzzles[0].puzzle
+
+        assert tutorial.solve_puzzle(puzzle) == (False, "Unsolvable!")
+        assert puzzle.solved == False
+
+    def test_solve_puzzle_error(self, tmp_path):
+        (tmp_path / "mypuzzles.py").write_text("""
+def invalid(file_system):
+    return Puzzle(
+        question = f"This puzzle is invalid",
+        checker = lambda: 100,
+    )
+        """)
+
+        config = tmp_path / "tutorial.yaml"
+        config.write_text(f"""
+            modules:
+                - mypuzzles.py
+            puzzles:
+                - mypuzzles.invalid
+        """)
+        tutorial = Tutorial(config)
+        tutorial.run()
+        puzzle = tutorial.puzzles[0].puzzle
+
+        with pytest.raises(Exception, match="bool or str expected"):
+            tutorial.solve_puzzle(puzzle)
+
+    # TODO test checker functions with different args.

@@ -38,23 +38,12 @@ class GUI:
         self.root.mainloop()
 
     def solve(self, puzzle: Puzzle):
-        rtrn = self.tutorial.solve_puzzle(puzzle)
-        print(rtrn)
-        if rtrn == True:
-            feedback = "Correct!"
-            # Mark puzzle as solved
-        elif rtrn == False:
-            feedback = "Incorrect!"
-        elif isinstance(rtrn, str):
-            feedback = rtrn
-        else:
-            raise Exception(f'Checker function for puzzle "{puzzle.question}" returned {type(rtrn).__name__}, bool or str expected.')
- 
+        solved, feedback = self.tutorial.solve_puzzle(puzzle)
         tkinter.messagebox.showinfo("Feedback", feedback)
 
-        if puzzle.solved:
+        if solved:
             self.puzzles[puzzle][1]["state"] = "disabled"
-            if all((p.solved for p in self.puzzles.keys())):
+            if all((p.solved for p in self.puzzles.keys())): # If all puzzles are solved quit.
                 self.root.destroy()
 
 
