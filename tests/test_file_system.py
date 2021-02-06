@@ -1,5 +1,5 @@
 import pytest
-from shell_adventure.tutorial import *
+from shell_adventure.filesystem import FileSystem
 
 class TestFileSystem:
 

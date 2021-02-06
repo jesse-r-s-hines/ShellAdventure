@@ -1,5 +1,6 @@
-from typing import Dict, List, Tuple, Callable, Union, ClassVar
-from shell_adventure.tutorial import Tutorial, Puzzle, PathLike
+from typing import *
+from shell_adventure.tutorial import Tutorial
+from shell_adventure.support import *
 import sys, threading, subprocess
 from tkinter import Tk, StringVar
 from tkinter import ttk

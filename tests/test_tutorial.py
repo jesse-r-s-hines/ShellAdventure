@@ -1,6 +1,6 @@
 import pytest
 from pytest import mark
-from shell_adventure.tutorial import *
+from shell_adventure.tutorial import Tutorial
 
 # @mark.filterwarnings("ignore:Using or importing the ABCs from")
 SIMPLE_PUZZLES = """
