@@ -1,3 +1,4 @@
+from typing import Dict, List, Tuple, Callable, Union, ClassVar
 from shell_adventure.tutorial import Tutorial, Puzzle, PathLike
 import sys, threading, subprocess
 from tkinter import Tk, StringVar
@@ -11,6 +12,9 @@ class GUI:
         # self.flagInput = StringVar(self.root, value="")
 
         self.root = Tk()
+        # map puzzles to their question label and button. By default, Python will use object identity for dict keys, which is what we want.
+        self.puzzles: Dict[Puzzle, Tuple[ttk.Label, ttk.Button]] = {}
+
         self.root.title("Shell Adventure")
         self.root.minsize(600, 300) # To keep you from being able to shrink everything off the screen.
         self.root.columnconfigure(0, weight = 1, minsize = 80)
@@ -20,24 +24,30 @@ class GUI:
         puzzlePanel.grid(column = 0, row = 0, sticky = 'WENS')
 
         for i, pt in enumerate(self.tutorial.puzzles):
-            ttk.Label(puzzlePanel, text = pt.puzzle.question).grid(column = 0, row = i)
+            label = ttk.Label(puzzlePanel, text = pt.puzzle.question).grid(column = 0, row = i)
             button = ttk.Button(puzzlePanel, text = "Solve",
                 command = lambda p=pt.puzzle: self.solve(p)
             )
             button.bind('<Return>', lambda e, p=pt.puzzle: self.solve(p))
             button.grid(column = 1, row = i)
+            self.puzzles[pt.puzzle] = (label, button)
 
         self.root.mainloop()
 
     def solve(self, puzzle: Puzzle):
         feedback = self.tutorial.solve_puzzle(puzzle)
-        print("feedback:", feedback)
         if feedback == True:
             feedback = "Correct!"
+            # Mark puzzle as solved
         elif feedback == False:
             feedback = "Incorrect!"
         # else its a string
         tkinter.messagebox.showinfo("Feedback", feedback)
+
+        if puzzle.solved:
+            self.puzzles[puzzle][1]["state"] = "disabled"
+            if all((p.solved for p in self.puzzles.keys())):
+                self.root.destroy()
 
 
 
