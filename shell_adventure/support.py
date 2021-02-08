@@ -6,13 +6,10 @@ from typing import *
 from pathlib import Path;
 import os, inspect
 
-__all__ = ["Path", "PathLike", "PKG_DIR", "CommandOutput", "Puzzle"]
+__all__ = ["Path", "PathLike", "CommandOutput", "Puzzle"]
 
 PathLike = Union[str, os.PathLike]
 """Type for a string representing a path or a PathLike object."""
-
-PKG_DIR: Path = Path(__file__).parent.resolve()
-"""Absolute path to the package folder."""
 
 class CommandOutput:
     """ Represents the output of a command. """

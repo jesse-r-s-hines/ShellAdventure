@@ -1,3 +1,5 @@
+modules:
+  - default.py
 puzzles:
   - default.move_1
   - default.move_2
