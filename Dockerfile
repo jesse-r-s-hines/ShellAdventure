@@ -51,7 +51,5 @@ USER ${username}
 WORKDIR /home/${username}
 
 # TODO copy from directory. Find a better place to put the files.
-COPY shell_adventure/tutorial.py /usr/local/shell-adventure/
-COPY shell_adventure/support.py /usr/local/shell-adventure/
-COPY shell_adventure/gui.py /usr/local/shell-adventure/
+COPY shell_adventure/docker_scripts /usr/local/shell-adventure/
 CMD ["bash"]
