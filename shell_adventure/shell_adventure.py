@@ -3,6 +3,7 @@ import docker, docker.errors, dockerpty
 import sys, tempfile, yaml, json
 from pathlib import Path
 
+# TODO add tests when I have more logic in this function
 def parse_config(config_file: Path) -> Dict[str, Any]:
     """ Parses and validate the given YAML file. """
     # TODO add validation and error checking, document config options

@@ -3,7 +3,7 @@ from types import ModuleType
 import json
 import importlib.util, inspect
 
-from support import *
+from .support import *
 
 class Tutorial:
     """ Contains the information for a running tutorial. """
@@ -56,6 +56,7 @@ class Tutorial:
 
         self.puzzles = []
         for gen in config.get('puzzles', []):
+            # TODO Should probably raise custom exception instead of using assert (which can be removed at will)
             assert gen in self.generators, f"Unknown puzzle generator {gen}."
             self.puzzles.append(Tutorial.PuzzleTree(gen))
 

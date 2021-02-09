@@ -1,5 +1,5 @@
 import pytest
-from shell_adventure.filesystem import FileSystem
+import docker
 
 SUPPORTED_COMMANDS = [
     "apt",
@@ -128,15 +128,20 @@ SUPPORTED_COMMANDS = [
 class TestContainer:
     @classmethod
     def setup_class(cls):
-        cls.fs = FileSystem()
+        docker_client = docker.from_env()
+        cls.container = docker_client.containers.run('shell-adventure',
+            command = "sleep infinity",
+            detach = True,
+            auto_remove = True,
+        )
 
     @classmethod
     def teardown_class(cls):
-        cls.fs.stop()
+        cls.container.stop(timeout = 0)
 
     @pytest.mark.parametrize("command", SUPPORTED_COMMANDS)
     def test_supported_commands(self, command):
         # command -v will check if the given command exists
-        exit_code, output = TestContainer.fs.run_command(f"command -v {command}")
+        exit_code, output = TestContainer.container.exec_run(f'/bin/bash -c "command -v {command}"')
         assert exit_code == 0, f'"{command}" not found: "{output}".'
 

@@ -6,7 +6,6 @@ def move_1():
     def checker():
         aCode = system("test -f A.txt")
         bCode = system("test -f B.txt")
-        print(aCode, bCode)
         return (aCode >= 1) and (bCode == 0)
 
     return Puzzle(
