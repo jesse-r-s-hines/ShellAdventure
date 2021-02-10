@@ -50,6 +50,6 @@ RUN useradd -ms /bin/bash ${username} && \
 USER ${username}
 WORKDIR /home/${username}
 
-# TODO copy from directory. Find a better place to put the files.
-COPY shell_adventure/docker_scripts /usr/local/shell-adventure/
+COPY shell_adventure/docker_scripts /usr/local/shell_adventure/
+
 CMD ["bash"]

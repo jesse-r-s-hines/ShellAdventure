@@ -39,11 +39,14 @@ if __name__ == "__main__":
         # TODO display settings are platform dependent, so I need to adjust for that.
         # See https://medium.com/better-programming/running-desktop-apps-in-docker-43a70a5265c4
         container = docker_client.containers.run('shell-adventure',
-            command=["python3", "/usr/local/shell-adventure/gui.py", "/tmp/shell-adventure/config.json"],
+            command=["python3", "-m", "shell_adventure.gui", "/tmp/shell-adventure/config.json"],
             # Make a volume to share our puzzle files with the container.
             volumes = {volume: {'bind': '/tmp/shell-adventure', 'mode': 'rw'}},
             network_mode = "host",
-            environment = {"DISPLAY": ":0"},
+            environment = {
+                "PYTHONPATH": "/usr/local/",
+                "DISPLAY": ":0",
+            },
             tty = True,
             stdin_open = True,
             remove = True,
