@@ -3,24 +3,25 @@ import pytest
 from pytest import mark
 from shell_adventure.docker_scripts.tutorial import Tutorial
 import yaml, json, os
+from textwrap import dedent;
 
 # @mark.filterwarnings("ignore:Using or importing the ABCs from")
-SIMPLE_PUZZLES = """
-from os import system
+SIMPLE_PUZZLES = dedent("""
+    from os import system
 
-def move():
-    system("echo 'move1' > A.txt")
+    def move():
+        system("echo 'move1' > A.txt")
 
-    def checker():
-        aCode = system("test -f A.txt")
-        bCode = system("test -f B.txt")
-        return (aCode >= 1) and (bCode == 0)
+        def checker():
+            aCode = system("test -f A.txt")
+            bCode = system("test -f B.txt")
+            return (aCode >= 1) and (bCode == 0)
 
-    return Puzzle(
-        question = f"Rename A.txt to B.txt",
-        checker = checker
-    )
-"""
+        return Puzzle(
+            question = f"Rename A.txt to B.txt",
+            checker = checker
+        )
+""")
 SIMPLE_TUTORIAL = """
     modules:
         - mypuzzles.py
@@ -32,7 +33,8 @@ class TestTutorial:
     # TODO maybe spin up a container for the tutorial? But then I can't access the Tutorial object.
     # I could start a python session in the container or run the tests in the container.
 
-    def _create_tutorial(tmp_path, puzzles: Dict[str, str], config: str):
+    @staticmethod
+    def _create_tutorial(tmp_path, puzzles: Dict[str, str], config: str) -> Tutorial:
         """
         Creates a tutorial with the given puzzles and config strings.
         Config will be saved to tmp_path/myconfig.py, puzzles will be saved to the dictionary key names under tmp_path.
@@ -105,6 +107,23 @@ class TestTutorial:
                     - mypuzzles.not_a_puzzle
             """)
 
+    def test_private_methods_arent_puzzles(self, tmp_path):
+        puzzles = dedent("""
+            def _private_method():
+                return "not a puzzle"
+
+            my_lambda = lambda: "not a puzzle"
+
+            def move():
+                return Puzzle(
+                    question = f"Easiest puzzle ever.",
+                    checker = lambda: True,
+                )
+        """)
+
+        tutorial = TestTutorial._create_tutorial(tmp_path, {"mypuzzles.py": puzzles}, SIMPLE_TUTORIAL)
+        assert list(tutorial.generators.keys()) == ["mypuzzles.move"]
+
     def test_solve_puzzle(self, tmp_path):
         tutorial = TestTutorial._create_tutorial(tmp_path, {"mypuzzles.py": SIMPLE_PUZZLES}, SIMPLE_TUTORIAL)
         tutorial.run()
@@ -121,11 +140,13 @@ class TestTutorial:
         assert puzzle.solved == True
 
     def test_solve_puzzle_feedback(self, tmp_path):
-        puzzles = """def unsolvable():
-                        return Puzzle(
-                            question = f"You can never solve this puzzle.",
-                            checker = lambda: "Unsolvable!",
-                        )"""
+        puzzles = dedent("""
+            def unsolvable():
+                return Puzzle(
+                    question = f"You can never solve this puzzle.",
+                    checker = lambda: "Unsolvable!",
+                )
+        """)
         tutorial = TestTutorial._create_tutorial(tmp_path, {"mypuzzles.py": puzzles}, """
             modules:
                 - mypuzzles.py
@@ -139,11 +160,13 @@ class TestTutorial:
         assert puzzle.solved == False
 
     def test_solve_puzzle_error(self, tmp_path):
-        puzzles = """def invalid():
-                        return Puzzle(
-                            question = f"This puzzle is invalid",
-                            checker = lambda: 100,
-                        )"""
+        puzzles = dedent("""
+            def invalid():
+                return Puzzle(
+                    question = f"This puzzle is invalid",
+                    checker = lambda: 100,
+                )
+        """)
         tutorial = TestTutorial._create_tutorial(tmp_path, {"mypuzzles.py": puzzles}, """
             modules:
                 - mypuzzles.py

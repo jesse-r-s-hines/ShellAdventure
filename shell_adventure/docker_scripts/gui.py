@@ -1,6 +1,6 @@
 from typing import Tuple, Dict
 from tutorial import Tutorial
-from support import *
+from support import Puzzle
 import sys
 from tkinter import Tk, StringVar
 from tkinter import ttk

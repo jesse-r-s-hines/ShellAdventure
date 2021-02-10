@@ -1,9 +1,10 @@
-from typing import List, Tuple, Dict, Callable, ClassVar
+from typing import List, Tuple, Dict, Any, Callable, ClassVar
 from types import ModuleType
 import json
 import importlib.util, inspect
 
-from .support import *
+from pathlib import Path;
+from .support import Puzzle, PathLike
 
 class Tutorial:
     """ Contains the information for a running tutorial. """
@@ -51,7 +52,7 @@ class Tutorial:
         for module_name, module in self.modules.items():
             for func_name, func in inspect.getmembers(module, inspect.isfunction):
                 # Exclude imported functions, lambdas, and private functions
-                if func.__module__ == module_name and func_name != "<lambda>" and not func_name.startswith("_"):
+                if func.__module__ == module_name and func.__name__ != "<lambda>" and not func_name.startswith("_"):
                     self.generators[f"{module_name}.{func_name}"] = func
 
         self.puzzles = []
@@ -79,7 +80,7 @@ class Tutorial:
 
     def solve_puzzle(self, puzzle: Puzzle, flag: str = None) -> Tuple[bool, str]:
         """ Tries to solve the puzzle. Returns (success, feedback) and sets the Puzzle as solved if the checker succeeded. """
-        args = {
+        args: Dict[str, Any] = {
             # "output": output,
             # "flag": flag,
             # "file_system": self.file_system,
