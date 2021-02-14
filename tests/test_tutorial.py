@@ -174,7 +174,7 @@ class TestTutorial:
                 - mypuzzles.invalid
         """)
         tutorial.run()
-        
+
         puzzle = tutorial.puzzles[0].puzzle
         with pytest.raises(Exception, match="bool or str expected"):
             tutorial.solve_puzzle(puzzle)

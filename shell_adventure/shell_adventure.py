@@ -19,7 +19,7 @@ if __name__ == "__main__":
 
     config_file = Path(sys.argv[1])
     config = parse_config(config_file)
-    
+
     with tempfile.TemporaryDirectory(prefix="shell-adventure-") as volume:
         # Gather puzzle modules and put them in container volume
         for module_path in config.pop("modules"):
@@ -29,7 +29,7 @@ if __name__ == "__main__":
             if dest.exists():
                 raise Exception(f"Two puzzle modules with name {module_path.name} found.")
             dest.write_text(module_path.read_text()) # Copy to volume
-        
+
         # Write the config file into docker container
         Path(volume, "config.json").write_text(json.dumps(config))
 
@@ -39,7 +39,7 @@ if __name__ == "__main__":
         # TODO display settings are platform dependent, so I need to adjust for that.
         # See https://medium.com/better-programming/running-desktop-apps-in-docker-43a70a5265c4
         container = docker_client.containers.run('shell-adventure',
-            command=["python3", "-m", "shell_adventure.gui", "/tmp/shell-adventure/config.json"],
+            # user = "root",
             # Make a volume to share our puzzle files with the container.
             volumes = {volume: {'bind': '/tmp/shell-adventure', 'mode': 'rw'}},
             network_mode = "host",
@@ -47,6 +47,8 @@ if __name__ == "__main__":
                 "PYTHONPATH": "/usr/local/",
                 "DISPLAY": ":0",
             },
+            command = ["python3", "-m", "shell_adventure.gui", "/tmp/shell-adventure/config.json"],
+
             tty = True,
             stdin_open = True,
             remove = True,
