@@ -1,6 +1,6 @@
 from typing import List, Tuple, Dict, Any, Callable, ClassVar
 from types import ModuleType
-import json
+import os, json
 import importlib.util, inspect
 
 from pathlib import Path;
@@ -106,6 +106,9 @@ class Tutorial:
 
     def run(self):
         """ Starts the tutorial. """
+        # By default, python won't make any files writable by "other". This turns that off. This will be called in docker container
+        os.umask(0o000)
+
         # Generate the puzzles
         for puzzle_tree in self.puzzles:
             puzzle_tree.puzzle = self.generators[puzzle_tree.generator]()
