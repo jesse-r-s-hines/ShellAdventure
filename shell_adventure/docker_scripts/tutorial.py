@@ -36,6 +36,7 @@ class Tutorial:
     puzzles: List[PuzzleTree]
     """ The tree of puzzles in this tutorial. """
 
+    # TODO can't I infer data_dir from config_file parent?
     def __init__(self, config_file: PathLike, data_dir: PathLike):
         self.config_file = Path(config_file).resolve()
         self.data_dir = Path(data_dir).resolve()
@@ -44,7 +45,7 @@ class Tutorial:
         # I don't need validate the config file here, as was validated before it was put in the docker container.
 
         # Load modules
-        module_list = [self._get_module(file) for file in self.data_dir.glob("*.py")]
+        module_list = [self._get_module(file) for file in (self.data_dir / "modules").glob("*.py")]
         self.modules = {module.__name__: module for module in module_list}
 
         # Get puzzle generators from the modules

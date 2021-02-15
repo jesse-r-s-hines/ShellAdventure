@@ -1,6 +1,7 @@
-from typing import Any, Dict
+from typing import Any, Dict, Union, List
 import docker, docker.errors, dockerpty
-import sys, tempfile, yaml, json
+import sys, shutil, tempfile
+import yaml, json
 from pathlib import Path
 
 # TODO add tests when I have more logic in this function
@@ -12,25 +13,35 @@ def parse_config(config_file: Path) -> Dict[str, Any]:
         config["modules"] = config.get("modules", [])
     return config
 
-def launch_container(config_file, command = None):
+def launch_container(config_file, command: Union[List[str], str] = None, resources: List[Path] = None):
     """
     Reads the config file, launches the container, and moves the files for the tutorial into the container.
     By default launches the tutorial. You can specify the command directly for tests.
     """
     if not command:
         command = ["python3", "-m", "shell_adventure.gui", "/tmp/shell-adventure/config.json"]
+    if not resources: resources = []
 
     config = parse_config(config_file)
 
     with tempfile.TemporaryDirectory(prefix="shell-adventure-") as volume:
+        volume = Path(volume)
+
         # Gather puzzle modules and put them in container volume
-        for module_path in config.pop("modules"):
-            # Files are relative to the config file (if module_path is absolute, Path will use that, if relative it will join with first)
-            module_path = Path(config_file.parent, module_path)
-            dest = Path(volume, module_path.name)
+        (volume / "modules").mkdir()
+        for module in config.pop("modules"):
+            # Files are relative to the config file (if module is absolute, Path will use that, if relative it will join with first)
+            module = Path(config_file.parent, module)
+            dest = volume / "modules" / module.name
             if dest.exists():
-                raise Exception(f"Two puzzle modules with name {module_path.name} found.")
-            dest.write_text(module_path.read_text()) # Copy to volume
+                raise Exception(f"Two puzzle modules with name {module.name} found.")
+            shutil.copyfile(module, dest) # Copy to volume
+
+        # TODO add this to config file
+        (volume / "resources").mkdir()
+        for resource in resources:
+            dest = volume / "resources" / resource.name
+            shutil.copyfile(resource, dest) # Copy to volume
 
         # Write the config file into docker container (as json)
         Path(volume, "config.json").write_text(json.dumps(config))
