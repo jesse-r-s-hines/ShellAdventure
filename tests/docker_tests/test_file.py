@@ -1,7 +1,7 @@
 from typing import *
 import pytest
 from pytest import mark
-from shell_adventure.docker_scripts.file import File
+from shell_adventure.file import File
 import os, stat, pathlib
 
 class TestFile:

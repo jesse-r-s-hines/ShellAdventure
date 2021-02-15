@@ -47,9 +47,18 @@ RUN useradd -ms /bin/bash ${username} && \
     echo "${username}:${password}" | chpasswd && \
     usermod -aG sudo ${username}
 
+# TODO move this into a seperate "test" container
+RUN apt-get update && \
+    apt-get install -y python3-pip && \
+    python -m pip --no-cache-dir install pytest PyYAML && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
 USER ${username}
 WORKDIR /home/${username}
 
 COPY shell_adventure/docker_scripts /usr/local/shell_adventure/
+
+# TODO move this into a sperate "test" container
+COPY tests/docker_tests /usr/local/shell_adventure/tests/
 
 CMD ["bash"]
