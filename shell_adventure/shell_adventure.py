@@ -12,12 +12,14 @@ def parse_config(config_file: Path) -> Dict[str, Any]:
         config["modules"] = config.get("modules", [])
     return config
 
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("No tutorial config file given.")
-        exit(1)
+def launch_container(config_file, command = None):
+    """
+    Reads the config file, launches the container, and moves the files for the tutorial into the container.
+    By default launches the tutorial. You can specify the command directly for tests.
+    """
+    if not command:
+        command = ["python3", "-m", "shell_adventure.gui", "/tmp/shell-adventure/config.json"]
 
-    config_file = Path(sys.argv[1])
     config = parse_config(config_file)
 
     with tempfile.TemporaryDirectory(prefix="shell-adventure-") as volume:
@@ -30,7 +32,7 @@ if __name__ == "__main__":
                 raise Exception(f"Two puzzle modules with name {module_path.name} found.")
             dest.write_text(module_path.read_text()) # Copy to volume
 
-        # Write the config file into docker container
+        # Write the config file into docker container (as json)
         Path(volume, "config.json").write_text(json.dumps(config))
 
         # Start the container
@@ -47,7 +49,7 @@ if __name__ == "__main__":
                 "PYTHONPATH": "/usr/local/",
                 "DISPLAY": ":0",
             },
-            command = ["python3", "-m", "shell_adventure.gui", "/tmp/shell-adventure/config.json"],
+            command = command,
 
             tty = True,
             stdin_open = True,
@@ -62,7 +64,15 @@ if __name__ == "__main__":
         print("\n".join([l.decode() for l in logs]))
 
         # try:
-        #   # Make container. I can use this code once I've got a terminal running inside docker, and don't have to detach
+        #   # Make container. I can use this code once If got a terminal running inside docker, and don't have to detach
         # except docker.errors.ContainerError as e:
         #     print(f"Docker container failed with exit code {e.exit_status}. Output was:\n")
         #     print(e.stderr.decode().strip())
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("No tutorial config file given.")
+        exit(1)
+
+    launch_container(Path(sys.argv[1]))
