@@ -1,4 +1,5 @@
 import pathlib
+import os, stat, shutil
 
 class File(pathlib.PosixPath):
     """

@@ -80,7 +80,7 @@ def launch_container(volume: str, command: Union[List[str], str]):
 def start(config_file: Path):
     with tempfile.TemporaryDirectory(prefix="shell-adventure-") as volume:
         gather_files(config_file, Path(volume))
-        output = launch_container(volume, command = ["python3", "-m", "shell_adventure.gui", "/tmp/shell-adventure/config.json"])
+        output = launch_container(volume, command = ["python3", "-m", "shell_adventure_docker.gui", "/tmp/shell-adventure/config.json"])
         print(output)
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 from typing import *
 import pytest
 from pytest import mark
-from shell_adventure.tutorial import Tutorial
+from shell_adventure_docker.tutorial import Tutorial
 import yaml, json, os
 from textwrap import dedent;
 

@@ -56,9 +56,9 @@ RUN apt-get update && \
 USER ${username}
 WORKDIR /home/${username}
 
-COPY shell_adventure/docker_scripts /usr/local/shell_adventure/
+COPY shell_adventure_docker /usr/local/shell_adventure_docker/
 
 # TODO move this into a sperate "test" container
-COPY tests/docker_tests /usr/local/shell_adventure/tests/
+COPY tests/docker_tests /usr/local/shell_adventure_docker/tests/
 
 CMD ["bash"]
