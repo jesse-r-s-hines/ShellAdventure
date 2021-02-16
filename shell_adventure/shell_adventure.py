@@ -49,7 +49,7 @@ def launch_container(volume: str, command: Union[List[str], str]):
     # TODO display settings are platform dependent, so I need to adjust for that.
     # See https://medium.com/better-programming/running-desktop-apps-in-docker-43a70a5265c4
     container = docker_client.containers.run('shell-adventure',
-        # user = "root",
+        user = "root",
         # Make a volume to share our puzzle files with the container.
         volumes = {volume: {'bind': '/tmp/shell-adventure', 'mode': 'rw'}},
         network_mode = "host",
@@ -66,7 +66,7 @@ def launch_container(volume: str, command: Union[List[str], str]):
     )
     logs = container.attach(stdout=True, stderr=True, stream = True, logs = True)
     try:
-        dockerpty.exec_command(docker_client.api, container.id, "bash")
+        dockerpty.exec_command(docker_client.api, container.id, "sudo -i -u student bash")
     except:
         pass
     return "\n".join([l.decode() for l in logs])
