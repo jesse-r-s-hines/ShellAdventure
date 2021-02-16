@@ -72,112 +72,112 @@ class TestTutorial:
         assert tutorial.puzzles[0].generator == "mypuzzles.move" # Not generated yet
         assert tutorial.puzzles[0].puzzle == None # Not generated yet
 
-    # def test_relative_path_creation(self, tmp_path):
-    #     tutorial = TestTutorial._create_tutorial(tmp_path, {"mypuzzles.py": SIMPLE_PUZZLES}, SIMPLE_TUTORIAL)
-    #     tutorial = Tutorial(f"{tmp_path / 'myconfig.yaml'}", tmp_path) # Strings should also work for path
-    #     assert tutorial.config_file == tmp_path / "myconfig.yaml"
-    #     assert "mypuzzles.move" in tutorial.generators
+    def test_relative_path_creation(self, tmp_path):
+        tutorial = TestTutorial._create_tutorial(tmp_path, {"mypuzzles.py": SIMPLE_PUZZLES}, SIMPLE_TUTORIAL)
+        tutorial = Tutorial(f"{tmp_path / 'myconfig.yaml'}", tmp_path) # Strings should also work for path
+        assert tutorial.config_file == tmp_path / "myconfig.yaml"
+        assert "mypuzzles.move" in tutorial.generators
 
-    # def test_multiple_modules(self, tmp_path):
-    #     tutorial = TestTutorial._create_tutorial(tmp_path, {
-    #         "mypuzzles1.py": SIMPLE_PUZZLES,
-    #         "mypuzzles2.py": SIMPLE_PUZZLES,
-    #     }, """
-    #         modules:
-    #             - mypuzzles1.py
-    #             - mypuzzles2.py
-    #         puzzles:
-    #             - mypuzzles1.move
-    #     """)
+    def test_multiple_modules(self, tmp_path):
+        tutorial = TestTutorial._create_tutorial(tmp_path, {
+            "mypuzzles1.py": SIMPLE_PUZZLES,
+            "mypuzzles2.py": SIMPLE_PUZZLES,
+        }, """
+            modules:
+                - mypuzzles1.py
+                - mypuzzles2.py
+            puzzles:
+                - mypuzzles1.move
+        """)
 
-    #     assert "mypuzzles1.move" in tutorial.generators
-    #     assert "mypuzzles2.move" in tutorial.generators
+        assert "mypuzzles1.move" in tutorial.generators
+        assert "mypuzzles2.move" in tutorial.generators
 
-    # def test_missing_files(self, tmp_path):
-    #     with pytest.raises(AssertionError, match="Unknown puzzle generator"):
-    #         tutorial = TestTutorial._create_tutorial(tmp_path, {}, SIMPLE_TUTORIAL) # Don't make any puzzle files
-    #     with pytest.raises(FileNotFoundError):
-    #         tutorial = Tutorial(tmp_path / "not_a_config_file.yaml", tmp_path)
+    def test_missing_files(self, tmp_path):
+        with pytest.raises(AssertionError, match="Unknown puzzle generator"):
+            tutorial = TestTutorial._create_tutorial(tmp_path, {}, SIMPLE_TUTORIAL) # Don't make any puzzle files
+        with pytest.raises(FileNotFoundError):
+            tutorial = Tutorial(tmp_path / "not_a_config_file.yaml", tmp_path)
 
-    # def test_missing_puzzle(self, tmp_path):
-    #     with pytest.raises(AssertionError, match="Unknown puzzle generator mypuzzles.not_a_puzzle"):
-    #         tutorial = TestTutorial._create_tutorial(tmp_path, {"mypuzzles.py": SIMPLE_PUZZLES}, """
-    #             modules:
-    #                 - mypuzzles.py
-    #             puzzles:
-    #                 - mypuzzles.not_a_puzzle
-    #         """)
+    def test_missing_puzzle(self, tmp_path):
+        with pytest.raises(AssertionError, match="Unknown puzzle generator mypuzzles.not_a_puzzle"):
+            tutorial = TestTutorial._create_tutorial(tmp_path, {"mypuzzles.py": SIMPLE_PUZZLES}, """
+                modules:
+                    - mypuzzles.py
+                puzzles:
+                    - mypuzzles.not_a_puzzle
+            """)
 
-    # def test_private_methods_arent_puzzles(self, tmp_path):
-    #     puzzles = dedent("""
-    #         def _private_method():
-    #             return "not a puzzle"
+    def test_private_methods_arent_puzzles(self, tmp_path):
+        puzzles = dedent("""
+            def _private_method():
+                return "not a puzzle"
 
-    #         my_lambda = lambda: "not a puzzle"
+            my_lambda = lambda: "not a puzzle"
 
-    #         def move():
-    #             return Puzzle(
-    #                 question = f"Easiest puzzle ever.",
-    #                 checker = lambda: True,
-    #             )
-    #     """)
+            def move():
+                return Puzzle(
+                    question = f"Easiest puzzle ever.",
+                    checker = lambda: True,
+                )
+        """)
 
-    #     tutorial = TestTutorial._create_tutorial(tmp_path, {"mypuzzles.py": puzzles}, SIMPLE_TUTORIAL)
-    #     assert list(tutorial.generators.keys()) == ["mypuzzles.move"]
+        tutorial = TestTutorial._create_tutorial(tmp_path, {"mypuzzles.py": puzzles}, SIMPLE_TUTORIAL)
+        assert list(tutorial.generators.keys()) == ["mypuzzles.move"]
 
-    # def test_solve_puzzle(self, tmp_path):
-    #     tutorial = TestTutorial._create_tutorial(tmp_path, {"mypuzzles.py": SIMPLE_PUZZLES}, SIMPLE_TUTORIAL)
-    #     tutorial.run()
-    #     puzzle = tutorial.puzzles[0].puzzle
+    def test_solve_puzzle(self, tmp_path):
+        tutorial = TestTutorial._create_tutorial(tmp_path, {"mypuzzles.py": SIMPLE_PUZZLES}, SIMPLE_TUTORIAL)
+        tutorial.run()
+        puzzle = tutorial.puzzles[0].puzzle
 
-    #     assert tutorial.solve_puzzle(puzzle) == (False, "Incorrect!")
-    #     assert puzzle.solved == False
+        assert tutorial.solve_puzzle(puzzle) == (False, "Incorrect!")
+        assert puzzle.solved == False
 
-    #     os.system("cp A.txt B.txt")
-    #     assert tutorial.solve_puzzle(puzzle) == (False, "Incorrect!")
+        os.system("cp A.txt B.txt")
+        assert tutorial.solve_puzzle(puzzle) == (False, "Incorrect!")
 
-    #     os.system("mv A.txt B.txt")
-    #     assert tutorial.solve_puzzle(puzzle) == (True, "Correct!")
-    #     assert puzzle.solved == True
+        os.system("mv A.txt B.txt")
+        assert tutorial.solve_puzzle(puzzle) == (True, "Correct!")
+        assert puzzle.solved == True
 
-    # def test_solve_puzzle_feedback(self, tmp_path):
-    #     puzzles = dedent("""
-    #         def unsolvable():
-    #             return Puzzle(
-    #                 question = f"You can never solve this puzzle.",
-    #                 checker = lambda: "Unsolvable!",
-    #             )
-    #     """)
-    #     tutorial = TestTutorial._create_tutorial(tmp_path, {"mypuzzles.py": puzzles}, """
-    #         modules:
-    #             - mypuzzles.py
-    #         puzzles:
-    #             - mypuzzles.unsolvable
-    #     """)
-    #     tutorial.run()
-    #     puzzle = tutorial.puzzles[0].puzzle
+    def test_solve_puzzle_feedback(self, tmp_path):
+        puzzles = dedent("""
+            def unsolvable():
+                return Puzzle(
+                    question = f"You can never solve this puzzle.",
+                    checker = lambda: "Unsolvable!",
+                )
+        """)
+        tutorial = TestTutorial._create_tutorial(tmp_path, {"mypuzzles.py": puzzles}, """
+            modules:
+                - mypuzzles.py
+            puzzles:
+                - mypuzzles.unsolvable
+        """)
+        tutorial.run()
+        puzzle = tutorial.puzzles[0].puzzle
 
-    #     assert tutorial.solve_puzzle(puzzle) == (False, "Unsolvable!")
-    #     assert puzzle.solved == False
+        assert tutorial.solve_puzzle(puzzle) == (False, "Unsolvable!")
+        assert puzzle.solved == False
 
-    # def test_solve_puzzle_error(self, tmp_path):
-    #     puzzles = dedent("""
-    #         def invalid():
-    #             return Puzzle(
-    #                 question = f"This puzzle is invalid",
-    #                 checker = lambda: 100,
-    #             )
-    #     """)
-    #     tutorial = TestTutorial._create_tutorial(tmp_path, {"mypuzzles.py": puzzles}, """
-    #         modules:
-    #             - mypuzzles.py
-    #         puzzles:
-    #             - mypuzzles.invalid
-    #     """)
-    #     tutorial.run()
+    def test_solve_puzzle_error(self, tmp_path):
+        puzzles = dedent("""
+            def invalid():
+                return Puzzle(
+                    question = f"This puzzle is invalid",
+                    checker = lambda: 100,
+                )
+        """)
+        tutorial = TestTutorial._create_tutorial(tmp_path, {"mypuzzles.py": puzzles}, """
+            modules:
+                - mypuzzles.py
+            puzzles:
+                - mypuzzles.invalid
+        """)
+        tutorial.run()
 
-    #     puzzle = tutorial.puzzles[0].puzzle
-    #     with pytest.raises(Exception, match="bool or str expected"):
-    #         tutorial.solve_puzzle(puzzle)
+        puzzle = tutorial.puzzles[0].puzzle
+        with pytest.raises(Exception, match="bool or str expected"):
+            tutorial.solve_puzzle(puzzle)
 
     # TODO test checker functions with different args.
