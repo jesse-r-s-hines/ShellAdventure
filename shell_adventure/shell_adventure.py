@@ -53,10 +53,7 @@ def launch_container(volume: str, command: Union[List[str], str]):
         # Make a volume to share our puzzle files with the container.
         volumes = {volume: {'bind': '/tmp/shell-adventure', 'mode': 'rw'}},
         network_mode = "host",
-        environment = {
-            "PYTHONPATH": "/usr/local/",
-            "DISPLAY": ":0",
-        },
+        environment = {"DISPLAY": ":0"},
         command = command,
 
         tty = True,

@@ -56,6 +56,8 @@ RUN apt-get update && \
 USER ${username}
 WORKDIR /home/${username}
 
+ENV PYTHONPATH=/usr/local
+
 COPY shell_adventure_docker /usr/local/shell_adventure_docker/
 
 # TODO move this into a sperate "test" container
