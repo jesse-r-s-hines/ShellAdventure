@@ -8,17 +8,17 @@ class TestFile:
         os.chdir(tmp_path)
 
         root_file = File("root_file.txt")
-        root_file.touch()
+        root_file.create()
         assert (root_file.owner(), root_file.group()) == ("root", "root")
 
         with utils.change_user("student"):
             student_file = File("student_file.txt")
-            student_file.touch()
+            student_file.create()
             assert (student_file.owner(), student_file.group()) == ("student", "student")
 
         # Back to student
         root_file2 = File("root_file2.txt")
-        root_file2.touch()
+        root_file2.create()
         assert (root_file2.owner(), root_file2.group()) == ("root", "root")
 
     def test_change_user_and_group(self, tmp_path):
@@ -26,12 +26,12 @@ class TestFile:
 
         with utils.change_user("root", "student"):
             file = File("file.txt")
-            file.touch()
+            file.create()
             assert (file.owner(), file.group()) == ("root", "student")
 
         # Back to root
         root_file = File("root_file.txt")
-        root_file.touch()
+        root_file.create()
         assert (root_file.owner(), root_file.group()) == ("root", "root")
 
     def test_change_back_user(self):

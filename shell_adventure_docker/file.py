@@ -45,11 +45,11 @@ class File(PosixPath):
     path = property(_get_path)
     """ Returns the absolute path to this file as a string. """
     
-    def touch(self, mode=0o666, exist_ok=True, recursive = False):
+    def create(self, mode=0o666, exist_ok=True, recursive = True):
         """
-        See Path.touch(). The only difference is that it will "mkdir" missing dirs in the path if recursive is set to True.
+        Basically an alias to Path.touch(), but will "mkdir" missing dirs in the path if recursive is set to True.
         New directories will be made with the same mode, except with execute permissions set.
         """
         if recursive:
             self.parent.mkdir(mode = mode | 0o111, parents = True, exist_ok=True) # mkdir is already recursive
-        super().touch(mode, exist_ok)
+        self.touch(mode, exist_ok)

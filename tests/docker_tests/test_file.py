@@ -23,7 +23,7 @@ class TestFile:
         assert file.path.startswith("/")
         assert file.path.endswith("A/B.txt")
 
-    def test_touch(self, tmp_path):
+    def test_create(self, tmp_path):
         os.chdir(tmp_path)
         # By default, python won't make any files writable by "other". This turns that off. This will be called in docker container
         # TODO if we move these tests into the container I should remove this and make sure the container has it set right.
@@ -34,8 +34,8 @@ class TestFile:
         assert not file.exists()
 
         with pytest.raises(FileNotFoundError):
-            file.touch()
-        file.touch(mode=0o644, recursive=True)
+            file.create(recursive=False)
+        file.create(mode=0o644, recursive=True)
 
         assert file.exists()
         assert file.parent.exists()
@@ -43,21 +43,20 @@ class TestFile:
         assert stat.S_IMODE(os.stat(file).st_mode) == 0o644
         assert stat.S_IMODE(os.stat("A").st_mode) == 0o755
 
-        File("A/C.txt").touch(mode=0o666, recursive=True)
+        File("A/C.txt").create(mode=0o666, recursive=True)
         assert stat.S_IMODE(os.stat("A/C.txt").st_mode) == 0o666
         assert stat.S_IMODE(os.stat("A").st_mode) == 0o755 # Does not change permissions of existing folders.
 
         file = File("A/D.txt")
-        file.touch()
+        file.create()
         assert file.exists()
 
     def test_children(self, tmp_path):
         os.chdir(tmp_path)
 
         dir = File("dir")
-        dir.mkdir()
         for name in ["A.txt", "B.txt", "C.txt"]:
-            (dir / name).touch()
+            (dir / name).create()
 
         with pytest.raises(NotADirectoryError):
             (dir / "A.txt").children()
@@ -72,7 +71,7 @@ class TestFile:
         os.chdir(tmp_path)
 
         file = File("a.txt")
-        file.touch()
+        file.create()
 
         # TODO use permissions object once I've added that
         assert stat.S_IMODE(os.stat(file).st_mode) == 0o666
@@ -98,7 +97,7 @@ class TestFile:
             file.chmod(0o000)
         with pytest.raises(FileNotFoundError):
             file.chmod("u+g")
-        file.touch()
+        file.create()
 
         with pytest.raises(Exception, match="Invalid mode"):
             file.chmod("not-a-chmod-string")
@@ -107,7 +106,7 @@ class TestFile:
         os.chdir(tmp_path)
 
         file = File("a.txt")
-        file.touch()
+        file.create()
         assert (file.owner(), file.group()) == ("root", "root")
 
         file.chown("student")
@@ -123,7 +122,7 @@ class TestFile:
         os.chdir(tmp_path)
 
         file = File("a.txt")
-        file.touch()
+        file.create()
         assert (file.owner(), file.group()) == ("root", "root")
 
         with change_user("student"):
