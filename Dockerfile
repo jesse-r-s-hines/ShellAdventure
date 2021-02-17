@@ -50,7 +50,7 @@ RUN useradd -ms /bin/bash ${username} && \
 # TODO move this into a seperate "test" container
 RUN apt-get update && \
     apt-get install -y python3-pip && \
-    python -m pip --no-cache-dir install pytest PyYAML && \
+    python -m pip --no-cache-dir install pytest pytest-cov PyYAML && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 USER ${username}
@@ -61,6 +61,6 @@ ENV PYTHONPATH=/usr/local
 COPY shell_adventure_docker /usr/local/shell_adventure_docker/
 
 # TODO move this into a sperate "test" container
-COPY tests/docker_tests /usr/local/shell_adventure_docker/tests/
+COPY tests/docker_tests /usr/local/shell_adventure_docker_tests/
 
 CMD ["bash"]
