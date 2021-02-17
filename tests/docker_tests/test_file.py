@@ -1,8 +1,7 @@
-from typing import *
 import pytest
-from pytest import mark
 from shell_adventure_docker.file import File
-import os, stat, pathlib
+from shell_adventure_docker.utilities import change_user
+import os, stat
 
 class TestFile:
     def test_basic(self, tmp_path):
@@ -52,7 +51,6 @@ class TestFile:
         file.touch()
         assert file.exists()
 
-
     def test_children(self, tmp_path):
         os.chdir(tmp_path)
 
@@ -69,3 +67,70 @@ class TestFile:
 
         names = {f.name for f in dir.children()}
         assert names == {"A.txt", "B.txt", "C.txt"}
+
+    def test_chmod(self, tmp_path):
+        os.chdir(tmp_path)
+
+        file = File("a.txt")
+        file.touch()
+
+        # TODO use permissions object once I've added that
+        assert stat.S_IMODE(os.stat(file).st_mode) == 0o666
+
+        file.chmod(0o000)
+        assert stat.S_IMODE(os.stat(file).st_mode) == 0o000
+
+        file.chmod(0o777)
+        assert stat.S_IMODE(os.stat(file).st_mode) == 0o777
+
+        file.chmod("o-wx,g-wx")
+        assert stat.S_IMODE(os.stat(file).st_mode) == 0o744
+
+        file.chmod("g+w,u=x")
+        assert stat.S_IMODE(os.stat(file).st_mode) == 0o164
+
+    def test_chmod_errors(self, tmp_path):
+        os.chdir(tmp_path)
+
+        file = File("a.txt")
+
+        with pytest.raises(FileNotFoundError):
+            file.chmod(0o000)
+        with pytest.raises(FileNotFoundError):
+            file.chmod("u+g")
+        file.touch()
+
+        with pytest.raises(Exception, match="Invalid mode"):
+            file.chmod("not-a-chmod-string")
+
+    def test_chown(self, tmp_path):
+        os.chdir(tmp_path)
+
+        file = File("a.txt")
+        file.touch()
+        assert (file.owner(), file.group()) == ("root", "root")
+
+        file.chown("student")
+        assert (file.owner(), file.group()) == ("student", "root")
+
+        file.chown(None, "student")
+        assert (file.owner(), file.group()) == ("student", "student")
+
+        file.chown(0, 0) # uid for root
+        assert (file.owner(), file.group()) == ("root", "root")
+
+    def test_chown_chmod_run_as_root(self, tmp_path):
+        os.chdir(tmp_path)
+
+        file = File("a.txt")
+        file.touch()
+        assert (file.owner(), file.group()) == ("root", "root")
+
+        with change_user("student"):
+            file.chmod("o-rwx")
+            # TODO use permissions object once I've added that
+            assert stat.S_IMODE(os.stat(file).st_mode) == 0o660
+    
+        with change_user("student"):
+            file.chown("student", "student")
+            assert (file.owner(), file.group()) == ("student", "student")
