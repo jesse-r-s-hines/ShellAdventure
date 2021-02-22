@@ -1,8 +1,7 @@
 from typing import Union
 from pathlib import PosixPath
 import os, shutil, shlex
-from .utilities import change_user
-from .permissions import Permissions, LinkedPermissions
+from .permissions import Permissions, LinkedPermissions, change_user
 
 class File(PosixPath):
     """

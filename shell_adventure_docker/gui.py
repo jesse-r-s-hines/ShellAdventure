@@ -1,7 +1,7 @@
 from typing import Tuple, Dict
 from .tutorial import Tutorial
 from .support import Puzzle
-from .utilities import change_user
+from .permissions import change_user
 import os, sys
 from tkinter import Tk, StringVar
 from tkinter import ttk
