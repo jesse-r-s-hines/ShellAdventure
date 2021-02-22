@@ -1,10 +1,11 @@
 from typing import List, Tuple, Dict, Any, Callable, ClassVar
 from types import ModuleType
-import os, json
+import os, json, subprocess
 import importlib.util, inspect
 
 from pathlib import Path;
 from .support import Puzzle, PathLike
+from .file import File
 
 class Tutorial:
     """ Contains the information for a running tutorial. """
@@ -37,9 +38,11 @@ class Tutorial:
     """ The tree of puzzles in this tutorial. """
 
     # TODO can't I infer data_dir from config_file parent?
-    def __init__(self, config_file: PathLike, data_dir: PathLike):
+    def __init__(self, config_file: PathLike, data_dir: PathLike, bash_pid: int = None):
+        """ Create a tutorial from a config_file and a PID to the bash_session the student is running. """
         self.config_file = Path(config_file).resolve()
         self.data_dir = Path(data_dir).resolve()
+        self.bash_pid = bash_pid
 
         config = json.loads(self.config_file.read_text())
         # I don't need validate the config file here, as was validated before it was put in the docker container.
@@ -104,6 +107,18 @@ class Tutorial:
             raise Exception(f'Checker function for puzzle "{puzzle.question}" returned {type(checker_result).__name__}, bool or str expected.')
 
         return (puzzle.solved, feedback)
+
+    def student_cwd(self):
+        """
+        Return the student's current working directory. Note that in generation functions, this is different from `File.cwd()`
+        File.cwd() returns the current working directory of the generation function, not the student.
+        """
+        if self.bash_pid == None:
+            raise ProcessLookupError("No bash session specified.")
+        result = subprocess.check_output(["pwdx", f"{self.bash_pid}"]) # returns "pid: /path/to/folder"
+        cwd = result.decode().split(": ", 1)[1][:-1] # Split and remove trailing newline.
+        return File(cwd) 
+
 
     def run(self):
         """ Starts the tutorial. """

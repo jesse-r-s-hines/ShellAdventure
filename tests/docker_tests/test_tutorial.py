@@ -2,7 +2,7 @@ from typing import *
 import pytest
 from pytest import mark
 from shell_adventure_docker.tutorial import Tutorial
-import yaml, json, os
+import yaml, json, os, subprocess
 from textwrap import dedent;
 
 # @mark.filterwarnings("ignore:Using or importing the ABCs from")
@@ -34,7 +34,7 @@ class TestTutorial:
     # I could start a python session in the container or run the tests in the container.
 
     @staticmethod
-    def _create_tutorial(tmp_path, puzzles: Dict[str, str], config: str) -> Tutorial:
+    def _create_tutorial(tmp_path, puzzles: Dict[str, str], config: str, bash_pid: int = None) -> Tutorial:
         """
         Creates a tutorial with the given puzzles and config strings.
         Config will be saved to tmp_path/myconfig.py, puzzles will be saved to the dictionary key names under tmp_path.
@@ -53,7 +53,7 @@ class TestTutorial:
         working_dir.mkdir()
         os.chdir(working_dir)
 
-        tutorial = Tutorial(config_file, tmp_path)
+        tutorial = Tutorial(config_file, tmp_path, bash_pid)
         return tutorial
 
     def test_creation(self, tmp_path):
@@ -179,5 +179,20 @@ class TestTutorial:
         puzzle = tutorial.puzzles[0].puzzle
         with pytest.raises(Exception, match="bool or str expected"):
             tutorial.solve_puzzle(puzzle)
+
+    def test_student_cwd(self, tmp_path):
+        bash = subprocess.Popen(["bash", "-c", "sleep 4"], cwd = tmp_path)
+        tutorial = TestTutorial._create_tutorial(tmp_path, {"mypuzzles.py": SIMPLE_PUZZLES}, SIMPLE_TUTORIAL, bash.pid)
+        assert tutorial.student_cwd() == tmp_path
+        bash.kill()
+
+    def test_student_cwd_spaces(self, tmp_path):
+        dir = (tmp_path / " ")
+        dir.mkdir()
+
+        bash = subprocess.Popen(["bash", "-c", "sleep 4"], cwd = dir)
+        tutorial = TestTutorial._create_tutorial(tmp_path, {"mypuzzles.py": SIMPLE_PUZZLES}, SIMPLE_TUTORIAL, bash.pid)
+        assert tutorial.student_cwd() == dir
+        bash.kill()
 
     # TODO test checker functions with different args.
