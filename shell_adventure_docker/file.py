@@ -2,6 +2,7 @@ from typing import Union
 from pathlib import PosixPath
 import os, shutil, shlex
 from .utilities import change_user
+from .permissions import Permissions, LinkedPermissions
 
 class File(PosixPath):
     """
@@ -53,3 +54,14 @@ class File(PosixPath):
         if recursive:
             self.parent.mkdir(mode = mode | 0o111, parents = True, exist_ok=True) # mkdir is already recursive
         self.touch(mode, exist_ok)
+
+    @property
+    def permissions(self) -> Permissions:
+        """ Return a Permissions object representing the permissions of this file. """
+        return LinkedPermissions(self)
+
+    @permissions.setter
+    def permissions(self, val: Union[int, Permissions]):
+        if isinstance(val, Permissions):
+            val = int(val)
+        self.chmod(val)

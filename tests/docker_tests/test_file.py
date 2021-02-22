@@ -1,6 +1,7 @@
 import pytest
 from shell_adventure_docker.file import File
 from shell_adventure_docker.utilities import change_user
+from shell_adventure_docker.permissions import Permissions
 import os, stat
 
 class TestFile:
@@ -133,3 +134,46 @@ class TestFile:
         with change_user("student"):
             file.chown("student", "student")
             assert (file.owner(), file.group()) == ("student", "student")
+
+    def test_checking_setting_permissions(self, tmp_path):
+        os.chdir(tmp_path)
+
+        file = File("root_file.txt")
+        file.create(0o764)
+
+        assert file.permissions.user.read == True
+        assert file.permissions.group.write == True
+
+        file.permissions.group.execute = True
+        assert file.permissions.group.execute == True
+        assert stat.S_IMODE(os.stat(file).st_mode) == 0o774
+
+        file.permissions.group.write = False
+        assert int(file.permissions) == 0o754
+        assert stat.S_IMODE(os.stat(file).st_mode) == 0o754
+
+    def test_setting_permissions_with_int(self, tmp_path):
+        os.chdir(tmp_path)
+
+        file = File("file.txt")
+        file.create(0o000)
+
+        file.permissions = 0o666
+        assert file.permissions.user.write == True
+        assert stat.S_IMODE(os.stat("file.txt").st_mode) == 0o666
+
+        file.permissions.others.write = False # Still "linked" to the actual file
+        assert stat.S_IMODE(os.stat("file.txt").st_mode) == 0o664
+
+    def test_setting_permissions_with_object(self, tmp_path):
+        os.chdir(tmp_path)
+
+        file = File("file.txt")
+        file.create(0o000)
+
+        file.permissions = Permissions(0o666)
+        assert file.permissions.user.write == True
+        assert stat.S_IMODE(os.stat("file.txt").st_mode) == 0o666
+
+        file.permissions.others.write = False # Still "linked" to the actual file
+        assert stat.S_IMODE(os.stat("file.txt").st_mode) == 0o664
