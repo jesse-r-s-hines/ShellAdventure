@@ -53,7 +53,7 @@ class TestTutorial:
         working_dir.mkdir()
         os.chdir(working_dir)
 
-        tutorial = Tutorial(config_file, tmp_path, bash_pid)
+        tutorial = Tutorial(config_file, bash_pid)
         return tutorial
 
     def test_creation(self, tmp_path):
@@ -74,7 +74,7 @@ class TestTutorial:
 
     def test_relative_path_creation(self, tmp_path):
         tutorial = TestTutorial._create_tutorial(tmp_path, {"mypuzzles.py": SIMPLE_PUZZLES}, SIMPLE_TUTORIAL)
-        tutorial = Tutorial(f"{tmp_path / 'myconfig.yaml'}", tmp_path) # Strings should also work for path
+        tutorial = Tutorial(f"{tmp_path / 'myconfig.yaml'}") # Strings should also work for path
         assert tutorial.config_file == tmp_path / "myconfig.yaml"
         assert "mypuzzles.move" in tutorial.generators
 
@@ -97,7 +97,7 @@ class TestTutorial:
         with pytest.raises(AssertionError, match="Unknown puzzle generator"):
             tutorial = TestTutorial._create_tutorial(tmp_path, {}, SIMPLE_TUTORIAL) # Don't make any puzzle files
         with pytest.raises(FileNotFoundError):
-            tutorial = Tutorial(tmp_path / "not_a_config_file.yaml", tmp_path)
+            tutorial = Tutorial(tmp_path / "not_a_config_file.yaml")
 
     def test_missing_puzzle(self, tmp_path):
         with pytest.raises(AssertionError, match="Unknown puzzle generator mypuzzles.not_a_puzzle"):

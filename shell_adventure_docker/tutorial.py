@@ -37,11 +37,13 @@ class Tutorial:
     puzzles: List[PuzzleTree]
     """ The tree of puzzles in this tutorial. """
 
-    # TODO can't I infer data_dir from config_file parent?
-    def __init__(self, config_file: PathLike, data_dir: PathLike, bash_pid: int = None):
-        """ Create a tutorial from a config_file and a PID to the bash_session the student is running. """
+    def __init__(self, config_file: PathLike, bash_pid: int = None):
+        """
+        Create a tutorial from a config_file and a PID to the bash_session the student is running.
+        Any resources the config file uses should be placed in the same directory as the config file.
+        """
         self.config_file = Path(config_file).resolve()
-        self.data_dir = Path(data_dir).resolve()
+        self.data_dir = self.config_file.parent
         self.bash_pid = bash_pid
 
         config = json.loads(self.config_file.read_text())
