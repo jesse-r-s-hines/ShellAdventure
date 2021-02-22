@@ -5,27 +5,22 @@ from shell_adventure_docker.permissions import Permissions
 import os, stat
 
 class TestFile:
-    def test_basic(self, tmp_path):
-        os.chdir(tmp_path)
-
+    def test_basic(self, working_dir):
         dir = File("A")
         file = dir / "a.txt"
         assert isinstance(file, File)
         
-        file = File(tmp_path, "b.txt")
+        file = File(working_dir, "b.txt")
         assert file.exists() == False
         file.write_text("STUFF")
         assert file.read_text() == "STUFF"
 
-    def test_path(self, tmp_path):
-        os.chdir(tmp_path)
-
+    def test_path(self, working_dir):
         file = File("A/B.txt")
         assert file.path.startswith("/")
         assert file.path.endswith("A/B.txt")
 
-    def test_create(self, tmp_path):
-        os.chdir(tmp_path)
+    def test_create(self, working_dir):
         # By default, python won't make any files writable by "other". This turns that off. This will be called in docker container
         # TODO if we move these tests into the container I should remove this and make sure the container has it set right.
         os.umask(0o000)
@@ -52,9 +47,7 @@ class TestFile:
         file.create()
         assert file.exists()
 
-    def test_children(self, tmp_path):
-        os.chdir(tmp_path)
-
+    def test_children(self, working_dir):
         dir = File("dir")
         for name in ["A.txt", "B.txt", "C.txt"]:
             (dir / name).create()
@@ -68,9 +61,7 @@ class TestFile:
         names = {f.name for f in dir.children()}
         assert names == {"A.txt", "B.txt", "C.txt"}
 
-    def test_chmod(self, tmp_path):
-        os.chdir(tmp_path)
-
+    def test_chmod(self, working_dir):
         file = File("a.txt")
         file.create()
 
@@ -89,9 +80,7 @@ class TestFile:
         file.chmod("g+w,u=x")
         assert stat.S_IMODE(os.stat(file).st_mode) == 0o164
 
-    def test_chmod_errors(self, tmp_path):
-        os.chdir(tmp_path)
-
+    def test_chmod_errors(self, working_dir):
         file = File("a.txt")
 
         with pytest.raises(FileNotFoundError):
@@ -103,9 +92,7 @@ class TestFile:
         with pytest.raises(Exception, match="Invalid mode"):
             file.chmod("not-a-chmod-string")
 
-    def test_chown(self, tmp_path):
-        os.chdir(tmp_path)
-
+    def test_chown(self, working_dir):
         file = File("a.txt")
         file.create()
         assert (file.owner(), file.group()) == ("root", "root")
@@ -119,9 +106,7 @@ class TestFile:
         file.chown(0, 0) # uid for root
         assert (file.owner(), file.group()) == ("root", "root")
 
-    def test_chown_chmod_run_as_root(self, tmp_path):
-        os.chdir(tmp_path)
-
+    def test_chown_chmod_run_as_root(self, working_dir):
         file = File("a.txt")
         file.create()
         assert (file.owner(), file.group()) == ("root", "root")
@@ -135,9 +120,7 @@ class TestFile:
             file.chown("student", "student")
             assert (file.owner(), file.group()) == ("student", "student")
 
-    def test_checking_setting_permissions(self, tmp_path):
-        os.chdir(tmp_path)
-
+    def test_checking_setting_permissions(self, working_dir):
         file = File("root_file.txt")
         file.create(0o764)
 
@@ -152,9 +135,7 @@ class TestFile:
         assert int(file.permissions) == 0o754
         assert stat.S_IMODE(os.stat(file).st_mode) == 0o754
 
-    def test_setting_permissions_with_int(self, tmp_path):
-        os.chdir(tmp_path)
-
+    def test_setting_permissions_with_int(self, working_dir):
         file = File("file.txt")
         file.create(0o000)
 
@@ -165,9 +146,7 @@ class TestFile:
         file.permissions.others.write = False # Still "linked" to the actual file
         assert stat.S_IMODE(os.stat("file.txt").st_mode) == 0o664
 
-    def test_setting_permissions_with_object(self, tmp_path):
-        os.chdir(tmp_path)
-
+    def test_setting_permissions_with_object(self, working_dir):
         file = File("file.txt")
         file.create(0o000)
 

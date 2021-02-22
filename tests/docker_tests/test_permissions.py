@@ -4,9 +4,7 @@ from shell_adventure_docker.permissions import *
 import os, stat, getpass
 
 class TestFile:
-    def test_creating_permissions(self, tmp_path):
-        os.chdir(tmp_path)
-
+    def test_creating_permissions(self, working_dir):
         p = Permissions(0o644)
         assert p.user.read == True
         assert p.others.write == False
@@ -33,9 +31,7 @@ class TestFile:
         p = Permissions(user = "rwx", group = "r", others = "rx")
         assert str(p) == "rwxr--r-x"
 
-    def test_checking_permissions(self, tmp_path):
-        os.chdir(tmp_path)
-
+    def test_checking_permissions(self, working_dir):
         file = File("file.txt")
         file.create(0o766)
         perms = LinkedPermissions(file)
@@ -50,9 +46,7 @@ class TestFile:
         assert perms.others.write == True
         assert perms.others.execute == False
 
-    def test_setting_permissions(self, tmp_path):
-        os.chdir(tmp_path)
-
+    def test_setting_permissions(self, working_dir):
         file = File("file.txt")
         file.create(0o000)
         perms = LinkedPermissions(file)
@@ -70,9 +64,7 @@ class TestFile:
 
         assert perms == Permissions(0o777)
 
-    def test_permission_equality(self, tmp_path):
-        os.chdir(tmp_path)
-
+    def test_permission_equality(self, working_dir):
         p1 = Permissions(0o744)
         p2 = Permissions(user = "rwx", group = "r", others = "r")
         p3 = Permissions(0o444)
@@ -91,9 +83,7 @@ class TestFile:
         assert p2 != 0o666
         assert (p2 != 0o744) == False
 
-    def test_permission_throws_errors(self, tmp_path):
-        os.chdir(tmp_path)
-
+    def test_permission_throws_errors(self, working_dir):
         with pytest.raises(ValueError):
             p = Permissions(user = "z")
 
@@ -101,9 +91,7 @@ class TestFile:
             p = Permissions(group = "ww")
 
 
-    def test_change_user(self, tmp_path):
-        os.chdir(tmp_path)
-
+    def test_change_user(self, working_dir):
         root_file = File("root_file.txt")
         root_file.create()
         assert (root_file.owner(), root_file.group()) == ("root", "root")
@@ -118,9 +106,7 @@ class TestFile:
         root_file2.create()
         assert (root_file2.owner(), root_file2.group()) == ("root", "root")
 
-    def test_change_user_and_group(self, tmp_path):
-        os.chdir(tmp_path)
-
+    def test_change_user_and_group(self, working_dir):
         with change_user("root", "student"):
             file = File("file.txt")
             file.create()
@@ -139,9 +125,7 @@ class TestFile:
             assert os.geteuid() == 1000
         assert os.geteuid() == 0
 
-    def test_system_call_change_user(self, tmp_path):
-        os.chdir(tmp_path)
-
+    def test_system_call_change_user(self, working_dir):
         with change_user("student"):
             os.system(f'touch a.txt')
             file = File("a.txt")
