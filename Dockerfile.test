@@ -1,0 +1,11 @@
+# This dockerfile extends shell-adventure, but installs pytest. This allows us to test the stuff that runs inside the docker container.
+FROM shell-adventure:latest
+
+USER root
+RUN apt-get update && \
+    apt-get install -y python3-pip && \
+    python -m pip --no-cache-dir install pytest pytest-cov PyYAML && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+USER student
+
+COPY tests/docker_tests /usr/local/shell_adventure_docker_tests/

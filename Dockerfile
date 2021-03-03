@@ -1,7 +1,4 @@
-# ARGS
-# USERNAME The user the student will be logged in as. Defaults to "student".
-# PASSWORD The password the student will have, for use in running "sudo" commands and such. Defaults to USERNAME
-
+# The student will be user "student" and their password will be "student"
 FROM ubuntu:20.04
 
 # Install stuff
@@ -39,28 +36,16 @@ RUN apt-get update && \
     # Remove the cache made by apt update and other files to save space
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-ARG username=student
-ARG password=${username}
-
 # Make new user and allow them to use sudo
-RUN useradd -ms /bin/bash ${username} && \
-    echo "${username}:${password}" | chpasswd && \
-    usermod -aG sudo ${username}
+RUN useradd -ms /bin/bash student && \
+    echo "student:student" | chpasswd && \
+    usermod -aG sudo student
 
-# TODO move this into a seperate "test" container
-RUN apt-get update && \
-    apt-get install -y python3-pip && \
-    python -m pip --no-cache-dir install pytest pytest-cov PyYAML && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-USER ${username}
-WORKDIR /home/${username}
+USER student
+WORKDIR /home/student
 
 ENV PYTHONPATH=/usr/local
 
 COPY shell_adventure_docker /usr/local/shell_adventure_docker/
-
-# TODO move this into a sperate "test" container
-COPY tests/docker_tests /usr/local/shell_adventure_docker_tests/
 
 CMD ["bash"]
