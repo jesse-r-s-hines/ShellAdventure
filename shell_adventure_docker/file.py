@@ -42,6 +42,7 @@ class File(PosixPath):
     
     def _get_path(self) -> str:
         return str(self.resolve())
+
     path = property(_get_path)
     """ Returns the absolute path to this file as a string. """
     
