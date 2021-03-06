@@ -103,6 +103,7 @@ class Tutorial:
 
         return (puzzle.solved, feedback)
 
+    # TODO make this work again
     # def student_cwd(self):
     #     """
     #     Return the student's current working directory. Note that in generation functions, this is different from `File.cwd()`
@@ -140,5 +141,7 @@ class Tutorial:
 
             while True: # TODO add ending condition
                 request = conn.recv()
+                if request == "END":
+                    break
                 feedback = self.solve_puzzle(self.puzzles[int(request)]) # TODO handle flag
                 conn.send(feedback)

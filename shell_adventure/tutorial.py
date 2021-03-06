@@ -20,11 +20,8 @@ class Tutorial:
     data_dir: Path
     """ This is the path where tutorial files such as puzzles have been placed. """
 
-    # container: docker.Container
-    # """ The docker container that the student is in. """
-    # conn: Connection
-    # """ A connection to the docker container. """
-
+    container: docker.Container
+    """ The docker container that the student is in. """
     class PuzzleTree:
         """ A tree node so that puzzles can be unlocked after other puzzles are solved. """
         def __init__(self, generator: str, puzzle: Puzzle = None, dependents: List[Puzzle] = None):
@@ -47,25 +44,23 @@ class Tutorial:
             config = yaml.safe_load(temp)
             # TODO validate config.
 
-        self._module_names: List[str] = config.get("modules", [])
-        self._puzzle_names: List[str] = config.get("puzzles", [])
-        
+        self.module_names: List[str] = config.get("modules", [])
+        self.puzzle_names: List[str] = config.get("puzzles", [])
         self.puzzles = []
-        
-        self._conn = None
-        # self._volume: Path = None # The volume that the container is using.
-        # self._listener: Listener = None # The listener that is connected to the container.
+
+        self._volume: tempfile.TemporaryDirectory = None # The volume that the container is using.
+        self.container = None
+        self._logs = None
+        self._listener: Listener = None # Listener to the docker container
+        self._conn: Connection = None # Connection to the docker container.
 
     def _gather_files(self, volume: Path):
-        """
-        Moves the files for the tutorial into volume.
-        dir is that path that the config file was in, and paths will be relative to it.
-        """
+        """ Moves the files for the tutorial into self.volume. """
         # if not resources: resources = []
 
         # Gather puzzle modules and put them in container volume
         (volume / "modules").mkdir()
-        for module in self._module_names:
+        for module in self.module_names:
             # Files are relative to the config file (if module is absolute, Path will use that, if relative it will join with first)
             module = Path(self.data_dir, module)
             dest = volume / "modules" / module.name
@@ -115,53 +110,51 @@ class Tutorial:
         #     print(f"Docker container failed with exit code {e.exit_status}. Output was:\n")
         #     print(e.stderr.decode().strip())
     
-    def _start_terminal(self, container):
-        # TODO maybe launch a separate terminal if the app wasn't called in one? Clear the terminal beforehand?
-        os.system(f"docker exec -it {container.id} bash")
-
-    def run(self):
+    def start(self):
         """
         Starts the tutorial.
         Launches the container, sets up a connection and generates the puzzles.
         """
 
-        with tempfile.TemporaryDirectory(prefix="shell-adventure-") as volume:
-            # Move files into volume
-            self._gather_files(Path(volume))
+        # We can't use "with" since we the caller to be able to use the tutorial object before it is closed.
+        
+        self._volume = tempfile.TemporaryDirectory(prefix="shell-adventure-")
+        self._gather_files(Path(self._volume.name)) # Gather modules and resources into the volume.
+        self.container = self._launch_container(self._volume.name,
+            ["python3", "-m", "shell_adventure_docker.start", "/tmp/shell-adventure"]
+        )
+        self._logs = self.container.attach(stdout=True, stderr=True, stream = True, logs = True)
 
-            # start the docker container
-            container = self._launch_container(volume,
-                command = ["python3", "-m", "shell_adventure_docker.start", "/tmp/shell-adventure"]
-            )
-            logs = container.attach(stdout=True, stderr=True, stream = True, logs = True)
+        # TODO add checks for if error occurs in container
+        address = ('localhost', 6000) # TODO move address into support
+        self._listener = Listener(address, authkey = b'shell_adventure')
+        self._conn = self._listener.accept()
 
-            try:
-                # TODO add checks for if error occurs in container
-                address = ('localhost', 6000)
-                with Listener(address, authkey = b'shell_adventure') as listener:
-                    with listener.accept() as conn:
-                        self._conn = conn # TODO need better way of doing this
-                    
-                        # TODO send puzzles to generate
-                        conn.send(self._puzzle_names)
-                        puzzles = conn.recv()
-                        for gen, puz in zip(self._puzzle_names, puzzles):
-                            # Maybe send puzzles directly.
-                            puz = Puzzle(question = puz["question"], score = puz["score"], checker = None)
-                            self.puzzles.append(Tutorial.PuzzleTree(gen, puz))
+        self._conn.send(self.puzzle_names)
+        puzzles = self._conn.recv()
+        for gen, puz in zip(self.puzzle_names, puzzles):
+            # TODO Maybe send puzzles directly.
+            puz = Puzzle(question = puz["question"], score = puz["score"], checker = None)
+            self.puzzles.append(Tutorial.PuzzleTree(gen, puz))
 
-                        # TODO move the interface out of the tutorial.
-                        terminal_thread = Thread(target = self._start_terminal, args = (container,))
-                        terminal_thread.start()
-                        
-                        gui.GUI(self)
-                        # TODO handle closing connection 
+    def stop(self):
+        """ Stop the tutorial, clean up all resources. """
+        self._conn.send("END")
+        # The container should stop and remove itself now.
+        self._conn.close()
+        self._listener.close()
 
-            except BaseException as e: # TODO clean this up
-                print("Container output:")
-                print("    \n".join([l.decode() for l in logs]))
-                print("Original exception:")
-                raise e
+        print("Container output:") # TODO clean this up
+        print("    \n".join([l.decode() for l in self._logs]))
+        print("End container output")
+        self._volume.cleanup()
+
+    def __enter__(self):
+        self.start()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.stop()
 
     def solve_puzzle(self, puzzle: int, flag: str = None) -> Tuple[bool, str]:
         """ Tries to solve the puzzle by its index. Returns (success, feedback) and sets the Puzzle as solved if the checker succeeded. """

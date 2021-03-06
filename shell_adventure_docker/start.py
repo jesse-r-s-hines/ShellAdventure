@@ -7,6 +7,3 @@ os.umask(0o000)
 with change_user("student"):
     tutorial = Tutorial(sys.argv[1])
     tutorial.run()
-    tutorial.connect()
-
-    # GUI(tutorial)
