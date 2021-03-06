@@ -1,22 +1,21 @@
 from typing import List, Tuple, Dict, Any, Callable, ClassVar
 from types import ModuleType
 import os, json, subprocess
+from multiprocessing.connection import Client, Connection
 import importlib.util, inspect
-
+import time
 from pathlib import Path;
 from .support import Puzzle, PathLike
 from .file import File
 
+# TODO rename this to avoid confusion
 class Tutorial:
-    """ Contains the information for a running tutorial. """
+    """ Contains the information for a running tutorial docker side. """
 
     _puzzle_module_inject: ClassVar[Dict[str, object]] = {
         "Puzzle": Puzzle,
     }
     """ The classes/modules/packages to inject into the puzzle generator modules. """
-
-    config_file: Path
-    """ The path to the config file for this tutorial """
 
     data_dir: Path
     """ This is the path where tutorial files such as puzzles have been placed. """
@@ -27,28 +26,18 @@ class Tutorial:
     generators: Dict[str, Callable[[], Puzzle]]
     """ All available puzzle generator functions mapped to their name. """
 
-    class PuzzleTree:
-        """ A tree node so that puzzles can be unlocked after other puzzles are solved. """
-        def __init__(self, generator: str, puzzle: Puzzle = None, dependents: List[Puzzle] = None):
-            self.generator = generator
-            self.puzzle = puzzle
-            self.dependents = dependents if dependents else []
+    puzzles: List[Puzzle]
+    """ Puzzles in this tutorial. """
 
-    puzzles: List[PuzzleTree]
-    """ The tree of puzzles in this tutorial. """
-
-    def __init__(self, config_file: PathLike, bash_pid: int = None):
+    def __init__(self, data_dir: PathLike):
         """
         Create a tutorial from a config_file and a PID to the bash_session the student is running.
         Any resources the config file uses should be placed in the same directory as the config file.
         """
-        self.config_file = Path(config_file).resolve()
-        self.data_dir = self.config_file.parent
-        self.bash_pid = bash_pid
+        self.data_dir = Path(data_dir)
+        # self.bash_pid = bash_pid # TODO add back bash stuff
 
-        config = json.loads(self.config_file.read_text())
-        # I don't need validate the config file here, as was validated before it was put in the docker container.
-
+        # TODO test this
         # Load modules
         module_list = [self._get_module(file) for file in (self.data_dir / "modules").glob("*.py")]
         self.modules = {module.__name__: module for module in module_list}
@@ -61,11 +50,7 @@ class Tutorial:
                 if func.__module__ == module_name and func.__name__ != "<lambda>" and not func_name.startswith("_"):
                     self.generators[f"{module_name}.{func_name}"] = func
 
-        self.puzzles = []
-        for gen in config.get('puzzles', []):
-            # TODO Should probably raise custom exception instead of using assert (which can be removed at will)
-            assert gen in self.generators, f"Unknown puzzle generator {gen}."
-            self.puzzles.append(Tutorial.PuzzleTree(gen))
+        self.puzzles = [] # Made when we generate the puzzles.
 
     def _get_module(self, file_path: Path) -> ModuleType:
         """
@@ -83,6 +68,14 @@ class Tutorial:
         spec.loader.exec_module(module) # type: ignore # MyPy is confused about the types here
 
         return module
+
+    def generate(self, puzzle_generators: List[str]) -> List[Puzzle]:
+        """ Takes a list of puzzle generators and generates them. Stores the puzzles. """
+        for gen in puzzle_generators:
+            # TODO Should probably raise custom exception instead of using assert (which can be removed at will)
+            assert gen in self.generators, f"Unknown puzzle generator {gen}."
+            self.puzzles.append(self.generators[gen]())
+            # TODO error checking
 
     def solve_puzzle(self, puzzle: Puzzle, flag: str = None) -> Tuple[bool, str]:
         """ Tries to solve the puzzle. Returns (success, feedback) and sets the Puzzle as solved if the checker succeeded. """
@@ -110,20 +103,42 @@ class Tutorial:
 
         return (puzzle.solved, feedback)
 
-    def student_cwd(self):
-        """
-        Return the student's current working directory. Note that in generation functions, this is different from `File.cwd()`
-        File.cwd() returns the current working directory of the generation function, not the student.
-        """
-        if self.bash_pid == None:
-            raise ProcessLookupError("No bash session specified.")
-        result = subprocess.check_output(["pwdx", f"{self.bash_pid}"]) # returns "pid: /path/to/folder"
-        cwd = result.decode().split(": ", 1)[1][:-1] # Split and remove trailing newline.
-        return File(cwd) 
-
+    # def student_cwd(self):
+    #     """
+    #     Return the student's current working directory. Note that in generation functions, this is different from `File.cwd()`
+    #     File.cwd() returns the current working directory of the generation function, not the student.
+    #     """
+    #     if self.bash_pid == None:
+    #         raise ProcessLookupError("No bash session specified.")
+    #     result = subprocess.check_output(["pwdx", f"{self.bash_pid}"]) # returns "pid: /path/to/folder"
+    #     cwd = result.decode().split(": ", 1)[1][:-1] # Split and remove trailing newline.
+    #     return File(cwd) 
 
     def run(self):
-        """ Starts the tutorial. """
-        # Generate the puzzles
-        for puzzle_tree in self.puzzles:
-            puzzle_tree.puzzle = self.generators[puzzle_tree.generator]()
+        """
+        Sets up a connection between the tutorial inside the docker container and the driving application outside.
+        Listen for requests from the app
+        """
+        address = ('localhost', 6000) # TODO move this somewhere else so I don't have to reference it twice
+        # TODO move this driving code out of Tutorial class? Rename method?
+
+        def retry_connect(address, authkey, retries = 16, pause = 0.25):
+            for attempt in range(retries - 1):
+                try:
+                    return Client(address, authkey=authkey)
+                except ConnectionRefusedError as e:
+                    time.sleep(pause)
+            return Client(address, authkey=authkey) # Last time just let the error fall through.
+            
+        # The container can boot up before the app starts the Listener.
+        with retry_connect(address, authkey = b"shell_adventure") as conn:
+            puzzle_generators = conn.recv() # Get the puzzles to generate
+            self.generate(puzzle_generators)
+
+            cleaned_puzzles = [{"question": p.question, "score": p.score} for p in self.puzzles]
+            conn.send(cleaned_puzzles)
+
+            while True: # TODO add ending condition
+                request = conn.recv()
+                feedback = self.solve_puzzle(self.puzzles[int(request)]) # TODO handle flag
+                conn.send(feedback)

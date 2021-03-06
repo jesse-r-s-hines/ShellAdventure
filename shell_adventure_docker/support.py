@@ -2,6 +2,7 @@
 Contains miscellaneous support classes and values
 """
 
+# TODO don't duplicate this file
 from typing import Union, Callable
 import os, inspect
 

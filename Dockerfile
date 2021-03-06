@@ -47,5 +47,6 @@ WORKDIR /home/student
 ENV PYTHONPATH=/usr/local
 
 COPY shell_adventure_docker /usr/local/shell_adventure_docker/
+COPY shell_adventure/support.py shell_adventure_docker/support.py
 
 CMD ["bash"]
