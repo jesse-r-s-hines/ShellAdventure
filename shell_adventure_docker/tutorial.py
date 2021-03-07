@@ -1,7 +1,7 @@
 from typing import List, Tuple, Dict, Any, Callable, ClassVar
 from types import ModuleType
 import os, json, subprocess
-from multiprocessing.connection import Client, Connection
+from multiprocessing.connection import Listener, Connection
 import importlib.util, inspect
 import time
 from pathlib import Path;
@@ -136,31 +136,22 @@ class Tutorial:
         """
         Sets up a connection between the tutorial inside the docker container and the driving application outside.
         Listen for requests from the app
-        """
-        # TODO move retry_connect into support?
-        def retry_connect(address, authkey, retries = 16, pause = 0.25):
-            for attempt in range(retries - 1):
-                try:
-                    return Client(address, authkey=authkey)
-                except ConnectionRefusedError as e:
-                    time.sleep(pause)
-            return Client(address, authkey=authkey) # Last time just let the error fall through.
-            
-        
-        actions = {
-            # Map message type to a function that will be called. The return of the lambda will be sent back to host. 
-            Message.GENERATE: lambda generators: self.generate(generators),
-            Message.CONNECT_TO_BASH: lambda: self.connect_to_bash(),
-            Message.SOLVE: lambda id: self.solve_puzzle(id),
-        }
+        """ 
 
-        # The container can boot up before the app starts the Listener.
-        with retry_connect(conn_addr, authkey = conn_key) as conn:
-            while True: # Loop until connection ends.
-                # Messages are send as (MessageEnum, *args) tuples.
-                message, *args = conn.recv()
+        with Listener(conn_addr, authkey = conn_key) as listener:
+            with listener.accept() as conn:
+                actions = {
+                    # Map message type to a function that will be called. The return of the lambda will be sent back to host. 
+                    Message.GENERATE: lambda generators: self.generate(generators),
+                    Message.CONNECT_TO_BASH: lambda: self.connect_to_bash(),
+                    Message.SOLVE: lambda id: self.solve_puzzle(id),
+                }
 
-                if message == Message.STOP:
-                    return
-                else: # call the lambda with *args, send the return value.
-                    conn.send(actions[message](*args))
+                while True: # Loop until connection ends.
+                    # Messages are send as (MessageEnum, *args) tuples.
+                    message, *args = conn.recv()
+
+                    if message == Message.STOP:
+                        return
+                    else: # call the lambda with *args, send the return value.
+                        conn.send(actions[message](*args))

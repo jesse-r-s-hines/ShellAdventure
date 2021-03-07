@@ -2,12 +2,13 @@ from __future__ import annotations # Don't evaluate annotations until after the 
 from typing import List, Tuple, Dict, Any, Callable, ClassVar, Union
 from types import ModuleType
 import os, yaml, subprocess, shutil
-from multiprocessing.connection import Listener, Connection
+from multiprocessing.connection import Connection
 import importlib.util, inspect
 import docker, docker.errors
 from pathlib import Path;
 from threading import Thread
-from .support import Puzzle, PuzzleTree, PathLike, conn_addr, conn_key, Message
+from . import support
+from .support import Puzzle, PuzzleTree, PathLike, Message
 import tempfile
 from . import gui
 import textwrap
@@ -44,7 +45,6 @@ class Tutorial:
 
         self._volume: tempfile.TemporaryDirectory = None # The volume that the container is using.
         self.container = None
-        self._listener: Listener = None # Listener to the docker container
         self._conn: Connection = None # Connection to the docker container.
 
     def _gather_files(self, volume: Path):
@@ -103,8 +103,8 @@ class Tutorial:
         )
 
         try:
-            self._listener = Listener(conn_addr, authkey = conn_key)
-            self._conn = self._listener.accept()
+            # retry the connection a few times since the container may take a bit to get started.
+            self._conn = support.retry_connect(support.conn_addr, authkey = support.conn_key)
 
             self._conn.send( (Message.GENERATE, [pt.generator for pt in self.puzzles]) )
             generated_puzzles = self._conn.recv()
@@ -121,7 +121,6 @@ class Tutorial:
         if self._conn:
             self._conn.send("END")
             self._conn.close()
-        self._listener.close()
         # The container should stop itself, but we'll make sure here as well.
         self.container.stop(timeout = 4)
         logs = self.container.attach(stdout = True, stderr = True, logs = True)

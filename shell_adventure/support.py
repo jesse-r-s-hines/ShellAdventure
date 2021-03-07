@@ -5,7 +5,8 @@ This file is shared between the Docker side code and host,
 """
 
 from typing import Union, Callable, List
-import os, inspect, uuid
+import os, inspect, uuid, time
+from multiprocessing.connection import Client
 from enum import Enum
 
 PathLike = Union[str, os.PathLike]
@@ -103,3 +104,12 @@ class Message(Enum):
     """ Tells the container that a bash session has started and to connect to it. Usage: (CONNECT_TO_BASH,) """
     SOLVE = 3
     """ Solve a puzzle. Usage: (SOLVE, puzzle_id) """
+
+def retry_connect(address, authkey, retries = 16, pause = 0.25):
+    """ Tries to connect to the given address and authkey, retries a few times if the connection fails. """
+    for attempt in range(retries - 1):
+        try:
+            return Client(address, authkey=authkey)
+        except:
+            time.sleep(pause)
+    return Client(address, authkey=authkey) # Last time just let any errors get raised.
