@@ -5,7 +5,7 @@ from multiprocessing.connection import Client, Connection
 import importlib.util, inspect
 import time
 from pathlib import Path;
-from .support import Puzzle, PathLike, conn_addr, conn_key
+from shell_adventure.support import Puzzle, PathLike, conn_addr, conn_key, Message
 from .file import File
 
 # TODO rename this to avoid confusion
@@ -35,7 +35,6 @@ class Tutorial:
         Any resources the config file uses should be placed in the same directory as the config file.
         """
         self.data_dir = Path(data_dir)
-        # self.bash_pid = bash_pid # TODO add back bash stuff
 
         # TODO test this
         # Load modules
@@ -51,6 +50,7 @@ class Tutorial:
                     self.generators[f"{module_name}.{func_name}"] = func
 
         self.puzzles = {} # Populated when we generate the puzzles.
+        self.bash_pid: int = None
 
     def _get_module(self, file_path: Path) -> ModuleType:
         """
@@ -70,7 +70,10 @@ class Tutorial:
         return module
 
     def generate(self, puzzle_generators: List[str]) -> List[Puzzle]:
-        """ Takes a list of puzzle generators and generates them. Stores the puzzles. """
+        """
+        Takes a list of puzzle generators and generates them. Stores the puzzles in self.puzzles.
+        Returns the generated puzzles as a list.
+        """
         for gen in puzzle_generators:
             # TODO Should probably raise custom exception instead of using assert (which can be removed at will)
             assert gen in self.generators, f"Unknown puzzle generator {gen}."
@@ -78,8 +81,15 @@ class Tutorial:
             self.puzzles[puzzle.id] = puzzle
             # TODO error checking
 
-    def solve_puzzle(self, puzzle: Puzzle, flag: str = None) -> Tuple[bool, str]:
-        """ Tries to solve the puzzle. Returns (success, feedback) and sets the Puzzle as solved if the checker succeeded. """
+        return list(self.puzzles.values())
+
+    def solve_puzzle(self, puzzle_id: str, flag: str = None) -> Tuple[bool, str]:
+        """
+        Tries to solve the puzzle with the given id.
+        Returns (success, feedback) and sets the Puzzle as solved if the checker succeeded.
+        """
+        puzzle = self.puzzles[puzzle_id]
+
         args: Dict[str, Any] = {
             # "output": output,
             # "flag": flag,
@@ -104,25 +114,29 @@ class Tutorial:
 
         return (puzzle.solved, feedback)
 
-    # TODO make this work again
-    # def student_cwd(self):
-    #     """
-    #     Return the student's current working directory. Note that in generation functions, this is different from `File.cwd()`
-    #     File.cwd() returns the current working directory of the generation function, not the student.
-    #     """
-    #     if self.bash_pid == None:
-    #         raise ProcessLookupError("No bash session specified.")
-    #     result = subprocess.check_output(["pwdx", f"{self.bash_pid}"]) # returns "pid: /path/to/folder"
-    #     cwd = result.decode().split(": ", 1)[1][:-1] # Split and remove trailing newline.
-    #     return File(cwd) 
+    def connect_to_bash(self):
+        """ Finds a running bash session and stores it's id. Returns True on success. """
+        pid = subprocess.check_output(["pidof", "-s", "bash"])
+        self.bash_pid = None if pid.isspace() else int(pid)
+
+        return self.bash_pid != None
+
+    def student_cwd(self):
+        """
+        Return the student's current working directory. Note that in generation functions, this is different from `File.cwd()`
+        File.cwd() returns the current working directory of the generation function, not the student.
+        """
+        if self.bash_pid == None:
+            raise ProcessLookupError("No bash session specified.")
+        result = subprocess.check_output(["pwdx", f"{self.bash_pid}"]) # returns "pid: /path/to/folder"
+        cwd = result.decode().split(": ", 1)[1][:-1] # Split and remove trailing newline.
+        return File(cwd) 
 
     def run(self):
         """
         Sets up a connection between the tutorial inside the docker container and the driving application outside.
         Listen for requests from the app
         """
-        # TODO move this driving code out of Tutorial class? Rename method?
-
         # TODO move retry_connect into support?
         def retry_connect(address, authkey, retries = 16, pause = 0.25):
             for attempt in range(retries - 1):
@@ -132,17 +146,21 @@ class Tutorial:
                     time.sleep(pause)
             return Client(address, authkey=authkey) # Last time just let the error fall through.
             
+        
+        actions = {
+            # Map message type to a function that will be called. The return of the lambda will be sent back to host. 
+            Message.GENERATE: lambda generators: self.generate(generators),
+            Message.CONNECT_TO_BASH: lambda: self.connect_to_bash(),
+            Message.SOLVE: lambda id: self.solve_puzzle(id),
+        }
+
         # The container can boot up before the app starts the Listener.
         with retry_connect(conn_addr, authkey = conn_key) as conn:
-            puzzle_generators = conn.recv() # Get the puzzles to generate
-            self.generate(puzzle_generators)
+            while True: # Loop until connection ends.
+                # Messages are send as (MessageEnum, *args) tuples.
+                message, *args = conn.recv()
 
-            # The checker functions will be removed when pickling, but the host doesn't need them.
-            conn.send(list(self.puzzles.values())) 
-
-            while True: # TODO add ending condition
-                request = conn.recv()
-                if request == "END":
-                    break
-                feedback = self.solve_puzzle(self.puzzles[request]) # TODO handle flag
-                conn.send(feedback)
+                if message == Message.STOP:
+                    return
+                else: # call the lambda with *args, send the return value.
+                    conn.send(actions[message](*args))

@@ -7,7 +7,7 @@ import importlib.util, inspect
 import docker, docker.errors
 from pathlib import Path;
 from threading import Thread
-from .support import Puzzle, PuzzleTree, PathLike, conn_addr, conn_key
+from .support import Puzzle, PuzzleTree, PathLike, conn_addr, conn_key, Message
 import tempfile
 from . import gui
 import textwrap
@@ -106,7 +106,7 @@ class Tutorial:
             self._listener = Listener(conn_addr, authkey = conn_key)
             self._conn = self._listener.accept()
 
-            self._conn.send([pt.generator for pt in self.puzzles])
+            self._conn.send( (Message.GENERATE, [pt.generator for pt in self.puzzles]) )
             generated_puzzles = self._conn.recv()
 
             # store the puzzles in the PuzzleTree
@@ -141,7 +141,7 @@ class Tutorial:
         """ Tries to solve the puzzle. Returns (success, feedback) and sets the Puzzle as solved if the checker succeeded. """
 
         try:
-            self._conn.send(puzzle.id)
+            self._conn.send( (Message.SOLVE, puzzle.id) )
             (solved, feedback) = self._conn.recv()
             puzzle.solved = solved
             return (solved, feedback)
@@ -149,6 +149,8 @@ class Tutorial:
             logs = self.container.attach(stdout = True, stderr = True, logs = True)
             raise TutorialError(f'An error occurred while solving puzzle {puzzle.id}: "{puzzle.question}"', container_logs = logs) from e
 
+    def connect_to_bash(self):
+        self._conn.send( (Message.CONNECT_TO_BASH,) )
 
 class TutorialError(Exception):
     """

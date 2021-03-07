@@ -47,6 +47,7 @@ WORKDIR /home/student
 ENV PYTHONPATH=/usr/local
 
 COPY shell_adventure_docker /usr/local/shell_adventure_docker/
-COPY shell_adventure/support.py shell_adventure_docker/support.py
+# support code is shared between container and host.
+COPY shell_adventure/support.py /usr/local/shell_adventure/support.py
 
 CMD ["bash"]
