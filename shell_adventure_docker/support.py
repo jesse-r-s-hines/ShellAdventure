@@ -1,33 +1,14 @@
 """
-Contains miscellaneous support classes and values
+Contains miscellaneous support classes and values.
+This file is shared between the Docker side code and host,
+`shell_adventure/support.py` is a symlink to `shell_adventure_docker/support.py`
 """
 
-# TODO don't duplicate this file
 from typing import Union, Callable
 import os, inspect
 
 PathLike = Union[str, os.PathLike]
 """Type for a string representing a path or a PathLike object."""
-
-class CommandOutput:
-    """ Represents the output of a command. """
-
-    exit_code: int
-    """ The exit code that the command returned """
-
-    output: str
-    """ The printed output of the command """
-
-    # error: str
-    # """ Output to std error """
-
-    def __init__(self, exit_code: int, output: str):
-        self.exit_code = exit_code
-        self.output = output
-
-    def __iter__(self):
-        """ Make it iterable so we can unpack it. """
-        return iter((self.exit_code, self.output))
 
 class Puzzle:
     """ Represents a single puzzle in the tutorial. """
@@ -65,3 +46,24 @@ class Puzzle:
     def get_checker_params(self):
         """ Returns the paramater list of the checker function. """
         return inspect.getfullargspec(self.checker).args
+
+# We aren't using this class currently
+# class CommandOutput:
+#     """ Represents the output of a command. """
+
+#     exit_code: int
+#     """ The exit code that the command returned """
+
+#     output: str
+#     """ The printed output of the command """
+
+#     # error: str
+#     # """ Output to std error """
+
+#     def __init__(self, exit_code: int, output: str):
+#         self.exit_code = exit_code
+#         self.output = output
+
+#     def __iter__(self):
+#         """ Make it iterable so we can unpack it. """
+#         return iter((self.exit_code, self.output))
