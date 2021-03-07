@@ -40,7 +40,7 @@ class Tutorial:
             config = yaml.safe_load(temp)
             # TODO validate config.
 
-        self.module_names: List[str] = config.get("modules", [])
+        self.module_paths: List[str] = config.get("modules", [])
         self.puzzles = [PuzzleTree(gen) for gen in config.get("puzzles", [])]
 
         self._volume: tempfile.TemporaryDirectory = None # The volume that the container is using.
@@ -53,9 +53,9 @@ class Tutorial:
 
         # Gather puzzle modules and put them in container volume
         (volume / "modules").mkdir()
-        for module in self.module_names:
+        for module_path in self.module_paths:
             # Files are relative to the config file (if module is absolute, Path will use that, if relative it will join with first)
-            module = Path(self.data_dir, module)
+            module = Path(self.data_dir, module_path)
             dest = volume / "modules" / module.name
             if dest.exists():
                 raise Exception(f"Two puzzle modules with name {module.name} found.")

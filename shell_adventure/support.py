@@ -52,7 +52,7 @@ class Puzzle:
         self.score = score
         self.checker = checker # type: ignore # MyPy fusses about "Cannot assign to a method"
         self.solved = False
-        self.id = uuid.uuid4()
+        self.id = str(uuid.uuid4())
 
     def __getstate__(self):
         # Can't pickle lambdas, but we don't need it host side.

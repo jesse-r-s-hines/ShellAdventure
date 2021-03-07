@@ -32,9 +32,9 @@ class GUI(Tk):
             label.grid(column = 0, row = i)
 
             button = ttk.Button(puzzlePanel, text = "Solve",
-                command = lambda p=puzzle: self.solve(p)
+                command = lambda p=puzzle: self.solve(p) # type: ignore
             )
-            button.bind('<Return>', lambda e, p=puzzle: self.solve(p))
+            button.bind('<Return>', lambda e, p=puzzle: self.solve(p)) # type: ignore
             button.grid(column = 1, row = i)
 
             self.puzzles[puzzle] = (label, button)
