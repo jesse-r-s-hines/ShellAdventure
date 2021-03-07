@@ -5,7 +5,7 @@ from multiprocessing.connection import Client, Connection
 import importlib.util, inspect
 import time
 from pathlib import Path;
-from .support import Puzzle, PathLike
+from .support import Puzzle, PathLike, conn_addr, conn_key
 from .file import File
 
 # TODO rename this to avoid confusion
@@ -120,7 +120,6 @@ class Tutorial:
         Sets up a connection between the tutorial inside the docker container and the driving application outside.
         Listen for requests from the app
         """
-        address = ('localhost', 6000) # TODO move this somewhere else so I don't have to reference it twice
         # TODO move this driving code out of Tutorial class? Rename method?
 
         def retry_connect(address, authkey, retries = 16, pause = 0.25):
@@ -132,7 +131,7 @@ class Tutorial:
             return Client(address, authkey=authkey) # Last time just let the error fall through.
             
         # The container can boot up before the app starts the Listener.
-        with retry_connect(address, authkey = b"shell_adventure") as conn:
+        with retry_connect(conn_addr, authkey = conn_key) as conn:
             puzzle_generators = conn.recv() # Get the puzzles to generate
             self.generate(puzzle_generators)
 

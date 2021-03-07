@@ -7,7 +7,7 @@ import importlib.util, inspect
 import docker, docker.errors
 from pathlib import Path;
 from threading import Thread
-from .support import Puzzle, PathLike
+from .support import Puzzle, PathLike, conn_addr, conn_key
 import tempfile
 from . import gui
 
@@ -126,8 +126,7 @@ class Tutorial:
         self._logs = self.container.attach(stdout=True, stderr=True, stream = True, logs = True)
 
         # TODO add checks for if error occurs in container
-        address = ('localhost', 6000) # TODO move address into support
-        self._listener = Listener(address, authkey = b'shell_adventure')
+        self._listener = Listener(conn_addr, authkey = conn_key)
         self._conn = self._listener.accept()
 
         self._conn.send(self.puzzle_names)

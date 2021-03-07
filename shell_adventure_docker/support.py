@@ -10,6 +10,11 @@ import os, inspect
 PathLike = Union[str, os.PathLike]
 """Type for a string representing a path or a PathLike object."""
 
+conn_addr = ('localhost', 6000)
+"""The address that will be used to communicate between the Docker code and the host app. """
+conn_key = b'shell_adventure'
+"""The authkey that will be used in communication between the Docker code and the host app. """
+
 class Puzzle:
     """ Represents a single puzzle in the tutorial. """
 
