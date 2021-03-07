@@ -26,8 +26,8 @@ class Tutorial:
     generators: Dict[str, Callable[[], Puzzle]]
     """ All available puzzle generator functions mapped to their name. """
 
-    puzzles: List[Puzzle]
-    """ Puzzles in this tutorial. """
+    puzzles: Dict[str, Puzzle]
+    """ Puzzles in this tutorial, mapped to their id. """
 
     def __init__(self, data_dir: PathLike):
         """
@@ -50,7 +50,7 @@ class Tutorial:
                 if func.__module__ == module_name and func.__name__ != "<lambda>" and not func_name.startswith("_"):
                     self.generators[f"{module_name}.{func_name}"] = func
 
-        self.puzzles = [] # Made when we generate the puzzles.
+        self.puzzles = {} # Populated when we generate the puzzles.
 
     def _get_module(self, file_path: Path) -> ModuleType:
         """
@@ -74,7 +74,8 @@ class Tutorial:
         for gen in puzzle_generators:
             # TODO Should probably raise custom exception instead of using assert (which can be removed at will)
             assert gen in self.generators, f"Unknown puzzle generator {gen}."
-            self.puzzles.append(self.generators[gen]())
+            puzzle = self.generators[gen]()
+            self.puzzles[puzzle.id] = puzzle
             # TODO error checking
 
     def solve_puzzle(self, puzzle: Puzzle, flag: str = None) -> Tuple[bool, str]:
@@ -85,7 +86,7 @@ class Tutorial:
             # "file_system": self.file_system,
         }
         # Only pass the args that the checker function has
-        checker_params = puzzle.get_checker_params()
+        checker_params = puzzle._get_checker_params()
         assert set(checker_params).issubset(args.keys()), 'Only paramaters, "flag", "file_system" and "output" are allowed in checker functions.'
         args = {param: args[param] for param in checker_params}
 
@@ -122,6 +123,7 @@ class Tutorial:
         """
         # TODO move this driving code out of Tutorial class? Rename method?
 
+        # TODO move retry_connect into support?
         def retry_connect(address, authkey, retries = 16, pause = 0.25):
             for attempt in range(retries - 1):
                 try:
@@ -135,12 +137,12 @@ class Tutorial:
             puzzle_generators = conn.recv() # Get the puzzles to generate
             self.generate(puzzle_generators)
 
-            cleaned_puzzles = [{"question": p.question, "score": p.score} for p in self.puzzles]
+            cleaned_puzzles = [{"question": p.question, "score": p.score, "id": p.id} for p in self.puzzles.values()]
             conn.send(cleaned_puzzles)
 
             while True: # TODO add ending condition
                 request = conn.recv()
                 if request == "END":
                     break
-                feedback = self.solve_puzzle(self.puzzles[int(request)]) # TODO handle flag
+                feedback = self.solve_puzzle(self.puzzles[request]) # TODO handle flag
                 conn.send(feedback)

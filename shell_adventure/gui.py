@@ -14,7 +14,7 @@ class GUI:
 
         self.root = Tk()
         # map puzzles to their question label and button. By default, Python will use object identity for dict keys, which is what we want.
-        self.puzzles: Dict[int, Tuple[ttk.Label, ttk.Button]] = {}
+        self.puzzles: Dict[Puzzle, Tuple[ttk.Label, ttk.Button]] = {}
 
         self.root.title("Shell Adventure")
         self.root.minsize(600, 300) # To keep you from being able to shrink everything off the screen.
@@ -25,25 +25,26 @@ class GUI:
         puzzlePanel.grid(column = 0, row = 0, sticky = 'WENS')
 
         for i, pt in enumerate(self.tutorial.puzzles):
-            label = ttk.Label(puzzlePanel, text = pt.puzzle.question)
+            puzzle = pt.puzzle
+
+            label = ttk.Label(puzzlePanel, text = puzzle.question)
             label.grid(column = 0, row = i)
 
             button = ttk.Button(puzzlePanel, text = "Solve",
-                command = lambda i=i: self.solve(i)
+                command = lambda p=puzzle: self.solve(p)
             )
-            button.bind('<Return>', lambda e, i=i: self.solve(i))
+            button.bind('<Return>', lambda e, p=puzzle: self.solve(p))
             button.grid(column = 1, row = i)
 
-            self.puzzles[i] = (label, button)
+            self.puzzles[puzzle] = (label, button)
 
         self.root.mainloop()
 
-    def solve(self, puzzle: int):
+    def solve(self, puzzle: Puzzle):
         solved, feedback = self.tutorial.solve_puzzle(puzzle)
         tkinter.messagebox.showinfo("Feedback", feedback)
 
         if solved:
             self.puzzles[puzzle][1]["state"] = "disabled"
-            # TODO handle quiting condition.
-            # if all((p.solved for p in self.puzzles.keys())): # If all puzzles are solved quit.
-            #     self.root.destroy()
+            if all((p.solved for p in self.puzzles.keys())): # If all puzzles are solved quit.
+                self.root.destroy()

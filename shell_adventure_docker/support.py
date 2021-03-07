@@ -5,7 +5,7 @@ This file is shared between the Docker side code and host,
 """
 
 from typing import Union, Callable
-import os, inspect
+import os, inspect, uuid
 
 PathLike = Union[str, os.PathLike]
 """Type for a string representing a path or a PathLike object."""
@@ -42,13 +42,17 @@ class Puzzle:
     solved: bool
     """ Whether the puzzle is solved yet """
 
+    id: str
+    """ A unique identifier for the puzzle. """
+
     def __init__(self, question: str, checker: Callable[..., Union[str,bool]] , score = 1):
         self.question = question
         self.score = score
         self.checker = checker # type: ignore # MyPy fusses about "Cannot assign to a method"
         self.solved = False
+        self.id = uuid.uuid4()
 
-    def get_checker_params(self):
+    def _get_checker_params(self):
         """ Returns the paramater list of the checker function. """
         return inspect.getfullargspec(self.checker).args
 

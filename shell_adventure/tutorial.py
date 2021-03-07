@@ -22,6 +22,8 @@ class Tutorial:
 
     container: docker.Container
     """ The docker container that the student is in. """
+    
+    #TODO move into support?
     class PuzzleTree:
         """ A tree node so that puzzles can be unlocked after other puzzles are solved. """
         def __init__(self, generator: str, puzzle: Puzzle = None, dependents: List[Puzzle] = None):
@@ -45,8 +47,7 @@ class Tutorial:
             # TODO validate config.
 
         self.module_names: List[str] = config.get("modules", [])
-        self.puzzle_names: List[str] = config.get("puzzles", [])
-        self.puzzles = []
+        self.puzzles = [Tutorial.PuzzleTree(gen) for gen in config.get("puzzles", [])]
 
         self._volume: tempfile.TemporaryDirectory = None # The volume that the container is using.
         self.container = None
@@ -129,12 +130,15 @@ class Tutorial:
         self._listener = Listener(conn_addr, authkey = conn_key)
         self._conn = self._listener.accept()
 
-        self._conn.send(self.puzzle_names)
-        puzzles = self._conn.recv()
-        for gen, puz in zip(self.puzzle_names, puzzles):
+        self._conn.send([pt.generator for pt in self.puzzles])
+        generated_puzzles = self._conn.recv()
+
+        # store the puzzles in the PuzzleTree
+        for pt, response in zip(self.puzzles, generated_puzzles):
             # TODO Maybe send puzzles directly.
-            puz = Puzzle(question = puz["question"], score = puz["score"], checker = None)
-            self.puzzles.append(Tutorial.PuzzleTree(gen, puz))
+            puz = Puzzle(question = response["question"], score = response["score"], checker = None)
+            puz.id = response["id"]
+            pt.puzzle = puz
 
     def stop(self):
         """ Stop the tutorial, clean up all resources. """
@@ -155,7 +159,9 @@ class Tutorial:
     def __exit__(self, exc_type, exc_value, traceback):
         self.stop()
 
-    def solve_puzzle(self, puzzle: int, flag: str = None) -> Tuple[bool, str]:
-        """ Tries to solve the puzzle by its index. Returns (success, feedback) and sets the Puzzle as solved if the checker succeeded. """
-        self._conn.send(puzzle)
-        return self._conn.recv()
+    def solve_puzzle(self, puzzle: Puzzle, flag: str = None) -> Tuple[bool, str]:
+        """ Tries to solve the puzzle. Returns (success, feedback) and sets the Puzzle as solved if the checker succeeded. """
+        self._conn.send(puzzle.id)
+        (solved, feedback) = self._conn.recv()
+        puzzle.solved = solved
+        return (solved, feedback)
