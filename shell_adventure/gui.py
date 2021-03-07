@@ -6,22 +6,23 @@ from tkinter import Tk, StringVar
 from tkinter import ttk
 import tkinter.messagebox
 
-class GUI:
+class GUI(Tk):
     def __init__(self, tutorial: tutorial.Tutorial):
         """ Creates and launches the Shell Adventure GUI. Pass it the tutorial object. """
-        self.tutorial = tutorial
-        # self.flagInput = StringVar(self.root, value="")
+        super().__init__()
 
-        self.root = Tk()
+        self.tutorial = tutorial
+        # self.flagInput = StringVar(self, value="")
+
         # map puzzles to their question label and button. By default, Python will use object identity for dict keys, which is what we want.
         self.puzzles: Dict[Puzzle, Tuple[ttk.Label, ttk.Button]] = {}
 
-        self.root.title("Shell Adventure")
-        self.root.minsize(600, 300) # To keep you from being able to shrink everything off the screen.
-        self.root.columnconfigure(0, weight = 1, minsize = 80)
-        self.root.rowconfigure(0, weight = 1, minsize = 80)
+        self.title("Shell Adventure")
+        self.minsize(600, 300) # To keep you from being able to shrink everything off the screen.
+        self.columnconfigure(0, weight = 1, minsize = 80)
+        self.rowconfigure(0, weight = 1, minsize = 80)
 
-        puzzlePanel = ttk.LabelFrame(self.root, text = 'Puzzles:')
+        puzzlePanel = ttk.LabelFrame(self, text = 'Puzzles:')
         puzzlePanel.grid(column = 0, row = 0, sticky = 'WENS')
 
         for i, pt in enumerate(self.tutorial.puzzles):
@@ -38,7 +39,7 @@ class GUI:
 
             self.puzzles[puzzle] = (label, button)
 
-        self.root.mainloop()
+        self.mainloop()
 
     def solve(self, puzzle: Puzzle):
         solved, feedback = self.tutorial.solve_puzzle(puzzle)
@@ -47,4 +48,11 @@ class GUI:
         if solved:
             self.puzzles[puzzle][1]["state"] = "disabled"
             if all((p.solved for p in self.puzzles.keys())): # If all puzzles are solved quit.
-                self.root.destroy()
+                self.destroy()
+
+    def report_callback_exception(self, *args):
+        """ Override. """
+        # TODO make this show an error box or something.
+        # Error will be shown in stderr
+        super().report_callback_exception(*args)
+        self.destroy()

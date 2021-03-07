@@ -1,6 +1,6 @@
 from typing import Any, Dict, Union, List
 import docker, docker.errors
-import os, sys, shutil, tempfile
+import os, sys, shutil, tempfile, subprocess
 import yaml
 from pathlib import Path
 from threading import Thread
@@ -8,9 +8,10 @@ from multiprocessing.connection import Listener
 from shell_adventure.gui import GUI
 from shell_adventure.tutorial import Tutorial
 
-def start_terminal(container):
-    # TODO maybe launch a separate terminal if the app wasn't called in one? Clear the terminal beforehand?
-    os.system(f"docker exec -it {container.id} bash")
+def start_bash(container):
+    """ Starts a bash session in the docker container in a detached process. Returns the process. """
+    # TODO Make this cross-platform or run in the current terminal
+    return subprocess.Popen(["gnome-terminal", "--", "docker", "exec", "-it", container.id, "bash"])
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
@@ -18,7 +19,5 @@ if __name__ == "__main__":
         exit(1)
 
     with Tutorial(sys.argv[1]) as tutorial: # Creates and sets up the container with the tutorial inside
-        terminal_thread = Thread(target = start_terminal, args = (tutorial.container,))
-        terminal_thread.start()
-                    
-        GUI(tutorial)
+        bash = start_bash(tutorial.container)
+        gui = GUI(tutorial)
