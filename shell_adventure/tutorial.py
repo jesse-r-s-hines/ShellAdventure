@@ -10,6 +10,7 @@ from threading import Thread
 from .support import Puzzle, PathLike, conn_addr, conn_key
 import tempfile
 from . import gui
+import textwrap
 
 class Tutorial:
     """ Contains the information for a running tutorial. """
@@ -51,7 +52,6 @@ class Tutorial:
 
         self._volume: tempfile.TemporaryDirectory = None # The volume that the container is using.
         self.container = None
-        self._logs = None
         self._listener: Listener = None # Listener to the docker container
         self._conn: Connection = None # Connection to the docker container.
 
@@ -80,7 +80,6 @@ class Tutorial:
         Launches the container with the given command. Returns the container.
         The volume will be mapped to /tmp/shell-adventure/ in the container.
         """
-        # Start the container
         docker_client = docker.from_env()
 
         container = docker_client.containers.run('shell-adventure',
@@ -92,24 +91,10 @@ class Tutorial:
 
             tty = True,
             stdin_open = True,
-            remove = True,
+            # remove = True, # Auto remove makes getting output logs difficult. We'll have to remove the container ourselves.
             detach = True,
         )
         return container
-
-        # TODO handle container errors
-        # logs = container.attach(stdout=True, stderr=True, stream = True, logs = True)
-        # try:
-        #     dockerpty.exec_command(docker_client.api, container.id, "sudo -i -u student bash")
-        # except:
-        #     pass
-        # return "\n".join([l.decode() for l in logs])
-
-        # try:
-        #   # Make container. I can use this code once If got a terminal running inside docker, and don't have to detach
-        # except docker.errors.ContainerError as e:
-        #     print(f"Docker container failed with exit code {e.exit_status}. Output was:\n")
-        #     print(e.stderr.decode().strip())
     
     def start(self):
         """
@@ -124,32 +109,34 @@ class Tutorial:
         self.container = self._launch_container(self._volume.name,
             ["python3", "-m", "shell_adventure_docker.start", "/tmp/shell-adventure"]
         )
-        self._logs = self.container.attach(stdout=True, stderr=True, stream = True, logs = True)
 
-        # TODO add checks for if error occurs in container
-        self._listener = Listener(conn_addr, authkey = conn_key)
-        self._conn = self._listener.accept()
+        try:
+            self._listener = Listener(conn_addr, authkey = conn_key)
+            self._conn = self._listener.accept()
 
-        self._conn.send([pt.generator for pt in self.puzzles])
-        generated_puzzles = self._conn.recv()
+            self._conn.send([pt.generator for pt in self.puzzles])
+            generated_puzzles = self._conn.recv()
 
-        # store the puzzles in the PuzzleTree
-        for pt, response in zip(self.puzzles, generated_puzzles):
-            # TODO Maybe send puzzles directly.
-            puz = Puzzle(question = response["question"], score = response["score"], checker = None)
-            puz.id = response["id"]
-            pt.puzzle = puz
+            # store the puzzles in the PuzzleTree
+            for pt, response in zip(self.puzzles, generated_puzzles):
+                # TODO Maybe send puzzles directly.
+                puz = Puzzle(question = response["question"], score = response["score"], checker = None)
+                puz.id = response["id"]
+                pt.puzzle = puz
+        except BaseException as e: # BaseException includes KeyboardInterrupt
+            logs = self.container.attach(stdout = True, stderr = True, logs = True)
+            self.stop() # If an error occurs in __enter__, __exit__ isn't called.
+            raise TutorialError("An error occurred while generating puzzles.", container_logs = logs) from e
 
     def stop(self):
         """ Stop the tutorial, clean up all resources. """
-        self._conn.send("END")
-        # The container should stop and remove itself now.
-        self._conn.close()
+        if self._conn:
+            self._conn.send("END")
+            self._conn.close()
         self._listener.close()
-
-        print("Container output:") # TODO clean this up
-        print("    \n".join([l.decode() for l in self._logs]))
-        print("End container output")
+        # The container should stop itself, but we'll make sure here as well.
+        self.container.stop(timeout = 4)
+        self.container.remove()
         self._volume.cleanup()
 
     def __enter__(self):
@@ -161,7 +148,25 @@ class Tutorial:
 
     def solve_puzzle(self, puzzle: Puzzle, flag: str = None) -> Tuple[bool, str]:
         """ Tries to solve the puzzle. Returns (success, feedback) and sets the Puzzle as solved if the checker succeeded. """
-        self._conn.send(puzzle.id)
-        (solved, feedback) = self._conn.recv()
-        puzzle.solved = solved
-        return (solved, feedback)
+
+        try:
+            self._conn.send(puzzle.id)
+            (solved, feedback) = self._conn.recv()
+            puzzle.solved = solved
+            return (solved, feedback)
+        except BaseException as e:
+            logs = self.container.attach(stdout = True, stderr = True, logs = True)
+            raise TutorialError(f'An error occurred while solving puzzle {puzzle.id}: "{puzzle.question}"', container_logs = logs) from e
+
+
+class TutorialError(Exception):
+    """
+    Class for exceptions that occur in the Tutorial.
+        container_logs - Output of the container at the time of the exception.
+        message - A description of the exception.
+    """
+    
+    def __init__(self, message, container_logs):
+        self.container_logs = container_logs.decode()
+        message = message + "\n\nContainer Logs:\n" + textwrap.indent(self.container_logs, "    ")
+        super().__init__(message)
