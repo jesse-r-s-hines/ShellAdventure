@@ -4,7 +4,7 @@ This file is shared between the Docker side code and host,
 `shell_adventure/support.py` is a symlink to `shell_adventure_docker/support.py`
 """
 
-from typing import Union, Callable
+from typing import Union, Callable, List
 import os, inspect, uuid
 
 PathLike = Union[str, os.PathLike]
@@ -52,9 +52,20 @@ class Puzzle:
         self.solved = False
         self.id = uuid.uuid4()
 
+    def __getstate__(self):
+        # Can't pickle lambdas, but we don't need it host side.
+        return {k:v for k, v in self.__dict__.items() if k != "checker"}
+
     def _get_checker_params(self):
         """ Returns the paramater list of the checker function. """
         return inspect.getfullargspec(self.checker).args
+
+class PuzzleTree:
+    """ A tree node so that puzzles can be unlocked after other puzzles are solved. """
+    def __init__(self, generator: str, puzzle: Puzzle = None, dependents: List[Puzzle] = None):
+        self.generator = generator
+        self.puzzle = puzzle
+        self.dependents = dependents if dependents else []
 
 # We aren't using this class currently
 # class CommandOutput:

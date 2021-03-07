@@ -7,7 +7,7 @@ import importlib.util, inspect
 import docker, docker.errors
 from pathlib import Path;
 from threading import Thread
-from .support import Puzzle, PathLike, conn_addr, conn_key
+from .support import Puzzle, PuzzleTree, PathLike, conn_addr, conn_key
 import tempfile
 from . import gui
 import textwrap
@@ -24,14 +24,6 @@ class Tutorial:
     container: docker.Container
     """ The docker container that the student is in. """
     
-    #TODO move into support?
-    class PuzzleTree:
-        """ A tree node so that puzzles can be unlocked after other puzzles are solved. """
-        def __init__(self, generator: str, puzzle: Puzzle = None, dependents: List[Puzzle] = None):
-            self.generator = generator
-            self.puzzle = puzzle
-            self.dependents = dependents if dependents else []
-
     puzzles: List[PuzzleTree]
     """ The tree of puzzles in this tutorial. """
 
@@ -48,7 +40,7 @@ class Tutorial:
             # TODO validate config.
 
         self.module_names: List[str] = config.get("modules", [])
-        self.puzzles = [Tutorial.PuzzleTree(gen) for gen in config.get("puzzles", [])]
+        self.puzzles = [PuzzleTree(gen) for gen in config.get("puzzles", [])]
 
         self._volume: tempfile.TemporaryDirectory = None # The volume that the container is using.
         self.container = None
@@ -118,26 +110,25 @@ class Tutorial:
             generated_puzzles = self._conn.recv()
 
             # store the puzzles in the PuzzleTree
-            for pt, response in zip(self.puzzles, generated_puzzles):
-                # TODO Maybe send puzzles directly.
-                puz = Puzzle(question = response["question"], score = response["score"], checker = None)
-                puz.id = response["id"]
-                pt.puzzle = puz
+            for pt, puzzle in zip(self.puzzles, generated_puzzles):
+                pt.puzzle = puzzle
         except BaseException as e: # BaseException includes KeyboardInterrupt
-            logs = self.container.attach(stdout = True, stderr = True, logs = True)
-            self.stop() # If an error occurs in __enter__, __exit__ isn't called.
+            logs = self.stop() # If an error occurs in __enter__, __exit__ isn't called.
             raise TutorialError("An error occurred while generating puzzles.", container_logs = logs) from e
 
     def stop(self):
-        """ Stop the tutorial, clean up all resources. """
+        """ Stop the tutorial, clean up all resources. Returns container logs. """
         if self._conn:
             self._conn.send("END")
             self._conn.close()
         self._listener.close()
         # The container should stop itself, but we'll make sure here as well.
         self.container.stop(timeout = 4)
+        logs = self.container.attach(stdout = True, stderr = True, logs = True)
         self.container.remove()
         self._volume.cleanup()
+        
+        return logs.decode()
 
     def __enter__(self):
         self.start()
@@ -167,6 +158,6 @@ class TutorialError(Exception):
     """
     
     def __init__(self, message, container_logs):
-        self.container_logs = container_logs.decode()
+        self.container_logs = container_logs
         message = message + "\n\nContainer Logs:\n" + textwrap.indent(self.container_logs, "    ")
         super().__init__(message)

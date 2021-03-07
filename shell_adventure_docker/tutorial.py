@@ -137,8 +137,8 @@ class Tutorial:
             puzzle_generators = conn.recv() # Get the puzzles to generate
             self.generate(puzzle_generators)
 
-            cleaned_puzzles = [{"question": p.question, "score": p.score, "id": p.id} for p in self.puzzles.values()]
-            conn.send(cleaned_puzzles)
+            # The checker functions will be removed when pickling, but the host doesn't need them.
+            conn.send(list(self.puzzles.values())) 
 
             while True: # TODO add ending condition
                 request = conn.recv()
