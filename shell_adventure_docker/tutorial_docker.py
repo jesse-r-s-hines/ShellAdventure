@@ -114,11 +114,12 @@ class TutorialDocker:
         return (puzzle.solved, feedback)
 
     def connect_to_bash(self):
-        """ Finds a running bash session and stores it's id. Returns True on success. """
-        pid = subprocess.check_output(["pidof", "-s", "bash"])
-        self.bash_pid = None if pid.isspace() else int(pid)
-
-        return self.bash_pid != None
+        """ Finds a running bash session and stores it's id. Returns the pid. """
+        try:
+            self.bash_pid = int(subprocess.check_output(["pidof", "-s", "bash"]))
+        except subprocess.CalledProcessError:
+            raise ProcessLookupError("No bash session to connect to.")
+        return self.bash_pid
 
     def student_cwd(self):
         """
