@@ -56,7 +56,9 @@ class Puzzle:
 
     def __getstate__(self):
         # Can't pickle lambdas, but we don't need it host side.
-        return {k:v for k, v in self.__dict__.items() if k != "checker"}
+        data = self.__dict__.copy()
+        data["checker"] = None
+        return data
 
     def _get_checker_params(self):
         """ Returns the paramater list of the checker function. """
