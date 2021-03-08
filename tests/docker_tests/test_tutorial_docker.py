@@ -1,8 +1,7 @@
-from typing import *
+from typing import Dict
 import pytest
-from pytest import mark
 from shell_adventure_docker.tutorial_docker import TutorialDocker
-import yaml, json, os, subprocess
+import os, subprocess
 from textwrap import dedent;
 
 # TODO use File in here.

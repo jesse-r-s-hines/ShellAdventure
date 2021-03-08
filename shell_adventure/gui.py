@@ -1,4 +1,3 @@
-from __future__ import annotations # Don't evaluate annotations until after the module is run.
 from typing import Tuple, Dict
 from . import tutorial
 from .support import Puzzle

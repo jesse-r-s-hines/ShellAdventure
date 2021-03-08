@@ -1,10 +1,5 @@
-from typing import Any, Dict, Union, List
-import docker, docker.errors
-import os, sys, shutil, tempfile, subprocess
-import yaml
+import sys, subprocess
 from pathlib import Path
-from threading import Thread
-from multiprocessing.connection import Listener 
 from shell_adventure.gui import GUI
 from shell_adventure.tutorial import Tutorial
 

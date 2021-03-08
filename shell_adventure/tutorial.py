@@ -1,16 +1,12 @@
-from __future__ import annotations # Don't evaluate annotations until after the module is run.
 from typing import List, Tuple, Dict, Any, Callable, ClassVar, Union
-from types import ModuleType
-import os, yaml, subprocess, shutil
+import yaml, shutil
 from multiprocessing.connection import Connection
-import importlib.util, inspect
 import docker, docker.errors
+from docker.models.containers import Container
 from pathlib import Path;
-from threading import Thread
 from . import support
 from .support import Puzzle, PuzzleTree, PathLike, Message
 import tempfile
-from . import gui
 import textwrap
 
 class Tutorial:
@@ -22,7 +18,7 @@ class Tutorial:
     data_dir: Path
     """ This is the path where tutorial files such as puzzles have been placed. """
 
-    container: docker.Container
+    container: Container
     """ The docker container that the student is in. """
     
     puzzles: List[PuzzleTree]

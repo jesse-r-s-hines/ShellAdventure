@@ -1,11 +1,11 @@
 from typing import List, Tuple, Dict, Any, Callable, ClassVar
 from types import ModuleType
-import os, json, subprocess
-from multiprocessing.connection import Listener, Connection
-import importlib.util, inspect
-import time
 from pathlib import Path;
-from shell_adventure.support import Puzzle, PathLike, conn_addr, conn_key, Message
+import subprocess
+from multiprocessing.connection import Listener
+import importlib.util, inspect
+from shell_adventure import support
+from shell_adventure.support import Puzzle, PathLike, Message
 from .file import File
 
 class TutorialDocker:
@@ -138,7 +138,7 @@ class TutorialDocker:
         Listen for requests from the app
         """ 
 
-        with Listener(conn_addr, authkey = conn_key) as listener:
+        with Listener(support.conn_addr, authkey = support.conn_key) as listener:
             with listener.accept() as conn:
                 actions = {
                     # Map message type to a function that will be called. The return of the lambda will be sent back to host. 

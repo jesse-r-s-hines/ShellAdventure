@@ -1,7 +1,7 @@
 import pytest
 from shell_adventure_docker.file import File
 from shell_adventure_docker.permissions import *
-import os, stat, getpass
+import os, stat
 
 class TestFile:
     def test_creating_permissions(self, working_dir):
