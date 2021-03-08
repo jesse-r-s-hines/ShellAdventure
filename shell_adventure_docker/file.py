@@ -1,4 +1,5 @@
-from typing import Union
+from __future__ import annotations
+from typing import Union, List
 from pathlib import PosixPath
 import os, shutil, shlex
 from .permissions import Permissions, LinkedPermissions, change_user
@@ -33,12 +34,12 @@ class File(PosixPath):
             else:
                 super().chmod(mode)
 
-    def children(self):
+    def children(self) -> List[File]:
         """
         Return list of directory's contents. Raises "NotADirectoryError" if not a directory.
         Basically an alias of Path.iterdir() but returns a list instead of a generator.
         """
-        return list(self.iterdir())
+        return list(self.iterdir()) # type: ignore
     
     def _get_path(self) -> str:
         return str(self.resolve())

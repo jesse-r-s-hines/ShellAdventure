@@ -34,10 +34,18 @@ class Tutorial:
 
         with open(config_file) as temp:
             config = yaml.safe_load(temp)
-            # TODO validate config.
+            # TODO use a custom exception
+            if not isinstance(config, dict): raise Exception("Invalid config file.")
 
-        self.module_paths: List[str] = config.get("modules", [])
-        self.puzzles = [PuzzleTree(gen) for gen in config.get("puzzles", [])]
+        self.module_paths: List[Path] = []
+        for module in config.get("modules"):
+            # Files are relative to the config file (if module is absolute, Path will use that, if relative it will join with first)
+            module = Path(self.data_dir, module)
+            if not module.exists(): raise FileNotFoundError(f'Module "{module}" not found.')
+            if module in self.module_paths: raise Exception(f'Multiple puzzle modules with name "{module.name}" found.')
+            self.module_paths.append(module)
+
+        self.puzzles = [PuzzleTree(gen) for gen in config.get("puzzles")]
 
         self._volume: tempfile.TemporaryDirectory = None # The volume that the container is using.
         self.container = None
@@ -49,12 +57,8 @@ class Tutorial:
 
         # Gather puzzle modules and put them in container volume
         (volume / "modules").mkdir()
-        for module_path in self.module_paths:
-            # Files are relative to the config file (if module is absolute, Path will use that, if relative it will join with first)
-            module = Path(self.data_dir, module_path)
+        for module in self.module_paths:
             dest = volume / "modules" / module.name
-            if dest.exists():
-                raise Exception(f"Two puzzle modules with name {module.name} found.")
             shutil.copyfile(module, dest) # Copy to volume
 
         # TODO add this to config file
@@ -88,6 +92,8 @@ class Tutorial:
         """
         Starts the tutorial.
         Launches the container, sets up a connection and generates the puzzles.
+        In general you should use a tutorial as a context manager instead to start/stop the tutorial, which will
+        guarantee that the container gets cleaned up.
         """
 
         # We can't use "with" since we the caller to be able to use the tutorial object before it is closed.
@@ -113,7 +119,11 @@ class Tutorial:
             raise TutorialError("An error occurred while generating puzzles.", container_logs = logs) from e
 
     def stop(self):
-        """ Stop the tutorial, clean up all resources. Returns container logs. """
+        """
+        Stop the tutorial, clean up all resources. Returns container logs.
+        In general you should use a tutorial as a context manager instead to start/stop the tutorial, which will
+        guarantee that the container gets cleaned up.
+        """
         if self._conn:
             self._conn.send("END")
             self._conn.close()
