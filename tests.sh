@@ -1,6 +1,5 @@
 #!/bin/bash
-docker build -t shell-adventure . 1> /dev/null # Only print errors
-docker build -t shell-adventure:test -f Dockerfile.test . 1> /dev/null # Only print errors
+docker build -t shell-adventure:test --build-arg TESTING=1 . 1> /dev/null # Only print errors
 
 echo "=========== mypy analysis ==========="
 mypy shell_adventure shell_adventure_docker tests

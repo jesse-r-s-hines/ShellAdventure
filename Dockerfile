@@ -36,6 +36,17 @@ RUN apt-get update && \
     # Remove the cache made by apt update and other files to save space
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+# if TESTING is 1 install pytest.
+ARG TESTING=0
+RUN if [ ${TESTING} -eq 1 ]; then \
+        apt-get update && \
+        apt-get install -y python3-pip && \
+        python -m pip --no-cache-dir install pytest pytest-cov PyYAML && \
+        rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* ; \
+    fi
+# There doesn't seem to be a way to conditionally copy.
+COPY tests/docker_tests /usr/local/shell_adventure_docker_tests/
+
 # Make new user and allow them to use sudo
 RUN useradd -ms /bin/bash student && \
     echo "student:student" | chpasswd && \
