@@ -8,8 +8,7 @@ from pathlib import Path;
 from shell_adventure.support import Puzzle, PathLike, conn_addr, conn_key, Message
 from .file import File
 
-# TODO rename this to avoid confusion
-class Tutorial:
+class TutorialDocker:
     """ Contains the information for a running tutorial docker side. """
 
     _puzzle_module_inject: ClassVar[Dict[str, object]] = {
@@ -62,7 +61,7 @@ class Tutorial:
         module = importlib.util.module_from_spec(spec)
 
         # Inject names into the modules
-        for name, obj in Tutorial._puzzle_module_inject.items():
+        for name, obj in TutorialDocker._puzzle_module_inject.items():
             setattr(module, name, obj)
 
         spec.loader.exec_module(module) # type: ignore # MyPy is confused about the types here
