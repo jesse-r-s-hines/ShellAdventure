@@ -155,7 +155,9 @@ class Tutorial:
             raise TutorialError(f'An error occurred while solving puzzle {puzzle.id}: "{puzzle.question}"', container_logs = logs) from e
 
     def connect_to_bash(self):
+        """ Connects the tutorial to a running bash session. Returns the PID (in docker) of the bash session. """
         self._conn.send( (Message.CONNECT_TO_BASH,) )
+        return self._conn.recv() # wait for response
 
 class TutorialError(Exception):
     """

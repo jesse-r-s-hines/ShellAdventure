@@ -9,12 +9,11 @@ SIMPLE_PUZZLES = dedent("""
     from os import system
 
     def move():
-        system("echo 'move1' > A.txt")
+        file = File("A.txt")
+        file.write_text("A")
 
         def checker():
-            aCode = system("test -f A.txt")
-            bCode = system("test -f B.txt")
-            return (aCode >= 1) and (bCode == 0)
+            return not file.exists() and File("B.txt").exists()
 
         return Puzzle(
             question = f"Rename A.txt to B.txt",

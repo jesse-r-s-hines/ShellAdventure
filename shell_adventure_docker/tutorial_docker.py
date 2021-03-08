@@ -13,6 +13,7 @@ class TutorialDocker:
 
     _puzzle_module_inject: ClassVar[Dict[str, object]] = {
         "Puzzle": Puzzle,
+        "File": File,
     }
     """ The classes/modules/packages to inject into the puzzle generator modules. """
 
