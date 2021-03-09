@@ -1,6 +1,6 @@
 from typing import List, Tuple, Dict, Any, Callable, ClassVar, Union
 import yaml, shutil
-from multiprocessing.connection import Connection
+from multiprocessing.connection import Client, Connection
 import docker, docker.errors
 from docker.models.containers import Container
 from pathlib import Path;
@@ -8,6 +8,7 @@ from . import support
 from .support import Puzzle, PuzzleTree, PathLike, Message
 import tempfile
 import textwrap
+from retry.api import retry_call
 
 class Tutorial:
     """ Contains the information for a running tutorial. """
@@ -106,8 +107,7 @@ class Tutorial:
 
         try:
             # retry the connection a few times since the container may take a bit to get started.
-            self._conn = support.retry_connect(support.conn_addr, authkey = support.conn_key)
-
+            self._conn = retry_call(lambda: Client(support.conn_addr, authkey = support.conn_key), tries = 20, delay = 0.2)
             self._conn.send( (Message.GENERATE, [pt.generator for pt in self.puzzles]) )
             generated_puzzles = self._conn.recv()
 
@@ -129,7 +129,7 @@ class Tutorial:
             self._conn.close()
         # The container should stop itself, but we'll make sure here as well.
         self.container.stop(timeout = 4)
-        logs = self.container.attach(stdout = True, stderr = True, logs = True)
+        logs = self.container.logs()
         self.container.remove()
         self._volume.cleanup()
         
@@ -144,20 +144,23 @@ class Tutorial:
 
     def solve_puzzle(self, puzzle: Puzzle, flag: str = None) -> Tuple[bool, str]:
         """ Tries to solve the puzzle. Returns (success, feedback) and sets the Puzzle as solved if the checker succeeded. """
-
         try:
             self._conn.send( (Message.SOLVE, puzzle.id) )
             (solved, feedback) = self._conn.recv()
             puzzle.solved = solved
             return (solved, feedback)
         except BaseException as e:
-            logs = self.container.attach(stdout = True, stderr = True, logs = True)
+            logs = self.stop()
             raise TutorialError(f'An error occurred while solving puzzle {puzzle.id}: "{puzzle.question}"', container_logs = logs) from e
 
     def connect_to_bash(self):
         """ Connects the tutorial to a running bash session. Returns the PID (in docker) of the bash session. """
-        self._conn.send( (Message.CONNECT_TO_BASH,) )
-        return self._conn.recv() # wait for response
+        try:
+            self._conn.send( (Message.CONNECT_TO_BASH,) )
+            return self._conn.recv() # wait for response
+        except BaseException as e:
+            logs = self.stop()
+            raise TutorialError(f'An error occurred while connecting to bash.', container_logs = logs) from e
 
 class TutorialError(Exception):
     """
