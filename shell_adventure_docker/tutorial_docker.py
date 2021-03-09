@@ -151,9 +151,9 @@ class TutorialDocker:
             with listener.accept() as conn:
                 actions = {
                     # Map message type to a function that will be called. The return of the lambda will be sent back to host. 
-                    Message.GENERATE: lambda generators: self.generate(generators),
-                    Message.CONNECT_TO_BASH: lambda: self.connect_to_bash(),
-                    Message.SOLVE: lambda id: self.solve_puzzle(id),
+                    Message.GENERATE: self.generate,
+                    Message.CONNECT_TO_BASH: self.connect_to_bash,
+                    Message.SOLVE: self.solve_puzzle,
                 }
 
                 while True: # Loop until connection ends.
