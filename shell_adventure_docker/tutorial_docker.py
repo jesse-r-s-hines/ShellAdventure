@@ -4,9 +4,11 @@ from pathlib import Path;
 import subprocess
 from multiprocessing.connection import Listener
 import importlib.util, inspect
+from retry.api import retry_call
 from shell_adventure import support
 from shell_adventure.support import Puzzle, PathLike, Message
 from .file import File
+from .permissions import change_user
 
 class TutorialDocker:
     """ Contains the information for a running tutorial docker side. """
@@ -94,10 +96,12 @@ class TutorialDocker:
             # "output": output,
             # "flag": flag,
             # "file_system": self.file_system,
+            "cwd": self.student_cwd(),
         }
         # Only pass the args that the checker function has
         checker_params = puzzle._get_checker_params()
-        assert set(checker_params).issubset(args.keys()), 'Only paramaters, "flag", "file_system" and "output" are allowed in checker functions.'
+        #TODO don't use assert
+        assert set(checker_params).issubset(args.keys()), f'Only paramaters ({", ".join(args)}) are allowed in checker functions. Got: ({", ".join(checker_params)})'
         args = {param: args[param] for param in checker_params}
 
         checker_result = puzzle.checker(**args)
@@ -117,7 +121,9 @@ class TutorialDocker:
     def connect_to_bash(self):
         """ Finds a running bash session and stores it's id. Returns the pid. """
         try:
-            self.bash_pid = int(subprocess.check_output(["pidof", "-s", "bash"]))
+            # retry a few times since exec'ing into the container can take a bit.
+            result = retry_call(lambda: subprocess.check_output(["pidof", "-s", "bash"]), tries=20, delay=0.1)
+            self.bash_pid = int(result)
         except subprocess.CalledProcessError:
             raise ProcessLookupError("No bash session to connect to.")
         return self.bash_pid
@@ -126,10 +132,12 @@ class TutorialDocker:
         """
         Return the student's current working directory. Note that in generation functions, this is different from `File.cwd()`
         File.cwd() returns the current working directory of the generation function, not the student.
+        Returns None if bash_pid is not set.
         """
         if self.bash_pid == None:
-            raise ProcessLookupError("No bash session specified.")
-        result = subprocess.check_output(["pwdx", f"{self.bash_pid}"]) # returns "pid: /path/to/folder"
+            return None
+        with change_user("root"):
+            result = subprocess.check_output(["pwdx", f"{self.bash_pid}"]) # returns "pid: /path/to/folder"
         cwd = result.decode().split(": ", 1)[1][:-1] # Split and remove trailing newline.
         return File(cwd) 
 
