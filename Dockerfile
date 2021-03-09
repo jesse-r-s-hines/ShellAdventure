@@ -17,8 +17,6 @@ RUN apt-get update && \
     # Reinstalling "libc6" throws "Could not configure libc6:amd64", so we reinstall all packages except libc6
     # See https://manpages.ubuntu.com/manpages/focal/man7/apt-patterns.7.html for apt patterns
     apt-get reinstall -y '?and(?installed, !?name(libc6))' && \
-    # Install stuff to allow running python and a GUI
-    apt-get install -y x11-apps python3 python-is-python3 python3-tk && \
     # Now we can install new packages
     apt-get install -y \
         binutils \
@@ -33,19 +31,19 @@ RUN apt-get update && \
         unzip \
         wget \
         zip \
+    && \
+    # Install Python
+    apt-get install -y python3 python-is-python3 python3-pip && \
+    python -m pip install retry && \
     # Remove the cache made by apt update and other files to save space
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # if TESTING is 1 install pytest.
 ARG TESTING=0
 RUN if [ ${TESTING} -eq 1 ]; then \
-        apt-get update && \
-        apt-get install -y python3-pip && \
-        python -m pip --no-cache-dir install pytest pytest-cov PyYAML && \
+        python -m pip --no-cache-dir install pytest pytest-cov && \
         rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* ; \
     fi
-# There doesn't seem to be a way to conditionally copy.
-COPY tests/docker_tests /usr/local/shell_adventure_docker_tests/
 
 # Make new user and allow them to use sudo
 RUN useradd -ms /bin/bash student && \
@@ -60,5 +58,7 @@ ENV PYTHONPATH=/usr/local
 COPY shell_adventure_docker /usr/local/shell_adventure_docker/
 # support code is shared between container and host.
 COPY shell_adventure/support.py /usr/local/shell_adventure/support.py
+# There doesn't seem to be a way to conditionally copy this only when testing..
+COPY tests/docker_tests /usr/local/shell_adventure_docker_tests/
 
 CMD ["bash"]
