@@ -6,7 +6,7 @@ from shell_adventure.tutorial import Tutorial
 
 # Defines some fixtures for use in the rest of the tests
 
-@pytest.helpers.register
+@pytest.helpers.register #type: ignore
 def create_tutorial(tmp_path, puzzles: Dict[str, str], config: str) -> Tutorial:
     """
     Creates a tutorial with the given puzzles and config strings.

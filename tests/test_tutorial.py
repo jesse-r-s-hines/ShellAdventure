@@ -13,7 +13,7 @@ SIMPLE_PUZZLES = dedent("""
         file.write_text("A")
 
         def checker():
-            return not file.exists and File("B.txt").exists()
+            return not file.exists() and File("B.txt").exists()
 
         return Puzzle(
             question = f"Rename A.txt to B.txt",
@@ -68,4 +68,3 @@ class TestTutorial:
                 puzzles:
                     puzzle1.move
             """) 
-    # Integration tests, running the tutorial and container.

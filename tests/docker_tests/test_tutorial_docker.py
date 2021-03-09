@@ -6,8 +6,6 @@ from textwrap import dedent;
 
 # TODO use File in here.
 SIMPLE_PUZZLES = dedent("""
-    from os import system
-
     def move():
         file = File("A.txt")
         file.write_text("A")
