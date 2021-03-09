@@ -1,25 +1,21 @@
-from os import system
-
 def move_1():
-    system("echo 'move1' > A.txt")
+    file = File("A.txt")
+    file.write_text("A")
 
     def checker():
-        aCode = system("test -f A.txt")
-        bCode = system("test -f B.txt")
-        return (aCode >= 1) and (bCode == 0)
+        return not file.exists() and File("B.txt").exists()
 
     return Puzzle(
         question = f"Rename A.txt to B.txt",
         checker = checker
-    )
+                )
 
 def move_2():
-    system("echo 'move2' > C.txt")
+    file = File("C.txt")
+    file.write_text("C")
 
     def checker():
-        cCode = system("test -f C.txt")
-        dCode = system("test -f D.txt")
-        return (cCode >= 1) and (dCode == 0)
+        return not file.exists() and File("D.txt").exists()
 
     return Puzzle(
         question = f"Rename C.txt to D.txt",
