@@ -3,14 +3,30 @@ from . import tutorial
 from .support import Puzzle
 from tkinter import ttk
 from ttkthemes import ThemedTk
-from tkinter import StringVar
+from tkinter import StringVar, Canvas, RIGHT, LEFT, Y, BOTTOM, BOTH
 import tkinter.messagebox
 
 class WrappingLabel(ttk.Label):
     """Label that automatically adjusts the wrap to the size"""
     def __init__(self, master=None, **kwargs):
         super().__init__(master, **kwargs)
-        self.bind('<Configure>', lambda e: self.config(wraplength = self.winfo_width() - 5))
+        self.bind('<Configure>', lambda e: self.config(wraplength = e.width))
+
+class ScrollableFrame(ttk.Frame):
+    def __init__(self, container, *args, **kwargs):
+        super().__init__(container, *args, **kwargs)
+        canvas = Canvas(self)
+        scrollbar = ttk.Scrollbar(self, orient="vertical", command=canvas.yview)
+        self.scrollable_frame = ttk.Frame(canvas)
+
+        canvas_frame = canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+    
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        self.scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.bind("<Configure>", lambda e: canvas.itemconfig(canvas_frame, width = e.width))
 
 class GUI(ThemedTk):
     def __init__(self, tutorial: tutorial.Tutorial):
@@ -28,7 +44,11 @@ class GUI(ThemedTk):
         self.columnconfigure(0, weight = 1, minsize = 80)
         self.rowconfigure(0, weight = 1, minsize = 80)
 
-        puzzlePanel = ttk.LabelFrame(self, text = 'Puzzles:')
+        puzzle_scrollable = ScrollableFrame(self)
+        puzzle_scrollable.pack(side = BOTTOM, fill = BOTH, expand = True)
+        puzzle_scrollable.scrollable_frame.columnconfigure(0, weight = 1)
+
+        puzzlePanel = ttk.LabelFrame(puzzle_scrollable.scrollable_frame, text = 'Puzzles:')
         puzzlePanel.grid(column = 0, row = 0, sticky = 'WENS')
         puzzlePanel.columnconfigure(0, weight = 1)
 
@@ -36,7 +56,7 @@ class GUI(ThemedTk):
             puzzle = pt.puzzle
 
             label = WrappingLabel(puzzlePanel, text = f"{i+1}. {puzzle.question}", wraplength=50)
-            label.grid(row = i, column = 0, sticky="EWNS")
+            label.grid(row = i, column = 0, padx = 5, pady = 5, sticky="EWNS")
 
             button = ttk.Button(puzzlePanel, text = "Solve",
                 command = lambda p=puzzle: self.solve(p) # type: ignore
