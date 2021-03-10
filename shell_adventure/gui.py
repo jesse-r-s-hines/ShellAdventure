@@ -6,6 +6,12 @@ from ttkthemes import ThemedTk
 from tkinter import StringVar
 import tkinter.messagebox
 
+class WrappingLabel(ttk.Label):
+    """Label that automatically adjusts the wrap to the size"""
+    def __init__(self, master=None, **kwargs):
+        super().__init__(master, **kwargs)
+        self.bind('<Configure>', lambda e: self.config(wraplength = self.winfo_width() - 5))
+
 class GUI(ThemedTk):
     def __init__(self, tutorial: tutorial.Tutorial):
         """ Creates and launches the Shell Adventure GUI. Pass it the tutorial object. """
@@ -18,24 +24,25 @@ class GUI(ThemedTk):
         self.puzzles: Dict[Puzzle, Tuple[ttk.Label, ttk.Button]] = {}
 
         self.title("Shell Adventure")
-        self.minsize(600, 300) # To keep you from being able to shrink everything off the screen.
+        self.minsize(300, 300) # To keep you from being able to shrink everything off the screen.
         self.columnconfigure(0, weight = 1, minsize = 80)
         self.rowconfigure(0, weight = 1, minsize = 80)
 
         puzzlePanel = ttk.LabelFrame(self, text = 'Puzzles:')
         puzzlePanel.grid(column = 0, row = 0, sticky = 'WENS')
+        puzzlePanel.columnconfigure(0, weight = 1)
 
         for i, pt in enumerate(self.tutorial.puzzles):
             puzzle = pt.puzzle
 
-            label = ttk.Label(puzzlePanel, text = puzzle.question)
-            label.grid(column = 0, row = i)
+            label = WrappingLabel(puzzlePanel, text = f"{i+1}. {puzzle.question}", wraplength=50)
+            label.grid(row = i, column = 0, sticky="EWNS")
 
             button = ttk.Button(puzzlePanel, text = "Solve",
                 command = lambda p=puzzle: self.solve(p) # type: ignore
             )
             button.bind('<Return>', lambda e, p=puzzle: self.solve(p)) # type: ignore
-            button.grid(column = 1, row = i)
+            button.grid(row = i, column = 1, padx = 5, sticky="S")
 
             self.puzzles[puzzle] = (label, button)
 
