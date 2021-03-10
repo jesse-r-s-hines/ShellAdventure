@@ -1,14 +1,15 @@
 from typing import Tuple, Dict
 from . import tutorial
 from .support import Puzzle
-from tkinter import Tk, StringVar
 from tkinter import ttk
+from ttkthemes import ThemedTk
+from tkinter import StringVar
 import tkinter.messagebox
 
-class GUI(Tk):
+class GUI(ThemedTk):
     def __init__(self, tutorial: tutorial.Tutorial):
         """ Creates and launches the Shell Adventure GUI. Pass it the tutorial object. """
-        super().__init__()
+        super().__init__(theme="radiance")
 
         self.tutorial = tutorial
         # self.flagInput = StringVar(self, value="")
