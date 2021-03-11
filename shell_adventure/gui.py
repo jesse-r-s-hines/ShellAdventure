@@ -1,32 +1,17 @@
 from typing import Tuple, Dict
 from . import tutorial
 from .support import Puzzle
+import tkinter as tk
 from tkinter import ttk
 from ttkthemes import ThemedTk
-from tkinter import StringVar, Canvas, RIGHT, LEFT, Y, BOTTOM, BOTH
 import tkinter.messagebox
+from .scrolled_frame import VerticalScrolledFrame
 
 class WrappingLabel(ttk.Label):
     """Label that automatically adjusts the wrap to the size"""
     def __init__(self, master=None, **kwargs):
-        super().__init__(master, **kwargs)
+        super().__init__(master, borderwidth = 0, **kwargs) # borderwidth = 0 fixes "chopping off" of pieces of letters at the edges
         self.bind('<Configure>', lambda e: self.config(wraplength = e.width))
-
-class ScrollableFrame(ttk.Frame):
-    def __init__(self, container, *args, **kwargs):
-        super().__init__(container, *args, **kwargs)
-        canvas = Canvas(self)
-        scrollbar = ttk.Scrollbar(self, orient="vertical", command=canvas.yview)
-        self.scrollable_frame = ttk.Frame(canvas)
-
-        canvas_frame = canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
-    
-        canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
-
-        self.scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-        canvas.bind("<Configure>", lambda e: canvas.itemconfig(canvas_frame, width = e.width))
 
 class GUI(ThemedTk):
     def __init__(self, tutorial: tutorial.Tutorial):
@@ -44,11 +29,11 @@ class GUI(ThemedTk):
         self.columnconfigure(0, weight = 1, minsize = 80)
         self.rowconfigure(0, weight = 1, minsize = 80)
 
-        puzzle_scrollable = ScrollableFrame(self)
-        puzzle_scrollable.pack(side = BOTTOM, fill = BOTH, expand = True)
-        puzzle_scrollable.scrollable_frame.columnconfigure(0, weight = 1)
+        puzzle_scrollable = VerticalScrolledFrame(self)
+        puzzle_scrollable.pack(side = tk.BOTTOM, fill = tk.BOTH, expand = True)
+        puzzle_scrollable.interior.columnconfigure(0, weight = 1)
 
-        puzzlePanel = ttk.LabelFrame(puzzle_scrollable.scrollable_frame, text = 'Puzzles:')
+        puzzlePanel = ttk.LabelFrame(puzzle_scrollable.interior, text = 'Puzzles:')
         puzzlePanel.grid(column = 0, row = 0, sticky = 'WENS')
         puzzlePanel.columnconfigure(0, weight = 1)
 
