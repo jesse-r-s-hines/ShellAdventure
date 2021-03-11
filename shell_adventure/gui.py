@@ -25,7 +25,7 @@ class GUI(ThemedTk):
         self.puzzles: Dict[Puzzle, Tuple[WrappingLabel, ttk.Button]] = {}
 
         self.title("Shell Adventure")
-        self.minsize(300, 300) # To keep you from being able to shrink everything off the screen.
+        self.minsize(300, 100) # To keep you from being able to shrink everything off the screen.
         self.columnconfigure(0, weight = 1, minsize = 80)
         self.rowconfigure(0, weight = 1, minsize = 80)
 
@@ -39,6 +39,7 @@ class GUI(ThemedTk):
         # map puzzles to their question label and button. By default, Python will use object identity for dict keys, which is what we want.
         scrollable = VerticalScrolledFrame(master)
         scrollable.interior.columnconfigure(0, weight = 1)
+        scrollable.interior.rowconfigure(0, weight = 1)
 
         frame = ttk.LabelFrame(scrollable.interior, text = 'Puzzles:')
         frame.grid(column = 0, row = 0, sticky = 'WENS')
