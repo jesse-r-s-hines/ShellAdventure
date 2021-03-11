@@ -1,4 +1,4 @@
-from typing import Tuple, Dict
+from typing import List, Tuple, Dict
 from . import tutorial
 from .support import Puzzle
 import tkinter as tk
@@ -22,28 +22,35 @@ class GUI(ThemedTk):
         # self.flagInput = StringVar(self, value="")
 
         # map puzzles to their question label and button. By default, Python will use object identity for dict keys, which is what we want.
-        self.puzzles: Dict[Puzzle, Tuple[ttk.Label, ttk.Button]] = {}
+        self.puzzles: Dict[Puzzle, Tuple[WrappingLabel, ttk.Button]] = {}
 
         self.title("Shell Adventure")
         self.minsize(300, 300) # To keep you from being able to shrink everything off the screen.
         self.columnconfigure(0, weight = 1, minsize = 80)
         self.rowconfigure(0, weight = 1, minsize = 80)
 
-        puzzle_scrollable = VerticalScrolledFrame(self)
+        puzzle_scrollable = self.puzzle_frame(self)
         puzzle_scrollable.pack(side = tk.BOTTOM, fill = tk.BOTH, expand = True)
-        puzzle_scrollable.interior.columnconfigure(0, weight = 1)
 
-        puzzlePanel = ttk.LabelFrame(puzzle_scrollable.interior, text = 'Puzzles:')
-        puzzlePanel.grid(column = 0, row = 0, sticky = 'WENS')
-        puzzlePanel.columnconfigure(0, weight = 1)
+        self.mainloop()
+
+    def puzzle_frame(self, master):
+        """ Returns a frame container the puzzle list. Stores the labels and buttons in the frame in self.puzzles """
+        # map puzzles to their question label and button. By default, Python will use object identity for dict keys, which is what we want.
+        scrollable = VerticalScrolledFrame(master)
+        scrollable.interior.columnconfigure(0, weight = 1)
+
+        frame = ttk.LabelFrame(scrollable.interior, text = 'Puzzles:')
+        frame.grid(column = 0, row = 0, sticky = 'WENS')
+        frame.columnconfigure(0, weight = 1)
 
         for i, pt in enumerate(self.tutorial.puzzles):
             puzzle = pt.puzzle
 
-            label = WrappingLabel(puzzlePanel, text = f"{i+1}. {puzzle.question}", wraplength=50)
+            label = WrappingLabel(frame, text = f"{i+1}. {puzzle.question}", wraplength=50)
             label.grid(row = i, column = 0, padx = 5, pady = 5, sticky="EWNS")
 
-            button = ttk.Button(puzzlePanel, text = "Solve",
+            button = ttk.Button(frame, text = "Solve",
                 command = lambda p=puzzle: self.solve(p) # type: ignore
             )
             button.bind('<Return>', lambda e, p=puzzle: self.solve(p)) # type: ignore
@@ -51,7 +58,7 @@ class GUI(ThemedTk):
 
             self.puzzles[puzzle] = (label, button)
 
-        self.mainloop()
+        return scrollable
 
     def solve(self, puzzle: Puzzle):
         solved, feedback = self.tutorial.solve_puzzle(puzzle)
