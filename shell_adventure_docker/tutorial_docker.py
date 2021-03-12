@@ -98,13 +98,7 @@ class TutorialDocker:
             # "file_system": self.file_system,
             "cwd": self.student_cwd(),
         }
-        # Only pass the args that the checker function has
-        checker_params = puzzle._get_checker_params()
-        #TODO don't use assert
-        assert set(checker_params).issubset(args.keys()), f'Only paramaters ({", ".join(args)}) are allowed in checker functions. Got: ({", ".join(checker_params)})'
-        args = {param: args[param] for param in checker_params}
-
-        checker_result = puzzle.checker(**args)
+        checker_result = support.call_with_args(puzzle.checker, args)
 
         if checker_result == True:
             puzzle.solved = True

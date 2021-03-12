@@ -4,7 +4,7 @@ This file is shared between the Docker side code and host,
 `shell_adventure/support.py` is a symlink to `shell_adventure_docker/support.py`
 """
 
-from typing import Union, Callable, List
+from typing import Union, Callable, List, Dict, Any
 import os, inspect, uuid, time
 from multiprocessing.connection import Client
 from enum import Enum
@@ -60,10 +60,6 @@ class Puzzle:
         data["checker"] = None
         return data
 
-    def _get_checker_params(self):
-        """ Returns the paramater list of the checker function. """
-        return inspect.getfullargspec(self.checker).args
-
 class PuzzleTree:
     """ A tree node so that puzzles can be unlocked after other puzzles are solved. """
     def __init__(self, generator: str, puzzle: Puzzle = None, dependents: List[Puzzle] = None):
@@ -106,3 +102,20 @@ class Message(Enum):
     """ Tells the container that a bash session has started and to connect to it. Usage: (CONNECT_TO_BASH,) """
     SOLVE = 3
     """ Solve a puzzle. Usage: (SOLVE, puzzle_id) """
+
+def call_with_args(func: Callable[..., Any], args: Dict[str, Any]):
+    """
+    Takes a function and a map of args to their names. Any values in args that have the same name as a parameter of func
+    will be passed to func. Ignores missing args, and will throw an error func has parameters that aren't in args.
+    Returns the return result of func.
+    """
+    func_params = set(inspect.getfullargspec(func).args)
+    known_args = set(args.keys())
+
+    # Make sure there are no unrecognized parameters
+    if not func_params.issubset(known_args): # TODO use custom exception
+        raise Exception(f'Unrecognized parameters ({", ".join(func_params - known_args)}), expected some combination of ({", ".join(known_args)}).')
+
+    # Only pass the args that the checker function has
+    args_to_pass = {param: args[param] for param in func_params}
+    return func(**args_to_pass)
