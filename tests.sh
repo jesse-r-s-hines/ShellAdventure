@@ -15,4 +15,4 @@ echo "Main tests"
 TEST_DIR=/usr/local/shell_adventure_docker_tests
 echo -e "\n\n"
 echo "Tests in Docker container"
-docker run -t --user="root" --workdir="$TEST_DIR" shell-adventure:test pytest --cov=shell_adventure_docker --cov-report term "$TEST_DIR"
+docker run -t --rm --user="root" --workdir="$TEST_DIR" shell-adventure:test pytest --cov=shell_adventure_docker --cov-report term "$TEST_DIR"
