@@ -76,10 +76,15 @@ class TutorialDocker:
         Takes a list of puzzle generators and generates them. Stores the puzzles in self.puzzles.
         Returns the generated puzzles as a list.
         """
+        args = { # TODO add documentation for args you can take in generator function
+            "home": File("/home/student"), # can't use home() since the user is actually root. #TODO add docs that File.home() doesn't work as expected. 
+            "root": File("/"),
+        }
+
         for gen in puzzle_generators:
             # TODO Should probably raise custom exception instead of using assert (which can be removed at will)
             assert gen in self.generators, f"Unknown puzzle generator {gen}."
-            puzzle = self.generators[gen]()
+            puzzle: Puzzle = support.call_with_args(self.generators[gen], args)
             self.puzzles[puzzle.id] = puzzle
             # TODO error checking
 
@@ -95,7 +100,6 @@ class TutorialDocker:
         args: Dict[str, Any] = {
             # "output": output,
             # "flag": flag,
-            # "file_system": self.file_system,
             "cwd": self.student_cwd(),
         }
         checker_result = support.call_with_args(puzzle.checker, args)

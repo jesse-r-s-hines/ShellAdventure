@@ -136,6 +136,23 @@ class TestTutorialDocker:
 
     # TODO test other puzzle errors
 
+    def test_puzzle_func_args(self, tmp_path):
+        puzzles = dedent("""
+            def move(home, root):
+                def checker():
+                    return home == File("/home/student") and root == File("/")
+
+                return Puzzle(
+                    question = f"Check home and root",
+                    checker = checker
+                )
+        """)
+
+        tutorial = TestTutorialDocker._create_tutorial(tmp_path, {"mypuzzles.py": puzzles})
+        [puzzle] = tutorial.generate(["mypuzzles.move"])
+
+        assert tutorial.solve_puzzle(puzzle.id) == (True, "Correct!")
+
     def test_student_cwd(self, tmp_path):
         tutorial = TestTutorialDocker._create_tutorial(tmp_path, {"mypuzzles.py": SIMPLE_PUZZLES})
         cwd = (tmp_path / "home" / "folder")
@@ -166,5 +183,3 @@ class TestTutorialDocker:
         tutorial = TestTutorialDocker._create_tutorial(tmp_path, {"mypuzzles.py": SIMPLE_PUZZLES})
         with pytest.raises(ProcessLookupError):
             tutorial.connect_to_bash()
-
-    # TODO test checker functions with different args.
