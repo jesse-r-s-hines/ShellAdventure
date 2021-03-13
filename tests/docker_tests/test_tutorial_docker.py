@@ -1,6 +1,7 @@
 from typing import Dict
 import pytest
 from shell_adventure_docker.tutorial_docker import TutorialDocker
+from shell_adventure_docker.file import File
 import os, subprocess
 from textwrap import dedent;
 
@@ -183,3 +184,16 @@ class TestTutorialDocker:
         tutorial = TestTutorialDocker._create_tutorial(tmp_path, {"mypuzzles.py": SIMPLE_PUZZLES})
         with pytest.raises(ProcessLookupError):
             tutorial.connect_to_bash()
+
+    def test_get_files(self, tmp_path):
+        tutorial = TestTutorialDocker._create_tutorial(tmp_path, {"mypuzzles.py": SIMPLE_PUZZLES})
+
+        a = File("A"); a.mkdir()
+        File("A/B").create()
+        File("C").create()
+        File("D").symlink_to(a)
+
+        files = tutorial.get_files(tmp_path / "home")
+        assert all([f.is_absolute() for _, _, f in files])
+        home = tmp_path / "home"
+        assert set(files) == {(True, False, home / "A"), (False, False, home / "C"), (True, True, home / "D")}

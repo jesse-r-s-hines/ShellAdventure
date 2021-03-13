@@ -3,7 +3,7 @@ import yaml, shutil
 from multiprocessing.connection import Client, Connection
 import docker, docker.errors
 from docker.models.containers import Container
-from pathlib import Path;
+from pathlib import Path, PurePosixPath;
 from . import support
 from .support import Puzzle, PuzzleTree, PathLike, Message
 import tempfile
@@ -161,6 +161,20 @@ class Tutorial:
         except BaseException as e:
             logs = self.stop()
             raise TutorialError(f'An error occurred while connecting to bash.', container_logs = logs) from e
+
+    def get_files(self, folder: PurePosixPath) -> List[Tuple[bool, bool, PurePosixPath]]:
+        """
+        Returns the children of the given folder in the docker container as a list of (is_dir, is_symlink, path) tuples.
+        Folder should be an absolute path.
+        """
+        assert folder.is_absolute()
+
+        try:
+            self._conn.send( (Message.GET_FILES, folder) )
+            return self._conn.recv()
+        except BaseException as e:
+            logs = self.stop()
+            raise TutorialError(f'An error occurred while getting files in "{folder}"', container_logs = logs) from e
 
 class TutorialError(Exception):
     """

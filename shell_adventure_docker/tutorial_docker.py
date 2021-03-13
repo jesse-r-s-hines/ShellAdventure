@@ -1,6 +1,6 @@
 from typing import List, Tuple, Dict, Any, Callable, ClassVar
 from types import ModuleType
-from pathlib import Path;
+from pathlib import Path, PurePosixPath;
 import subprocess
 from multiprocessing.connection import Listener
 import importlib.util, inspect
@@ -71,6 +71,8 @@ class TutorialDocker:
 
         return module
 
+    ### Message actions, these functions can be called by sending a message over the connection
+
     def generate(self, puzzle_generators: List[str]) -> List[Puzzle]:
         """
         Takes a list of puzzle generators and generates them. Stores the puzzles in self.puzzles.
@@ -116,7 +118,7 @@ class TutorialDocker:
 
         return (puzzle.solved, feedback)
 
-    def connect_to_bash(self):
+    def connect_to_bash(self) -> int:
         """ Finds a running bash session and stores it's id. Returns the pid. """
         try:
             # retry a few times since exec'ing into the container can take a bit.
@@ -125,6 +127,19 @@ class TutorialDocker:
         except subprocess.CalledProcessError:
             raise ProcessLookupError("No bash session to connect to.")
         return self.bash_pid
+
+    def get_files(self, folder: PurePosixPath) -> List[Tuple[bool, bool, PurePosixPath]]:
+        """
+        Returns a list of files under the given folder as a list of (is_dir, is_symlink, path) tuples.
+        folder should be an absolute path.
+        """
+        real_folder = Path(folder) # convert to real PosixPath
+        assert real_folder.is_absolute()
+        # Convert to PurePosixPath since we are going to send it over to a system that may be Windows. And the file doesn't exist on host.
+        with change_user("root"): # Access all files
+            return [(f.is_dir(), f.is_symlink(), PurePosixPath(f)) for f in real_folder.iterdir()]
+
+    ### Other methods
 
     def student_cwd(self):
         """
@@ -152,6 +167,7 @@ class TutorialDocker:
                     Message.GENERATE: self.generate,
                     Message.CONNECT_TO_BASH: self.connect_to_bash,
                     Message.SOLVE: self.solve_puzzle,
+                    Message.GET_FILES: self.get_files,
                 }
 
                 while True: # Loop until connection ends.
