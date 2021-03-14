@@ -28,6 +28,7 @@ class GUI(ThemedTk):
         # map puzzles to their question label and button. By default, Python will use object identity for dict keys, which is what we want.
         self.puzzles: Dict[Puzzle, Tuple[WrappingLabel, ttk.Button]] = {}
         self.file_tree: ttk.Treeview = None
+        self.file_icons = self.get_file_icons()
 
         self.title("Shell Adventure")
         self.minsize(300, 100) # To keep you from being able to shrink everything off the screen.
@@ -37,10 +38,25 @@ class GUI(ThemedTk):
         puzzle_frame = self.make_puzzle_frame(self)
         puzzle_frame.pack(side = tk.BOTTOM, fill = tk.BOTH, expand = True)
 
-        file_tree = self.make_file_tree(self)
+        file_tree = self.make_file_tree_frame(self)
         file_tree.pack(side = tk.TOP, fill = tk.BOTH, expand = True)
 
         self.mainloop()
+
+    def get_file_icons(self) -> Dict[Tuple[bool, bool], ImageTk.PhotoImage]:
+        """ Returns a map of icons representing 4 file types. Maps (is_dir, is_symlink) tuples to the icons """
+        icon_files = { 
+            (False, False): "file.png",
+            (False, True ): "file_symlink.png",
+            (True,  False): "folder.png",
+            (True,  True ): "folder_symlink.png",
+        }
+        # fetch icons files. We have to save to a field or tkinter will lose the images somehow.
+        file_icons = {}
+        for key, file in icon_files.items():
+            img = Image.open(PKG_PATH / "icons" / file).resize((16, 16), Image.ANTIALIAS)
+            file_icons[key] = ImageTk.PhotoImage(img)
+        return file_icons
 
     def make_puzzle_frame(self, master):
         """ Returns a frame container the puzzle list. Stores the labels and buttons in the frame in self.puzzles """
@@ -69,21 +85,8 @@ class GUI(ThemedTk):
 
         return scrollable
 
-    def make_file_tree(self, master):
+    def make_file_tree_frame(self, master):
         """ Returns the file view. Sets self.file_tree to the Treeview. """
-        # Map (is_dir, is_symlink) tuples to icons
-        icon_files = { 
-            (False, False): "file.png",
-            (False, True ): "file_symlink.png",
-            (True,  False): "folder.png",
-            (True,  True ): "folder_symlink.png",
-        }
-        # fetch icons files. We have to save to a field or tkinter will lose the images somehow.
-        self.icons = {}
-        for key, file in icon_files.items():
-            img = Image.open(PKG_PATH / "icons" / file).resize((16, 16), Image.ANTIALIAS)
-            self.icons[key] = ImageTk.PhotoImage(img)
-
         self.file_tree = ttk.Treeview(master)
 
         self.update_file_tree()
@@ -94,8 +97,6 @@ class GUI(ThemedTk):
 
     def update_file_tree(self, folder: str = ""):
         """ Updates the given folder in the file tree. Pass the iid of the node (which is the path to the file). "" is the root. """
-        print(f'updating file tree for "{folder}"')
-
         # get old_files as dict of {path: is_open,...}
         old_files = self.file_tree.get_children(folder)
         old_files = {file: self.file_tree.item(file, option = "open") for file in old_files}
@@ -115,7 +116,8 @@ class GUI(ThemedTk):
             if is_symlink: tags.append("symlink")
 
             
-            self.file_tree.insert(folder, tk.END, iid = file_id, text = file.name, image = self.icons[(is_dir, is_symlink)], tags = tags)
+            self.file_tree.insert(folder, tk.END, iid = file_id, text = file.name,
+                    image = self.file_icons[(is_dir, is_symlink)], tags = tags)
             if is_dir:
                 # TODO If a directory is new, or was already open, open it. Don't open symlinks (to avoid infinite recursion)
                 # Right now everything starts closed unless it was already open.
@@ -124,7 +126,6 @@ class GUI(ThemedTk):
                     self.update_file_tree(file_id) # trigger update on the subfolder
                 else:
                     self.file_tree.insert(file, tk.END) # insert a dummy child so that is shows as "openable"
-
 
     def solve(self, puzzle: Puzzle):
         solved, feedback = self.tutorial.solve_puzzle(puzzle)
