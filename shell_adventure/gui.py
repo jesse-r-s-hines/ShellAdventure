@@ -129,13 +129,11 @@ class GUI(ThemedTk):
         new_files = self.tutorial.get_files(PurePosixPath(folder if folder else "/"))
         new_files.sort()
 
-        # clear existing children
-        self.file_tree.delete(*old_files.keys()) 
-
         # Update the Treeview
-        for is_dir, is_symlink, file in new_files:
+        for i, (is_dir, is_symlink, file) in enumerate(new_files):
             file_id = str(file) # Use full path as iid
             file_text = file.name # The text to display for the file
+            file_icon = self.file_icons[(is_dir, is_symlink)]
 
             tags = ["dir"] if is_dir else ["file"]
             if is_symlink: tags.append("symlink")
@@ -143,17 +141,30 @@ class GUI(ThemedTk):
                 tags.append("cwd") # TODO maybe move this logic out of update_file_tree()
                 file_text += " 🠔"
             
-            self.file_tree.insert(folder, tk.END, iid = file_id, text = file_text, tags = tags,
-                                  image = self.file_icons[(is_dir, is_symlink)])
+            if file_id in old_files:
+                self.file_tree.item(file, text = file_text, tags = tags, image = file_icon) # modify existing item.
+                self.file_tree.move(file, folder, i)
+            else:
+                self.file_tree.insert(folder, i, iid = file_id, text = file_text, tags = tags, image = file_icon)
+
             if is_dir:
                 # TODO If a directory is new, or was already open, open it. Don't open symlinks (to avoid infinite recursion)
                 # Also open the current directory (and any parents of it)
                 # Right now everything starts closed unless it was already open.
-                if old_files.get(file_id, False) or file == self.student_cwd or file in self.student_cwd.parents:
+                if old_files.get(file_id, file == self.student_cwd or file in self.student_cwd.parents):
                     self.file_tree.item(file_id, open = True) # open it
                     self.update_file_tree(file_id) # trigger update on the subfolder
-                else:
+                elif file_id not in old_files:
                     self.file_tree.insert(file, tk.END) # insert a dummy child so that is shows as "openable"
+            else:
+                # if a folder has been converted into a file, we'd need to delete the children under it.
+                self.file_tree.delete(*self.file_tree.get_children(file))
+
+            old_files.pop(file_id, None)
+        
+        # Delete any files from the tree that no longer exist
+        for file in old_files.keys():
+            self.file_tree.delete(file)
 
     def solve(self, puzzle: Puzzle):
         solved, feedback = self.tutorial.solve_puzzle(puzzle)
