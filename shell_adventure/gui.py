@@ -94,16 +94,28 @@ class GUI(ThemedTk):
         self.update_file_tree()
         self.file_tree.tag_configure("cwd", font = font.Font(weight="bold"))
 
-        self.file_tree.tag_bind("dir", "<<TreeviewOpen>>",
-            lambda e: self.update_file_tree(self.file_tree.focus()))
+        def on_open(e):
+            item = self.file_tree.focus()
+            if not self.file_tree.tag_has("loaded", item):
+                self.update_file_tree(item)
+
+        self.file_tree.tag_bind("dir", "<<TreeviewOpen>>", on_open)
 
         return self.file_tree
+
+    def _add_tree_tag(self, iid, tag):
+        """ Adds a tag to the given item in the Treeview. """
+        old_tags = list(self.file_tree.item(iid, option = "tags"))
+        self.file_tree.item(iid, tags = old_tags + [tag])
 
     def update_file_tree(self, folder: str = ""):
         """
         Updates the given folder in the file tree. Indicates the student_cwd if it is under folder.
         Pass the iid of the node which is the path to the file except that "" is the root.
         """
+        print("Loading", folder)
+        self._add_tree_tag(folder, "loaded")
+
         # get old_files as dict of {path: is_open,...}
         old_files = self.file_tree.get_children(folder)
         old_files = {file: self.file_tree.item(file, option = "open") for file in old_files}
