@@ -44,11 +44,12 @@ class GUI(ThemedTk):
         file_tree.pack(side = tk.TOP, fill = tk.BOTH, expand = True)
 
         def update_file_tree_loop(): # TODO make this trigger after every command instead of on a loop
-            self.student_cwd = self.tutorial.get_student_cwd()
             self.update_file_tree()
             self.after(500, update_file_tree_loop)
-
         update_file_tree_loop()
+
+        if self.student_cwd != Path("/"): # can't really display pointer to root.
+            self.file_tree.see(str(self.student_cwd)) # open all parents and scroll to (parents should already be open)
 
         self.mainloop()
 
@@ -103,7 +104,7 @@ class GUI(ThemedTk):
         def on_open(e):
             item = self.file_tree.focus()
             if not self.file_tree.tag_has("loaded", item):
-                self.update_file_tree(item)
+                self.load_folder(item)
 
         self.file_tree.tag_bind("dir", "<<TreeviewOpen>>", on_open)
 
@@ -114,7 +115,7 @@ class GUI(ThemedTk):
         old_tags = list(self.file_tree.item(iid, option = "tags"))
         self.file_tree.item(iid, tags = old_tags + [tag])
 
-    def update_file_tree(self, folder: str = "", open_new: bool = False):
+    def load_folder(self, folder: str, open_new: bool = False):
         """
         Updates the given folder in the file tree. Indicates the student_cwd if it is under folder, and opens it.
         Pass the iid of the node which is the path to the file except that "" is the root.
@@ -158,7 +159,7 @@ class GUI(ThemedTk):
                 should_open = file_open if file_in_tree else (is_in_cwd_path or (open_new and not is_symlink))
                 if should_open: 
                     self.file_tree.item(file_id, open = True) # open it
-                    self.update_file_tree(file_id, open_new = file_open or open_new) # trigger update on the subfolder
+                    self.load_folder(file_id, open_new = file_open or open_new) # trigger update on the subfolder
                 elif not file_in_tree:
                     self.file_tree.insert(file, tk.END, tags = ["dummy"]) # insert a dummy child so that is shows as "openable"
             else:
@@ -172,8 +173,10 @@ class GUI(ThemedTk):
         if len(new_files) == 0:
             self.file_tree.insert(folder, tk.END, tags = ["dummy"]) # insert a dummy child so that is shows as "openable"
 
-
-
+    def update_file_tree(self):
+        """ Updates the file tree. """
+        self.student_cwd = self.tutorial.get_student_cwd()
+        self.load_folder("")
 
     def solve(self, puzzle: Puzzle):
         solved, feedback = self.tutorial.solve_puzzle(puzzle)
