@@ -25,7 +25,7 @@ class GUI(ThemedTk):
         self.tutorial = tutorial
         # map puzzles to their question label and button. By default, Python will use object identity for dict keys, which is what we want.
         self.puzzles: Dict[Puzzle, Tuple[WrappingLabel, ttk.Button]] = {}
-        self.student_cwd: PurePosixPath = tutorial.get_student_cwd() # The path to the student's current directory
+        self.student_cwd: PurePosixPath = None # The path to the student's current directory
 
         # self.flagInput = StringVar(self, value="")
 
@@ -42,6 +42,13 @@ class GUI(ThemedTk):
 
         file_tree = self.make_file_tree_frame(self)
         file_tree.pack(side = tk.TOP, fill = tk.BOTH, expand = True)
+
+        def update_file_tree_loop(): # TODO make this trigger after every command instead of on a loop
+            self.student_cwd = self.tutorial.get_student_cwd()
+            self.update_file_tree()
+            self.after(500, update_file_tree_loop)
+
+        update_file_tree_loop()
 
         self.mainloop()
 
@@ -91,7 +98,6 @@ class GUI(ThemedTk):
         """ Returns the file view. Sets self.file_tree to the Treeview. """
         self.file_tree = ttk.Treeview(master)
 
-        self.update_file_tree()
         self.file_tree.tag_configure("cwd", font = font.Font(weight="bold"))
 
         def on_open(e):
