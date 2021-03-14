@@ -128,7 +128,7 @@ class GUI(ThemedTk):
         # get new children, convert "" to "/"
         new_files = self.tutorial.get_files(PurePosixPath(folder if folder else "/"))
         new_files.sort()
-
+       
         # Update the Treeview
         for i, (is_dir, is_symlink, file) in enumerate(new_files):
             file_id = str(file) # Use full path as iid
@@ -159,14 +159,17 @@ class GUI(ThemedTk):
                     self.file_tree.item(file_id, open = True) # open it
                     self.update_file_tree(file_id) # trigger update on the subfolder
                 elif not file_in_tree:
-                    self.file_tree.insert(file, tk.END) # insert a dummy child so that is shows as "openable"
+                    self.file_tree.insert(file, tk.END, tags = ["dummy"]) # insert a dummy child so that is shows as "openable"
             else:
                 # if a folder has been converted into a file, we'd need to delete the children under it.
                 self.file_tree.delete(*self.file_tree.get_children(file))
 
         # Delete any files from the tree that no longer exist
         for file in old_files.keys():
-            self.file_tree.delete(file)
+            if not (self.file_tree.tag_has("dummy", file) and len(new_files) == 0): # if directory is empty keep the dummy item.
+                self.file_tree.delete(file)
+
+
 
     def solve(self, puzzle: Puzzle):
         solved, feedback = self.tutorial.solve_puzzle(puzzle)
