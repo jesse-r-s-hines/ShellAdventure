@@ -134,6 +134,8 @@ class GUI(ThemedTk):
             file_id = str(file) # Use full path as iid
             file_text = file.name # The text to display for the file
             file_icon = self.file_icons[(is_dir, is_symlink)]
+            file_in_tree = file_id in old_files
+            file_open = old_files.pop(file_id, False)
 
             tags = ["dir"] if is_dir else ["file"]
             if is_symlink: tags.append("symlink")
@@ -141,7 +143,7 @@ class GUI(ThemedTk):
                 tags.append("cwd") # TODO maybe move this logic out of update_file_tree()
                 file_text += " 🠔"
             
-            if file_id in old_files:
+            if file_in_tree:
                 self.file_tree.item(file, text = file_text, tags = tags, image = file_icon) # modify existing item.
                 self.file_tree.move(file, folder, i)
             else:
@@ -151,17 +153,17 @@ class GUI(ThemedTk):
                 # TODO If a directory is new, or was already open, open it. Don't open symlinks (to avoid infinite recursion)
                 # Also open the current directory (and any parents of it)
                 # Right now everything starts closed unless it was already open.
-                if old_files.get(file_id, file == self.student_cwd or file in self.student_cwd.parents):
+                is_in_cwd_path = (file == self.student_cwd or file in self.student_cwd.parents)
+                should_open = (file_open if file_in_tree else is_in_cwd_path)
+                if should_open: 
                     self.file_tree.item(file_id, open = True) # open it
                     self.update_file_tree(file_id) # trigger update on the subfolder
-                elif file_id not in old_files:
+                elif not file_in_tree:
                     self.file_tree.insert(file, tk.END) # insert a dummy child so that is shows as "openable"
             else:
                 # if a folder has been converted into a file, we'd need to delete the children under it.
                 self.file_tree.delete(*self.file_tree.get_children(file))
 
-            old_files.pop(file_id, None)
-        
         # Delete any files from the tree that no longer exist
         for file in old_files.keys():
             self.file_tree.delete(file)
