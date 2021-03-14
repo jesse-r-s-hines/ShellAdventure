@@ -128,7 +128,7 @@ class TutorialDocker:
             raise ProcessLookupError("No bash session to connect to.")
         return self.bash_pid
 
-    def get_files(self, folder: PurePosixPath) -> List[Tuple[bool, bool, PurePosixPath]]:
+    def get_files(self, folder: PathLike) -> List[Tuple[bool, bool, PurePosixPath]]:
         """
         Returns a list of files under the given folder as a list of (is_dir, is_symlink, path) tuples.
         folder should be an absolute path.
@@ -137,7 +137,9 @@ class TutorialDocker:
         assert real_folder.is_absolute()
         # Convert to PurePosixPath since we are going to send it over to a system that may be Windows. And the file doesn't exist on host.
         with change_user("root"): # Access all files
-            return [(f.is_dir(), f.is_symlink(), PurePosixPath(f)) for f in real_folder.iterdir()]
+            # I was getting `PermissionError: Operation not permitted: '/proc/1/map_files/400000-423000'`. The file is a symlink, but the
+            # proc directory is special and stat gets confused. Resolving the link first fixes it.
+            return [(f.resolve().is_dir(), f.is_symlink(), PurePosixPath(f)) for f in real_folder.iterdir()]
 
     # The method is used both as a response to a message and in the puzzle code
     def student_cwd(self) -> File:

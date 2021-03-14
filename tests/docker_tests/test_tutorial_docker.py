@@ -197,3 +197,17 @@ class TestTutorialDocker:
         assert all([f.is_absolute() for _, _, f in files])
         home = tmp_path / "home"
         assert set(files) == {(True, False, home / "A"), (False, False, home / "C"), (True, True, home / "D")}
+
+    def test_get_all_files(self, tmp_path):
+        tutorial = TestTutorialDocker._create_tutorial(tmp_path, {"mypuzzles.py": SIMPLE_PUZZLES})
+        
+        # recursively get the entire directory tree to make sure that there a no permission issues or other access issues that throw errors
+        def get_files_recursive(folder):
+            all_files = []
+            for is_dir, is_symlink, file in tutorial.get_files(folder):
+                all_files.append(file)
+                if is_dir and not is_symlink:
+                    all_files.extend(get_files_recursive(file))
+            return all_files
+
+        assert get_files_recursive("/") != []

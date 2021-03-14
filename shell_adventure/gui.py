@@ -112,7 +112,6 @@ class GUI(ThemedTk):
         new_files = self.tutorial.get_files(PurePosixPath(folder if folder else "/")) 
 
         # clear existing children
-        # TODO maybe keep the existing Treeview items instead of deleting them all each time?
         self.file_tree.delete(*old_files.keys()) 
 
         # Update the Treeview
@@ -130,8 +129,9 @@ class GUI(ThemedTk):
                                   image = self.file_icons[(is_dir, is_symlink)])
             if is_dir:
                 # TODO If a directory is new, or was already open, open it. Don't open symlinks (to avoid infinite recursion)
+                # Also open the current directory (and any parents of it)
                 # Right now everything starts closed unless it was already open.
-                if old_files.get(file_id, False):
+                if old_files.get(file_id, False) or file == self.student_cwd or file in self.student_cwd.parents:
                     self.file_tree.item(file_id, open = True) # open it
                     self.update_file_tree(file_id) # trigger update on the subfolder
                 else:
