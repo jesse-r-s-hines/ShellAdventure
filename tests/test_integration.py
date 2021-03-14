@@ -79,7 +79,4 @@ class TestIntegration:
             assert cwd_puzzle.solved == True
             assert feedback == "Correct!"
 
-            solved, feedback = tutorial.solve_puzzle(cwd_puzzle)
-            assert solved == True
-            assert cwd_puzzle.solved == True
-            assert feedback == "Correct!"
+            assert tutorial.get_student_cwd() == Path("/home/student/dir")

@@ -162,6 +162,15 @@ class Tutorial:
             logs = self.stop()
             raise TutorialError(f'An error occurred while connecting to bash.', container_logs = logs) from e
 
+    def get_student_cwd(self) -> PurePosixPath:
+        """ Get the path to the students current directory/ """
+        try:
+            self._conn.send( (Message.GET_STUDENT_CWD,) )
+            return self._conn.recv()
+        except BaseException as e:
+            logs = self.stop()
+            raise TutorialError(f'An error occurred while getting student cwd', container_logs = logs) from e
+
     def get_files(self, folder: PurePosixPath) -> List[Tuple[bool, bool, PurePosixPath]]:
         """
         Returns the children of the given folder in the docker container as a list of (is_dir, is_symlink, path) tuples.

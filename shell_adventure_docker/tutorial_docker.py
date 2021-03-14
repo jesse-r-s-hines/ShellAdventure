@@ -139,9 +139,8 @@ class TutorialDocker:
         with change_user("root"): # Access all files
             return [(f.is_dir(), f.is_symlink(), PurePosixPath(f)) for f in real_folder.iterdir()]
 
-    ### Other methods
-
-    def student_cwd(self):
+    # The method is used both as a response to a message and in the puzzle code
+    def student_cwd(self) -> File:
         """
         Return the student's current working directory. Note that in generation functions, this is different from `File.cwd()`
         File.cwd() returns the current working directory of the generation function, not the student.
@@ -153,6 +152,8 @@ class TutorialDocker:
             result = subprocess.check_output(["pwdx", f"{self.bash_pid}"]) # returns "pid: /path/to/folder"
         cwd = result.decode().split(": ", 1)[1][:-1] # Split and remove trailing newline.
         return File(cwd) 
+
+    ### Other methods
 
     def run(self):
         """
@@ -167,6 +168,7 @@ class TutorialDocker:
                     Message.GENERATE: self.generate,
                     Message.CONNECT_TO_BASH: self.connect_to_bash,
                     Message.SOLVE: self.solve_puzzle,
+                    Message.GET_STUDENT_CWD: lambda: PurePosixPath(self.student_cwd()),
                     Message.GET_FILES: self.get_files,
                 }
 

@@ -102,7 +102,9 @@ class Message(Enum):
     """ Tells the container that a bash session has started and to connect to it. Usage: (CONNECT_TO_BASH,) """
     SOLVE = 3
     """ Solve a puzzle. Usage: (SOLVE, puzzle_id) """
-    GET_FILES = 4
+    GET_STUDENT_CWD = 4
+    """ Get the path to the students current directory. Usage (GET_CWD,) """
+    GET_FILES = 5
     """ Get files under a folder. Usage (GET_FILES, folder) """
 
 def call_with_args(func: Callable[..., Any], args: Dict[str, Any]):
