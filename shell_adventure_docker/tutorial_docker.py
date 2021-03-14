@@ -151,7 +151,7 @@ class TutorialDocker:
         with change_user("root"):
             result = subprocess.check_output(["pwdx", f"{self.bash_pid}"]) # returns "pid: /path/to/folder"
         cwd = result.decode().split(": ", 1)[1][:-1] # Split and remove trailing newline.
-        return File(cwd) 
+        return File(cwd).resolve()
 
     ### Other methods
 

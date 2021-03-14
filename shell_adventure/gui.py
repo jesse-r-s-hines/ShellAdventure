@@ -3,7 +3,7 @@ from . import tutorial
 from .support import Puzzle, PathLike
 from pathlib import Path, PurePosixPath
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, font
 from ttkthemes import ThemedTk
 import tkinter.messagebox
 from PIL import ImageTk, Image
@@ -23,10 +23,12 @@ class GUI(ThemedTk):
         super().__init__(theme="radiance")
 
         self.tutorial = tutorial
-        # self.flagInput = StringVar(self, value="")
-
         # map puzzles to their question label and button. By default, Python will use object identity for dict keys, which is what we want.
         self.puzzles: Dict[Puzzle, Tuple[WrappingLabel, ttk.Button]] = {}
+        self.student_cwd: PurePosixPath = tutorial.get_student_cwd() # The path to the student's current directory
+
+        # self.flagInput = StringVar(self, value="")
+
         self.file_tree: ttk.Treeview = None
         self.file_icons = self.get_file_icons()
 
@@ -90,13 +92,18 @@ class GUI(ThemedTk):
         self.file_tree = ttk.Treeview(master)
 
         self.update_file_tree()
+        self.file_tree.tag_configure("cwd", font = font.Font(weight="bold"))
+
         self.file_tree.tag_bind("dir", "<<TreeviewOpen>>",
             lambda e: self.update_file_tree(self.file_tree.focus()))
 
         return self.file_tree
 
     def update_file_tree(self, folder: str = ""):
-        """ Updates the given folder in the file tree. Pass the iid of the node (which is the path to the file). "" is the root. """
+        """
+        Updates the given folder in the file tree. Indicates the student_cwd if it is under folder.
+        Pass the iid of the node which is the path to the file except that "" is the root.
+        """
         # get old_files as dict of {path: is_open,...}
         old_files = self.file_tree.get_children(folder)
         old_files = {file: self.file_tree.item(file, option = "open") for file in old_files}
@@ -111,13 +118,16 @@ class GUI(ThemedTk):
         # Update the Treeview
         for is_dir, is_symlink, file in new_files:
             file_id = str(file) # Use full path as iid
+            file_text = file.name # The text to display for the file
 
             tags = ["dir"] if is_dir else ["file"]
             if is_symlink: tags.append("symlink")
-
+            if self.student_cwd == file:
+                tags.append("cwd") # TODO maybe move this logic out of update_file_tree()
+                file_text += " 🠔"
             
-            self.file_tree.insert(folder, tk.END, iid = file_id, text = file.name,
-                    image = self.file_icons[(is_dir, is_symlink)], tags = tags)
+            self.file_tree.insert(folder, tk.END, iid = file_id, text = file_text, tags = tags,
+                                  image = self.file_icons[(is_dir, is_symlink)])
             if is_dir:
                 # TODO If a directory is new, or was already open, open it. Don't open symlinks (to avoid infinite recursion)
                 # Right now everything starts closed unless it was already open.
