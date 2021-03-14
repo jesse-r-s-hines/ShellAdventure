@@ -1,12 +1,15 @@
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, ClassVar
 from . import tutorial
 from .support import Puzzle, PathLike
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 import tkinter as tk
 from tkinter import ttk
 from ttkthemes import ThemedTk
 import tkinter.messagebox
+from PIL import ImageTk, Image
 from .scrolled_frame import VerticalScrolledFrame
+
+PKG_PATH = Path(__file__).parent
 
 class WrappingLabel(ttk.Label):
     """Label that automatically adjusts the wrap to the size"""
@@ -68,6 +71,19 @@ class GUI(ThemedTk):
 
     def make_file_tree(self, master):
         """ Returns the file view. Sets self.file_tree to the Treeview. """
+        # Map (is_dir, is_symlink) tuples to icons
+        icon_files = { 
+            (False, False): "file.png",
+            (False, True ): "file_symlink.png",
+            (True,  False): "folder.png",
+            (True,  True ): "folder_symlink.png",
+        }
+        # fetch icons files. We have to save to a field or tkinter will lose the images somehow.
+        self.icons = {}
+        for key, file in icon_files.items():
+            img = Image.open(PKG_PATH / "icons" / file).resize((16, 16), Image.ANTIALIAS)
+            self.icons[key] = ImageTk.PhotoImage(img)
+
         self.file_tree = ttk.Treeview(master)
 
         self.update_file_tree()
@@ -99,7 +115,7 @@ class GUI(ThemedTk):
             if is_symlink: tags.append("symlink")
 
             
-            self.file_tree.insert(folder, tk.END, iid = file_id, text = file.name, tags = tags)
+            self.file_tree.insert(folder, tk.END, iid = file_id, text = file.name, image = self.icons[(is_dir, is_symlink)], tags = tags)
             if is_dir:
                 # TODO If a directory is new, or was already open, open it. Don't open symlinks (to avoid infinite recursion)
                 # Right now everything starts closed unless it was already open.
