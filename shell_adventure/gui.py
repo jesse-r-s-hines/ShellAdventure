@@ -26,6 +26,7 @@ class GUI(ThemedTk):
         # map puzzles to their question label and button. By default, Python will use object identity for dict keys, which is what we want.
         self.puzzles: Dict[Puzzle, Tuple[WrappingLabel, ttk.Button]] = {}
         self.student_cwd: PurePosixPath = None # The path to the student's current directory
+        self.file_tree_root = PurePosixPath("/") # The root of the displayed file tree
 
         # self.flagInput = StringVar(self, value="")
 
@@ -48,7 +49,7 @@ class GUI(ThemedTk):
             self.after(500, update_file_tree_loop)
         update_file_tree_loop()
 
-        if self.student_cwd != Path("/"): # can't really display pointer to root.
+        if self.student_cwd != self.file_tree_root: # can't really display pointer to root.
             self.file_tree.see(str(self.student_cwd)) # open all parents and scroll to (parents should already be open)
 
         self.mainloop()
@@ -127,8 +128,8 @@ class GUI(ThemedTk):
         old_files = self.file_tree.get_children(folder)
         old_files = {file: self.file_tree.item(file, option = "open") for file in old_files}
 
-        # get new children, convert "" to "/"
-        new_files = self.tutorial.get_files(PurePosixPath(folder if folder else "/"))
+        # get new children, convert "" to the folder that is the root of the file tree
+        new_files = self.tutorial.get_files(PurePosixPath(folder if folder else self.file_tree_root))
         new_files.sort()
        
         # Update the Treeview
