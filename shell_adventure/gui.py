@@ -119,7 +119,6 @@ class GUI(ThemedTk):
         Updates the given folder in the file tree. Indicates the student_cwd if it is under folder.
         Pass the iid of the node which is the path to the file except that "" is the root.
         """
-        print("Loading", folder)
         self._add_tree_tag(folder, "loaded")
 
         # get old_files as dict of {path: is_open,...}
@@ -127,7 +126,8 @@ class GUI(ThemedTk):
         old_files = {file: self.file_tree.item(file, option = "open") for file in old_files}
 
         # get new children, convert "" to "/"
-        new_files = self.tutorial.get_files(PurePosixPath(folder if folder else "/")) 
+        new_files = self.tutorial.get_files(PurePosixPath(folder if folder else "/"))
+        new_files.sort()
 
         # clear existing children
         self.file_tree.delete(*old_files.keys()) 
