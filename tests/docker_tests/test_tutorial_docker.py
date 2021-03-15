@@ -198,10 +198,9 @@ class TestTutorialDocker:
         home = tmp_path / "home"
         assert set(files) == {(True, False, home / "A"), (False, False, home / "C"), (True, True, home / "D")}
 
-    def test_get_all_files(self, tmp_path):
+    def test_get_special_files(self, tmp_path):
         tutorial = TestTutorialDocker._create_tutorial(tmp_path, {"mypuzzles.py": SIMPLE_PUZZLES})
         
-        # recursively get the entire directory tree to make sure that there a no permission issues or other access issues that throw errors
         def get_files_recursive(folder):
             all_files = []
             for is_dir, is_symlink, file in tutorial.get_files(folder):
@@ -210,4 +209,5 @@ class TestTutorialDocker:
                     all_files.extend(get_files_recursive(file))
             return all_files
 
-        assert get_files_recursive("/") != []
+        # /proc has special files that sometimes throws errors when trying to get them via python. Test that they are handled properly.
+        assert get_files_recursive("/proc") != []
