@@ -224,7 +224,8 @@ class GUI(ThemedTk):
 
     def report_callback_exception(self, *args):
         """ Override. """
-        # TODO make this show an error box or something.
+        # TODO make this show an error box or something?
         # Error will be shown in stderr
+        print("\n\n\n ==== An error occurred in the tutorial === \n\n")
         super().report_callback_exception(*args)
         self.destroy()
