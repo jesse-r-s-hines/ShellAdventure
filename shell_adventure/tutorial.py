@@ -130,18 +130,21 @@ class Tutorial:
         In general you should use a tutorial as a context manager instead to start/stop the tutorial, which will
         guarantee that the container gets cleaned up.
         """
-        self.end_time = datetime.now()
+        if not self.end_time: # Check that we haven't already stopped the container
+            self.end_time = datetime.now()
 
-        if self._conn:
-            self._conn.send("END")
-            self._conn.close()
-        # The container should stop itself, but we'll make sure here as well.
-        self.container.stop(timeout = 4)
-        logs = self.container.logs()
-        self.container.remove()
-        self._volume.cleanup()
-        
-        return logs.decode()
+            if self._conn:
+                self._conn.send("END")
+                self._conn.close()
+            # The container should stop itself, but we'll make sure here as well.
+            self.container.stop(timeout = 4)
+            logs = self.container.logs()
+            self.container.remove()
+            self._volume.cleanup()
+            
+            return logs.decode()
+        else:
+            return None
 
     def __enter__(self):
         self.start()
