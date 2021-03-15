@@ -122,7 +122,7 @@ class TutorialDocker:
         """ Finds a running bash session and stores it's id. Returns the pid. """
         try:
             # retry a few times since exec'ing into the container can take a bit.
-            result = retry_call(lambda: subprocess.check_output(["pidof", "-s", "bash"]), tries=40, delay=0.1) # type: ignore
+            result = retry_call(lambda: subprocess.check_output(["pidof", "-s", "bash"]), tries=40, delay=0.2) # type: ignore
             self.bash_pid = int(result)
         except subprocess.CalledProcessError:
             raise ProcessLookupError("No bash session to connect to.")
