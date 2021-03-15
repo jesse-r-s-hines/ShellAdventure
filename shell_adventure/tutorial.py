@@ -164,14 +164,14 @@ class Tutorial:
             logs = self.stop()
             raise TutorialError(f'An error occurred while solving puzzle {puzzle.id}: "{puzzle.question}"', container_logs = logs) from e
 
-    def connect_to_bash(self) -> int:
-        """ Connects the tutorial to a running bash session. Returns the PID (in docker) of the bash session. """
+    def connect_to_shell(self) -> int:
+        """ Connects the tutorial to a running shell session. Returns the PID (in docker) of the shell session. """
         try:
-            self._conn.send( (Message.CONNECT_TO_BASH,) )
+            self._conn.send( (Message.CONNECT_TO_SHELL,) )
             return self._conn.recv() # wait for response
         except BaseException as e:
             logs = self.stop()
-            raise TutorialError(f'An error occurred while connecting to bash.', container_logs = logs) from e
+            raise TutorialError(f'An error occurred while connecting to shell.', container_logs = logs) from e
 
     def get_student_cwd(self) -> PurePosixPath:
         """ Get the path to the students current directory/ """

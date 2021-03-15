@@ -33,7 +33,7 @@ class TutorialDocker:
 
     def __init__(self, data_dir: PathLike):
         """
-        Create a tutorial from a config_file and a PID to the bash_session the student is running.
+        Create a tutorial from a config_file and a PID to the shell session the student is running.
         Any resources the config file uses should be placed in the same directory as the config file.
         """
         self.data_dir = Path(data_dir)
@@ -52,7 +52,7 @@ class TutorialDocker:
                     self.generators[f"{module_name}.{func_name}"] = func
 
         self.puzzles = {} # Populated when we generate the puzzles.
-        self.bash_pid: int = None
+        self.shell_pid: int = None
 
     def _get_module(self, file_path: Path) -> ModuleType:
         """
@@ -118,15 +118,15 @@ class TutorialDocker:
 
         return (puzzle.solved, feedback)
 
-    def connect_to_bash(self) -> int:
-        """ Finds a running bash session and stores it's id. Returns the pid. """
+    def connect_to_shell(self) -> int:
+        """ Finds a running shell session and stores it's id. Returns the pid. """
         try:
             # retry a few times since exec'ing into the container can take a bit.
             result = retry_call(lambda: subprocess.check_output(["pidof", "-s", "bash"]), tries=40, delay=0.2) # type: ignore
-            self.bash_pid = int(result)
+            self.shell_pid = int(result)
         except subprocess.CalledProcessError:
-            raise ProcessLookupError("No bash session to connect to.")
-        return self.bash_pid
+            raise ProcessLookupError("No shell session found.")
+        return self.shell_pid
 
     def get_files(self, folder: PathLike) -> List[Tuple[bool, bool, PurePosixPath]]:
         """
@@ -146,12 +146,12 @@ class TutorialDocker:
         """
         Return the student's current working directory. Note that in generation functions, this is different from `File.cwd()`
         File.cwd() returns the current working directory of the generation function, not the student.
-        Returns None if bash_pid is not set.
+        Returns None if shell_pid is not set.
         """
-        if self.bash_pid == None:
+        if self.shell_pid == None:
             return None
         with change_user("root"):
-            result = subprocess.check_output(["pwdx", f"{self.bash_pid}"]) # returns "pid: /path/to/folder"
+            result = subprocess.check_output(["pwdx", f"{self.shell_pid}"]) # returns "pid: /path/to/folder"
         cwd = result.decode().split(": ", 1)[1][:-1] # Split and remove trailing newline.
         return File(cwd).resolve()
 
@@ -168,7 +168,7 @@ class TutorialDocker:
                 actions = {
                     # Map message type to a function that will be called. The return of the lambda will be sent back to host. 
                     Message.GENERATE: self.generate,
-                    Message.CONNECT_TO_BASH: self.connect_to_bash,
+                    Message.CONNECT_TO_SHELL: self.connect_to_shell,
                     Message.SOLVE: self.solve_puzzle,
                     Message.GET_STUDENT_CWD: lambda: PurePosixPath(self.student_cwd()),
                     Message.GET_FILES: self.get_files,

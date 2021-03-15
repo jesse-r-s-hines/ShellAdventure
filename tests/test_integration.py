@@ -90,7 +90,7 @@ class TestIntegration:
             # Connect to bash
             bash = subprocess.Popen(["docker", "exec", "-i", "-w", "/home/student/dir", tutorial.container.id, "bash"],
                 stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-            assert tutorial.connect_to_bash() > 1
+            assert tutorial.connect_to_shell() > 1
 
             cwd_puzzle = tutorial.puzzles[0].puzzle
             solved, feedback = tutorial.solve_puzzle(cwd_puzzle)

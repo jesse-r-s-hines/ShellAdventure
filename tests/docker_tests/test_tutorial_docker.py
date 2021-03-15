@@ -161,8 +161,8 @@ class TestTutorialDocker:
         bash = subprocess.Popen("bash", stdin = subprocess.PIPE, cwd = cwd)
 
         try:
-            tutorial.connect_to_bash()
-            assert tutorial.bash_pid == bash.pid
+            tutorial.connect_to_shell()
+            assert tutorial.shell_pid == bash.pid
             assert tutorial.student_cwd() == cwd
         finally:
             bash.kill()
@@ -174,16 +174,16 @@ class TestTutorialDocker:
         bash = subprocess.Popen("bash", stdin = subprocess.PIPE, cwd = cwd)
 
         try:
-            tutorial.connect_to_bash()
-            assert tutorial.bash_pid == bash.pid
+            tutorial.connect_to_shell()
+            assert tutorial.shell_pid == bash.pid
             assert tutorial.student_cwd() == cwd
         finally:
             bash.kill()
 
-    def test_connect_to_bash_not_found(self, tmp_path):
+    def test_connect_to_shell_not_found(self, tmp_path):
         tutorial = TestTutorialDocker._create_tutorial(tmp_path, {"mypuzzles.py": SIMPLE_PUZZLES})
         with pytest.raises(ProcessLookupError):
-            tutorial.connect_to_bash()
+            tutorial.connect_to_shell()
 
     def test_get_files(self, tmp_path):
         tutorial = TestTutorialDocker._create_tutorial(tmp_path, {"mypuzzles.py": SIMPLE_PUZZLES})

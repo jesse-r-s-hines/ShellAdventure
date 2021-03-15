@@ -16,7 +16,7 @@ if __name__ == "__main__":
 
     with Tutorial(sys.argv[1]) as tutorial: # Creates and sets up the container with the tutorial inside
         bash = start_bash(tutorial.container)
-        tutorial.connect_to_bash()
+        tutorial.connect_to_shell()
         gui = GUI(tutorial)
 
     print("\n") # Add some newlines so that the terminal's next program is on a line by itself properly.
