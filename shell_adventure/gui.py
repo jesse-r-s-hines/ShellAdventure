@@ -50,7 +50,7 @@ class GUI(ThemedTk):
         update_file_tree_loop()
 
         if self.student_cwd != self.file_tree_root: # can't really display pointer to root.
-            self.file_tree.see(str(self.student_cwd)) # open all parents and scroll to (parents should already be open)
+            self.file_tree.see(str(self.student_cwd)) # type: ignore # open all parents and scroll to (parents should already be open)
 
         self.mainloop()
 
