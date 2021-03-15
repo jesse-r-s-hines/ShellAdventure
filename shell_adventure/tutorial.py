@@ -72,7 +72,7 @@ class Tutorial:
         #     dest = volume / "resources" / resource.name
         #     shutil.copyfile(resource, dest) # Copy to volume
 
-    def _launch_container(self, volume: str, command: Union[List[str], str]):
+    def _launch_container(self, volume: str, command: Union[List[str], str]) -> Container:
         """
         Launches the container with the given command. Returns the container.
         The volume will be mapped to /tmp/shell-adventure/ in the container.
@@ -124,7 +124,7 @@ class Tutorial:
 
         self.start_time = datetime.now()
 
-    def stop(self):
+    def stop(self) -> str:
         """
         Stop the tutorial, clean up all resources. Returns container logs.
         In general you should use a tutorial as a context manager instead to start/stop the tutorial, which will
@@ -164,7 +164,7 @@ class Tutorial:
             logs = self.stop()
             raise TutorialError(f'An error occurred while solving puzzle {puzzle.id}: "{puzzle.question}"', container_logs = logs) from e
 
-    def connect_to_bash(self):
+    def connect_to_bash(self) -> int:
         """ Connects the tutorial to a running bash session. Returns the PID (in docker) of the bash session. """
         try:
             self._conn.send( (Message.CONNECT_TO_BASH,) )
