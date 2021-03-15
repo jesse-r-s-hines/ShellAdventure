@@ -121,11 +121,14 @@ class TutorialDocker:
     def connect_to_shell(self) -> int:
         """ Finds a running shell session and stores it's id. Returns the pid. """
         try:
-            # retry a few times since exec'ing into the container can take a bit.
-            result = retry_call(lambda: subprocess.check_output(["pidof", "-s", "bash"]), tries=40, delay=0.2) # type: ignore
+            # retry a few times since exec'ing into the container can take a bit, or something else may have spun up its own temporary bash session
+            result = retry_call(lambda: subprocess.check_output(["pidof", "bash"]), tries=40, delay=0.2) # type: ignore
             self.shell_pid = int(result)
         except subprocess.CalledProcessError:
             raise ProcessLookupError("No shell session found.")
+        except ValueError: # int parse fails because more than one pid was returned
+            raise ProcessLookupError(f'Multiple shells found.')
+
         return self.shell_pid
 
     def get_files(self, folder: PathLike) -> List[Tuple[bool, bool, PurePosixPath]]:
