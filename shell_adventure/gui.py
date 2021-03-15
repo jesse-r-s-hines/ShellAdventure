@@ -3,7 +3,7 @@ from . import tutorial
 from .support import Puzzle, PathLike
 from pathlib import Path, PurePosixPath
 import tkinter as tk
-from tkinter import ttk, font
+from tkinter import StringVar, ttk, font
 from ttkthemes import ThemedTk
 import tkinter.messagebox
 from PIL import ImageTk, Image
@@ -28,26 +28,33 @@ class GUI(ThemedTk):
         self.student_cwd: PurePosixPath = None # The path to the student's current directory
         self.file_tree_root = PurePosixPath("/") # The root of the displayed file tree
 
-        # self.flagInput = StringVar(self, value="")
-
         self.file_tree: ttk.Treeview = None
         self.file_icons = self.get_file_icons()
+
+        self.time_label = StringVar(self, value = "Time: 00:00")
+        self.score_label = StringVar(self, value = "Score: 0/10")
+        # self.flagInput = StringVar(self, value="")
 
         self.title("Shell Adventure")
         self.minsize(300, 100) # To keep you from being able to shrink everything off the screen.
         self.columnconfigure(0, weight = 1, minsize = 80)
         self.rowconfigure(0, weight = 1, minsize = 80)
 
+        status_bar = self.make_status_bar(self)
+        status_bar.pack(side = tk.TOP, fill = tk.X, expand = False)
+
+        file_tree = self.make_file_tree(self)
+        file_tree.pack(side = tk.TOP, fill = tk.BOTH, expand = True)
+
         puzzle_frame = self.make_puzzle_frame(self)
         puzzle_frame.pack(side = tk.BOTTOM, fill = tk.BOTH, expand = True)
 
-        file_tree = self.make_file_tree_frame(self)
-        file_tree.pack(side = tk.TOP, fill = tk.BOTH, expand = True)
+        def update_loop(): # TODO make this trigger after every command instead of on a loop
+            self.update_gui()
+            self.after(250, update_loop)
+        update_loop()
 
-        def update_file_tree_loop(): # TODO make this trigger after every command instead of on a loop
-            self.update_file_tree()
-            self.after(500, update_file_tree_loop)
-        update_file_tree_loop()
+        self.start_timer_loop()
 
         if self.student_cwd != self.file_tree_root: # can't really display pointer to root.
             self.file_tree.see(str(self.student_cwd)) # type: ignore # open all parents and scroll to (parents should already be open)
@@ -68,6 +75,44 @@ class GUI(ThemedTk):
             img = Image.open(PKG_PATH / "icons" / file).resize((16, 16), Image.ANTIALIAS)
             file_icons[key] = ImageTk.PhotoImage(img)
         return file_icons
+
+    def make_status_bar(self, master):
+        """ Returns the status bar that displays time and current score. """
+        status_bar = ttk.Frame(master)
+
+        ttk.Label(status_bar, textvariable = self.score_label).pack(side = tk.RIGHT, padx = 5) # Score: 0/10
+        ttk.Separator(status_bar, orient='vertical').pack(side = tk.RIGHT, fill = tk.Y, padx = 5)
+        ttk.Label(status_bar, textvariable = self.time_label).pack(side = tk.RIGHT) # Time: 01:5
+        ttk.Separator(status_bar, orient='vertical').pack(side = tk.RIGHT, fill = tk.Y, padx = 5)
+        
+        return status_bar
+
+    def start_timer_loop(self):
+        """ Starts a loop which will update the timer every second. """
+        self.after(1000, self.start_timer_loop)
+
+        time = self.tutorial.time()
+        hours, remainder = divmod(int(time.total_seconds()), 60 * 60)
+        minutes, seconds = divmod(remainder, 60)
+        if hours:
+            self.time_label.set(f"Time: {hours}:{minutes:02}:{seconds:02}")
+        else:
+            self.time_label.set(f"Time: {minutes:02}:{seconds:02}")
+
+    def make_file_tree(self, master):
+        """ Returns the file view. Sets self.file_tree to the Treeview. """
+        self.file_tree = ttk.Treeview(master, show="tree") # don't show the heading
+
+        self.file_tree.tag_configure("cwd", font = font.Font(weight="bold"))
+
+        def on_open(e):
+            item = self.file_tree.focus()
+            if not self.file_tree.tag_has("loaded", item):
+                self.load_folder(item)
+
+        self.file_tree.tag_bind("dir", "<<TreeviewOpen>>", on_open)
+
+        return self.file_tree
 
     def make_puzzle_frame(self, master):
         """ Returns a frame container the puzzle list. Stores the labels and buttons in the frame in self.puzzles """
@@ -95,21 +140,6 @@ class GUI(ThemedTk):
             self.puzzles[puzzle] = (label, button)
 
         return scrollable
-
-    def make_file_tree_frame(self, master):
-        """ Returns the file view. Sets self.file_tree to the Treeview. """
-        self.file_tree = ttk.Treeview(master, show="tree") # don't show the heading
-
-        self.file_tree.tag_configure("cwd", font = font.Font(weight="bold"))
-
-        def on_open(e):
-            item = self.file_tree.focus()
-            if not self.file_tree.tag_has("loaded", item):
-                self.load_folder(item)
-
-        self.file_tree.tag_bind("dir", "<<TreeviewOpen>>", on_open)
-
-        return self.file_tree
 
     def _add_tree_tag(self, iid, tag):
         """ Adds a tag to the given item in the Treeview. """
@@ -174,10 +204,12 @@ class GUI(ThemedTk):
         if len(new_files) == 0:
             self.file_tree.insert(folder, tk.END, tags = ["dummy"]) # insert a dummy child so that is shows as "openable"
 
-    def update_file_tree(self):
-        """ Updates the file tree. """
+    def update_gui(self):
+        """ Updates the file tree, score, etc to match the current state of the tutorial. """
         self.student_cwd = self.tutorial.get_student_cwd()
         self.load_folder("")
+
+        self.score_label.set(f"Score: {self.tutorial.current_score()}/{self.tutorial.total_score()}")
 
     def solve(self, puzzle: Puzzle):
         solved, feedback = self.tutorial.solve_puzzle(puzzle)
