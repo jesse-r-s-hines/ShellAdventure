@@ -32,17 +32,16 @@ PUZZLES = dedent("""
             checker = checker
         )
 """)
-CONFIG = """
-    modules:
-        - puzzles.py
-    puzzles:
-        - puzzles.move
-        - puzzles.cd_puzzle
-"""
 
 class TestIntegration:
     def test_basic(self, tmp_path):
-        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {"puzzles.py": PUZZLES}, CONFIG)
+        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {"puzzles.py": PUZZLES}, """
+            modules:
+                - puzzles.py
+            puzzles:
+                - puzzles.move
+                - puzzles.cd_puzzle
+        """)
         with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
             assert docker.from_env().containers.get(tutorial.container.id) != None
 
@@ -67,6 +66,7 @@ class TestIntegration:
 
             assert tutorial.total_score() == 3
             assert tutorial.current_score() == 2
+            assert tutorial.is_finished() == False
             assert tutorial.time() > datetime.timedelta(0)
 
         # check that the timer gets stopped and doesn't continue advancing after tutorial ends.
@@ -79,19 +79,26 @@ class TestIntegration:
             docker.from_env().containers.get(tutorial.container.id)
 
     def test_cwd(self, tmp_path):
-        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {"puzzles.py": PUZZLES}, CONFIG)
+        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {"puzzles.py": PUZZLES}, """
+            modules:
+                - puzzles.py
+            puzzles:
+                - puzzles.cd_puzzle
+        """)
+
         with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
             # Connect to bash
             bash = subprocess.Popen(["docker", "exec", "-i", "-w", "/home/student/dir", tutorial.container.id, "bash"],
                 stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
             assert tutorial.connect_to_bash() > 1
 
-            cwd_puzzle = tutorial.puzzles[1].puzzle
+            cwd_puzzle = tutorial.puzzles[0].puzzle
             solved, feedback = tutorial.solve_puzzle(cwd_puzzle)
             assert solved == True
             assert cwd_puzzle.solved == True
             assert feedback == "Correct!"
 
             assert tutorial.current_score() == 1
+            assert tutorial.is_finished() == True
 
             assert tutorial.get_student_cwd() == Path("/home/student/dir")

@@ -198,15 +198,17 @@ class Tutorial:
         end_point = self.end_time if self.end_time else datetime.now()
         return (end_point - self.start_time)
 
-
     def total_score(self) -> int:
         """ Returns the current score of the student. """
         return sum((pt.puzzle.score for pt in self.puzzles))
 
-
     def current_score(self) -> int:
         """ Returns the current score of the student. """
         return sum((pt.puzzle.score for pt in self.puzzles if pt.puzzle.solved))
+
+    def is_finished(self) -> bool:
+        """ Return true if all the puzzles in the tutorial all solved. """
+        return all((pt.puzzle.solved for pt in self.puzzles))
 
 class TutorialError(Exception):
     """

@@ -217,7 +217,9 @@ class GUI(ThemedTk):
 
         if solved:
             self.puzzles[puzzle][1]["state"] = "disabled"
-            if all((p.solved for p in self.puzzles.keys())): # If all puzzles are solved quit.
+            self.puzzles[puzzle][1]["text"] = "Solved"
+
+            if self.tutorial.is_finished(): # then quit the tutorial
                 self.destroy()
 
     def report_callback_exception(self, *args):
