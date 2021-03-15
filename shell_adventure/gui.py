@@ -98,7 +98,7 @@ class GUI(ThemedTk):
 
     def make_file_tree_frame(self, master):
         """ Returns the file view. Sets self.file_tree to the Treeview. """
-        self.file_tree = ttk.Treeview(master)
+        self.file_tree = ttk.Treeview(master, show="tree") # don't show the heading
 
         self.file_tree.tag_configure("cwd", font = font.Font(weight="bold"))
 

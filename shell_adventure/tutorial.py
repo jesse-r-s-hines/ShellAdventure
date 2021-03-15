@@ -9,6 +9,7 @@ from .support import Puzzle, PuzzleTree, PathLike, Message
 import tempfile
 import textwrap
 from retry.api import retry_call
+from datetime import datetime, timedelta
 
 class Tutorial:
     """ Contains the information for a running tutorial. """
@@ -51,6 +52,9 @@ class Tutorial:
         self._volume: tempfile.TemporaryDirectory = None # The volume that the container is using.
         self.container = None
         self._conn: Connection = None # Connection to the docker container.
+
+        self.start_time: datetime = None # The time the tutorial started.
+        self.end_time: datetime = None # The time the tutorial ended
 
     def _gather_files(self, volume: Path):
         """ Moves the files for the tutorial into self.volume. """
@@ -118,12 +122,16 @@ class Tutorial:
             logs = self.stop() # If an error occurs in __enter__, __exit__ isn't called.
             raise TutorialError("An error occurred while generating puzzles.", container_logs = logs) from e
 
+        self.start_time = datetime.now()
+
     def stop(self):
         """
         Stop the tutorial, clean up all resources. Returns container logs.
         In general you should use a tutorial as a context manager instead to start/stop the tutorial, which will
         guarantee that the container gets cleaned up.
         """
+        self.end_time = datetime.now()
+
         if self._conn:
             self._conn.send("END")
             self._conn.close()
@@ -184,6 +192,21 @@ class Tutorial:
         except BaseException as e:
             logs = self.stop()
             raise TutorialError(f'An error occurred while getting files in "{folder}"', container_logs = logs) from e
+
+    def time(self) -> timedelta:
+        """ Returns the time that the student has spend on the tutorial so far. """
+        end_point = self.end_time if self.end_time else datetime.now()
+        return (end_point - self.start_time)
+
+
+    def total_score(self) -> int:
+        """ Returns the current score of the student. """
+        return sum((pt.puzzle.score for pt in self.puzzles))
+
+
+    def current_score(self) -> int:
+        """ Returns the current score of the student. """
+        return sum((pt.puzzle.score for pt in self.puzzles if pt.puzzle.solved))
 
 class TutorialError(Exception):
     """

@@ -3,7 +3,7 @@ import pytest
 from shell_adventure.tutorial import Tutorial
 from textwrap import dedent
 from pathlib import Path
-import subprocess
+import subprocess, datetime, time
 import docker, docker.errors
 
 PUZZLES = dedent("""
@@ -16,7 +16,8 @@ PUZZLES = dedent("""
 
         return Puzzle(
             question = f"Rename A.txt to B.txt",
-            checker = checker
+            checker = checker,
+            score = 2,
         )
 
     def cd_puzzle():
@@ -53,6 +54,9 @@ class TestIntegration:
             for pt in tutorial.puzzles:
                 assert pt.puzzle != None
 
+            assert tutorial.total_score() == 3
+            assert tutorial.current_score() == 0
+
             tutorial.container.exec_run(["mv", "A.txt", "B.txt"])
 
             move_puzzle = tutorial.puzzles[0].puzzle
@@ -60,6 +64,15 @@ class TestIntegration:
             assert solved == True
             assert move_puzzle.solved == True
             assert feedback == "Correct!"
+
+            assert tutorial.total_score() == 3
+            assert tutorial.current_score() == 2
+            assert tutorial.time() > datetime.timedelta(0)
+
+        # check that the timer gets stopped and doesn't continue advancing after tutorial ends.
+        end = tutorial.time()
+        time.sleep(0.1)
+        assert end == tutorial.time()
 
         # Make sure the container was removed.
         with pytest.raises(docker.errors.NotFound):
@@ -78,5 +91,7 @@ class TestIntegration:
             assert solved == True
             assert cwd_puzzle.solved == True
             assert feedback == "Correct!"
+
+            assert tutorial.current_score() == 1
 
             assert tutorial.get_student_cwd() == Path("/home/student/dir")
