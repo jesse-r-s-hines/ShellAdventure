@@ -118,16 +118,16 @@ class TutorialDocker:
 
         return (puzzle.solved, feedback)
 
-    def connect_to_shell(self) -> int:
-        """ Finds a running shell session and stores it's id. Returns the pid. """
+    def connect_to_shell(self, name: str) -> int:
+        """ Finds a running shell session with the given name and stores it's pid. Returns the pid. """
         try:
             # retry a few times since exec'ing into the container can take a bit, or something else may have spun up its own temporary bash session
-            result = retry_call(lambda: subprocess.check_output(["pidof", "bash"]), tries=40, delay=0.2) # type: ignore
+            result = retry_call(lambda: subprocess.check_output(["pidof", name]), tries=40, delay=0.2) # type: ignore
             self.shell_pid = int(result)
         except subprocess.CalledProcessError:
-            raise ProcessLookupError("No shell session found.")
+            raise ProcessLookupError(f'No process named "{name}" found.')
         except ValueError: # int parse fails because more than one pid was returned
-            raise ProcessLookupError(f'Multiple shells found.')
+            raise ProcessLookupError(f'Multiple processes named "{name}" found.')
 
         return self.shell_pid
 

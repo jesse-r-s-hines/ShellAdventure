@@ -99,7 +99,7 @@ class Message(Enum):
     GENERATE = 1
     """ Generate puzzles. Usage: (GENERATE, generator_list) """
     CONNECT_TO_SHELL = 2
-    """ Tells the container that a shell session has started and to connect to it. Usage: (CONNECT_TO_SHELL,) """
+    """ Tells the container that a shell session with the given name has started and to connect to it. Usage: (CONNECT_TO_SHELL, name) """
     SOLVE = 3
     """ Solve a puzzle. Usage: (SOLVE, puzzle_id) """
     GET_STUDENT_CWD = 4

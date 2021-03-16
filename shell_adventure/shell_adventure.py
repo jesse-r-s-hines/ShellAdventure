@@ -15,8 +15,8 @@ if __name__ == "__main__":
     os.system('cls' if os.name == 'nt' else 'clear') # clear the terminal
 
     with Tutorial(sys.argv[1]) as tutorial: # Creates and sets up the container with the tutorial inside
-        bash = start_bash(tutorial.container)
-        tutorial.connect_to_shell()
+        bash = start_bash(tutorial.container, "bash")
+        tutorial.connect_to_shell("bash")
         gui = GUI(tutorial)
 
     print("\n") # Add some newlines so that the terminal's next program is on a line by itself properly.

@@ -164,10 +164,13 @@ class Tutorial:
             logs = self.stop()
             raise TutorialError(f'An error occurred while solving puzzle {puzzle.id}: "{puzzle.question}"', container_logs = logs) from e
 
-    def connect_to_shell(self) -> int:
-        """ Connects the tutorial to a running shell session. Returns the PID (in docker) of the shell session. """
+    def connect_to_shell(self, name: str) -> int:
+        """
+        Connects the tutorial to a running shell session with the given name. The shell session should have a unique name.
+        Returns the PID (in docker) of the shell session.
+        """
         try:
-            self._conn.send( (Message.CONNECT_TO_SHELL,) )
+            self._conn.send( (Message.CONNECT_TO_SHELL, name) )
             return self._conn.recv() # wait for response
         except BaseException as e:
             logs = self.stop()

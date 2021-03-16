@@ -161,7 +161,7 @@ class TestTutorialDocker:
         bash = subprocess.Popen("bash", stdin = subprocess.PIPE, cwd = cwd)
 
         try:
-            tutorial.connect_to_shell()
+            tutorial.connect_to_shell("bash")
             assert tutorial.shell_pid == bash.pid
             assert tutorial.student_cwd() == cwd
         finally:
@@ -174,7 +174,7 @@ class TestTutorialDocker:
         bash = subprocess.Popen("bash", stdin = subprocess.PIPE, cwd = cwd)
 
         try:
-            tutorial.connect_to_shell()
+            tutorial.connect_to_shell("bash")
             assert tutorial.shell_pid == bash.pid
             assert tutorial.student_cwd() == cwd
         finally:
@@ -182,8 +182,16 @@ class TestTutorialDocker:
 
     def test_connect_to_shell_not_found(self, tmp_path):
         tutorial = TestTutorialDocker._create_tutorial(tmp_path, {"mypuzzles.py": SIMPLE_PUZZLES})
-        with pytest.raises(ProcessLookupError):
-            tutorial.connect_to_shell()
+        with pytest.raises(ProcessLookupError, match = "No process"):
+            tutorial.connect_to_shell("bash")
+
+    def test_connect_to_shell_multiple_found(self, tmp_path):
+        tutorial = TestTutorialDocker._create_tutorial(tmp_path, {"mypuzzles.py": SIMPLE_PUZZLES})
+        bash1 = subprocess.Popen("bash", stdin = subprocess.PIPE)
+        bash2 = subprocess.Popen("bash", stdin = subprocess.PIPE)
+
+        with pytest.raises(ProcessLookupError, match = "Multiple processes"):
+            tutorial.connect_to_shell("bash")
 
     def test_get_files(self, tmp_path):
         tutorial = TestTutorialDocker._create_tutorial(tmp_path, {"mypuzzles.py": SIMPLE_PUZZLES})
