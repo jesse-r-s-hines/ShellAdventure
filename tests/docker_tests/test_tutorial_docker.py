@@ -135,6 +135,21 @@ class TestTutorialDocker:
         with pytest.raises(Exception, match="bool or str expected"):
             tutorial.solve_puzzle(puzzle.id)
 
+    def test_solve_puzzle_flag(self, tmp_path):
+        puzzle = dedent("""
+            def flag_puzzle():
+                return Puzzle(
+                    question = f"Say OK",
+                    checker = lambda flag: flag == "OK",
+                )
+        """)
+        tutorial = TestTutorialDocker._create_tutorial(tmp_path, {"mypuzzles.py": puzzle})
+        [puzzle] = tutorial.generate(["mypuzzles.flag_puzzle"])
+
+        assert tutorial.solve_puzzle(puzzle.id) == (False, "Incorrect!")
+        assert tutorial.solve_puzzle(puzzle.id, "not ok") == (False, "Incorrect!")
+        assert tutorial.solve_puzzle(puzzle.id, "OK") == (True, "Correct!")
+
     # TODO test other puzzle errors
 
     def test_puzzle_func_args(self, tmp_path):

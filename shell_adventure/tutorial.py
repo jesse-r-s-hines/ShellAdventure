@@ -156,7 +156,7 @@ class Tutorial:
     def solve_puzzle(self, puzzle: Puzzle, flag: str = None) -> Tuple[bool, str]:
         """ Tries to solve the puzzle. Returns (success, feedback) and sets the Puzzle as solved if the checker succeeded. """
         try:
-            self._conn.send( (Message.SOLVE, puzzle.id) )
+            self._conn.send( (Message.SOLVE, puzzle.id, flag) )
             (solved, feedback) = self._conn.recv()
             puzzle.solved = solved
             return (solved, feedback)

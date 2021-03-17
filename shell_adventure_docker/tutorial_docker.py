@@ -101,7 +101,7 @@ class TutorialDocker:
 
         args: Dict[str, Any] = {
             # "output": output,
-            # "flag": flag,
+            "flag": flag,
             "cwd": self.student_cwd(),
         }
         checker_result = support.call_with_args(puzzle.checker, args)

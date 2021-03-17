@@ -3,9 +3,9 @@ from . import tutorial
 from .support import Puzzle, PathLike
 from pathlib import Path, PurePosixPath
 import tkinter as tk
-from tkinter import StringVar, ttk, font
+from tkinter import StringVar, ttk, font, messagebox
+import tkinter.simpledialog as simpledialog
 from ttkthemes import ThemedTk
-import tkinter.messagebox
 from PIL import ImageTk, Image
 from .scrolled_frame import VerticalScrolledFrame
 
@@ -132,9 +132,9 @@ class GUI(ThemedTk):
             label.grid(row = i, column = 0, padx = 5, pady = 5, sticky="EWNS")
 
             button = ttk.Button(frame, text = "Solve",
-                command = lambda p=puzzle: self.solve(p) # type: ignore
+                command = lambda p=puzzle: self.solve_puzzle(p) # type: ignore
             )
-            button.bind('<Return>', lambda e, p=puzzle: self.solve(p)) # type: ignore
+            button.bind('<Return>', lambda e, p=puzzle: self.solve_puzzle(p)) # type: ignore
             button.grid(row = i, column = 1, padx = 5, sticky="S")
 
             self.puzzles[puzzle] = (label, button)
@@ -211,9 +211,13 @@ class GUI(ThemedTk):
 
         self.score_label.set(f"Score: {self.tutorial.current_score()}/{self.tutorial.total_score()}")
 
-    def solve(self, puzzle: Puzzle):
-        solved, feedback = self.tutorial.solve_puzzle(puzzle)
-        tkinter.messagebox.showinfo("Feedback", feedback)
+    def solve_puzzle(self, puzzle: Puzzle):
+        flag = None
+        if "flag" in puzzle.checker_args:
+            flag = simpledialog.askstring("Input", puzzle.question, parent = self)
+
+        solved, feedback = self.tutorial.solve_puzzle(puzzle, flag)
+        messagebox.showinfo("Feedback", feedback)
 
         if solved:
             self.puzzles[puzzle][1]["state"] = "disabled"

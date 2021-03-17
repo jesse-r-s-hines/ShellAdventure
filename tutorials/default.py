@@ -21,3 +21,12 @@ def move_2():
         question = f"Rename C.txt to D.txt",
         checker = checker
     )
+
+def cat():
+    file = File("secret.txt")
+    file.write_text("42")
+
+    return Puzzle(
+        question = f"Find the number in secret.txt",
+        checker = lambda flag: flag == "42",
+    )

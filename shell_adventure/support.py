@@ -111,7 +111,7 @@ class Message(Enum):
     CONNECT_TO_SHELL = 2
     """ Tells the container that a shell session with the given name has started and to connect to it. Usage: (CONNECT_TO_SHELL, name) """
     SOLVE = 3
-    """ Solve a puzzle. Usage: (SOLVE, puzzle_id) """
+    """ Solve a puzzle. Usage: (SOLVE, puzzle_id, [flag]) """
     GET_STUDENT_CWD = 4
     """ Get the path to the students current directory. Usage (GET_CWD,) """
     GET_FILES = 5
