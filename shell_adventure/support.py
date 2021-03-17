@@ -4,8 +4,8 @@ This file is shared between the Docker side code and host,
 `shell_adventure/support.py` is a symlink to `shell_adventure_docker/support.py`
 """
 
-from typing import Union, Callable, List, Dict, Any
-import os, inspect, uuid, time
+from typing import Union, Callable, List, Dict, Any, Set, ClassVar
+import os, inspect, uuid, inspect
 from multiprocessing.connection import Client
 from enum import Enum
 
@@ -47,12 +47,22 @@ class Puzzle:
     id: str
     """ A unique identifier for the puzzle. """
 
+    checker_args: Set[str]
+    """ A set of the args of this puzzles checker function. """
+
+    allowed_checker_args: ClassVar[Set[str]] = {"cwd", "flag"}
+    """ A set of the checker args that are recognized. """
+
     def __init__(self, question: str, checker: Callable[..., Union[str,bool]] , score = 1):
         self.question = question
         self.score = score
         self.checker = checker # type: ignore # MyPy fusses about "Cannot assign to a method"
         self.solved = False
         self.id = str(uuid.uuid4())
+        self.checker_args = set(inspect.getfullargspec(self.checker).args)
+        if not self.checker_args.issubset(Puzzle.allowed_checker_args): # TODO use custom exception
+            raise Exception(f'Unrecognized parameters ({", ".join(self.checker_args - Puzzle.allowed_checker_args)}), ' +
+                            f'checker functions can only have some combination of parameters ({", ".join(Puzzle.allowed_checker_args)}).')
 
     def __getstate__(self):
         # Can't pickle lambdas, but we don't need it host side.

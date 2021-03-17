@@ -3,8 +3,18 @@ from shell_adventure.support import Puzzle, call_with_args
 import pickle
 
 class TestSupport:
+    def test_create_puzzle(self):
+        puzzle = Puzzle("Solve this puzzle.", checker = lambda cwd, flag: False)
+
+        assert puzzle.solved == False
+        assert puzzle.checker_args == {"cwd", "flag"}
+
+    def test_create_puzzle_invalid_args(self):
+        with pytest.raises(Exception, match=r"Unrecognized parameters \(blah\)"):
+            puzzle = Puzzle("Solve this puzzle.", checker = lambda blah: False)
+
     def test_pickle_puzzle(self, tmp_path):
-        puzzle = Puzzle("Solve this puzzle.", checker = lambda: False, score = 1)
+        puzzle = Puzzle("Solve this puzzle.", checker = lambda flag: False, score = 1)
         puzzle.solved = True
 
         data = pickle.dumps(puzzle)
@@ -14,9 +24,9 @@ class TestSupport:
         assert puzzle.score == new_puzzle.score
         assert puzzle.solved == new_puzzle.solved
         assert puzzle.id == new_puzzle.id
+        assert puzzle.checker_args == {"flag"}
         assert new_puzzle.checker == None # Can't pickle lambdas
         assert puzzle.checker != None # Doesn't affect original
-
 
     def test_call_with_args(self):
         args = {"a": 1, "b": 2, "c": 3}
