@@ -1,24 +1,38 @@
-def move_1():
-    file = File("A.txt")
-    file.write_text("A")
+def move():
+    src = File("A.txt")
+    src.write_text("A")
 
     def checker():
-        return not file.exists() and File("B.txt").exists()
+        dst = File("B.txt")
+        if dst.exists():
+            if not src.exists() and dst.read_text() == "A":
+                return True
+            elif src.exists():
+                return 'You need to "mv" not "cp"'
+        else:
+            return 'Try looking at "man mv"'
 
     return Puzzle(
         question = f"Rename A.txt to B.txt",
         checker = checker
-                )
+    )
 
-def move_2():
-    file = File("C.txt")
-    file.write_text("C")
+def copy(home):
+    src = home / "C.txt"
+    src.write_text("C")
 
     def checker():
-        return not file.exists() and File("D.txt").exists()
+        dst = home / "D.txt"
+        if dst.exists():
+            if src.exists() and dst.read_text() == "C":
+                return True
+            elif not src.exists():
+                return 'You need to "cp" not "mv"'
+        else:
+            return 'Try looking at "man cp"'
 
     return Puzzle(
-        question = f"Rename C.txt to D.txt",
+        question = f"Copy C.txt to D.txt",
         checker = checker
     )
 

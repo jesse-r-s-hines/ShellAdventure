@@ -1,7 +1,7 @@
 from typing import List, Tuple, Dict, Any, Callable, ClassVar
 from types import ModuleType
 from pathlib import Path, PurePosixPath;
-import subprocess
+import subprocess, os
 from multiprocessing.connection import Listener
 import importlib.util, inspect
 from retry.api import retry_call
@@ -99,6 +99,7 @@ class TutorialDocker:
         """
         puzzle = self.puzzles[puzzle_id]
 
+        os.chdir("/home/student") # Make sure each puzzle is called with home as its current directory
         args: Dict[str, Any] = {
             # "output": output,
             "flag": flag,
