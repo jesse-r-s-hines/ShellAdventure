@@ -38,7 +38,7 @@ def copy(home):
 
 def cat():
     file = File("secret.txt")
-    file.write_text("42")
+    file.write_text("42\n")
 
     return Puzzle(
         question = f"Find the number in secret.txt",
