@@ -106,7 +106,7 @@ class Tutorial:
         self._volume = tempfile.TemporaryDirectory(prefix="shell-adventure-")
         self._gather_files(Path(self._volume.name)) # Gather modules and resources into the volume.
         self.container = self._launch_container(self._volume.name,
-            ["python3", "-m", "shell_adventure_docker.start", "/tmp/shell-adventure"]
+            ["python3", "-m", "shell_adventure_docker.start", "/tmp/shell-adventure", "/home/student"]
         )
 
         try:

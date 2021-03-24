@@ -22,6 +22,9 @@ class TutorialDocker:
     data_dir: Path
     """ This is the path where tutorial files such as puzzles have been placed. """
 
+    home: Path
+    """ This is the folder that puzzle generators and checkers will be run in. Defaults to /home/student but can be changed for testing purposes. """
+
     modules: Dict[str, ModuleType]
     """ Puzzle modules mapped to their name. """
 
@@ -31,12 +34,13 @@ class TutorialDocker:
     puzzles: Dict[str, Puzzle]
     """ Puzzles in this tutorial, mapped to their id. """
 
-    def __init__(self, data_dir: PathLike):
+    def __init__(self, data_dir: PathLike, home: PathLike = "/home/student"):
         """
         Create a tutorial from a config_file and a PID to the shell session the student is running.
         Any resources the config file uses should be placed in the same directory as the config file.
         """
         self.data_dir = Path(data_dir)
+        self.home = Path(home)
 
         # TODO test this
         # Load modules
@@ -79,13 +83,14 @@ class TutorialDocker:
         Returns the generated puzzles as a list.
         """
         args = { # TODO add documentation for args you can take in generator function
-            "home": File("/home/student"), # can't use home() since the user is actually root. #TODO add docs that File.home() doesn't work as expected. 
+            "home": File(self.home), # can't use home() since the user is actually root. #TODO add docs that File.home() doesn't work as expected. 
             "root": File("/"),
         }
 
         for gen in puzzle_generators:
             # TODO Should probably raise custom exception instead of using assert (which can be removed at will)
             assert gen in self.generators, f"Unknown puzzle generator {gen}."
+            os.chdir(self.home) # Make sure generators are called with home as the cwd
             puzzle: Puzzle = support.call_with_args(self.generators[gen], args)
             self.puzzles[puzzle.id] = puzzle
             # TODO error checking
@@ -99,7 +104,7 @@ class TutorialDocker:
         """
         puzzle = self.puzzles[puzzle_id]
 
-        os.chdir("/home/student") # Make sure each puzzle is called with home as its current directory
+        os.chdir(self.home) # Make sure each puzzle is called with home as its current directory
         args: Dict[str, Any] = {
             # "output": output,
             "flag": flag,

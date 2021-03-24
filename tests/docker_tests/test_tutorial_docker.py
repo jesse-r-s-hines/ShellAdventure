@@ -27,7 +27,7 @@ class TestTutorialDocker:
         """
         Creates a tutorial with the given puzzles.
         Puzzles will be saved to the dictionary key names under tmp_path/tutorial.
-        Will cd into tmp_path/home
+        Will cd into tmp_path/home and set tutorial.home to tmp_path/home
         """
         data_dir = tmp_path / "tutorial"
         data_dir.mkdir()
@@ -40,7 +40,7 @@ class TestTutorialDocker:
         working_dir.mkdir()
         os.chdir(working_dir)
 
-        tutorial = TutorialDocker(data_dir)
+        tutorial = TutorialDocker(data_dir, home = working_dir)
         return tutorial
 
     def test_creation(self, tmp_path):
@@ -153,10 +153,10 @@ class TestTutorialDocker:
     # TODO test other puzzle errors
 
     def test_puzzle_func_args(self, tmp_path):
-        puzzles = dedent("""
+        puzzles = dedent(f"""
             def move(home, root):
                 def checker():
-                    return home == File("/home/student") and root == File("/")
+                    return home == File("{tmp_path / 'home'}") and root == File("/")
 
                 return Puzzle(
                     question = f"Check home and root",
