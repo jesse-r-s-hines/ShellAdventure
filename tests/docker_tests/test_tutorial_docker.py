@@ -35,7 +35,7 @@ class TestTutorialDocker:
         files = {"name_dictionary.txt": "apple\nbanana\n", **files}
         for file, content in files.items():
             path = data_dir / file
-            path.parent.mkdir(exist_ok = True)
+            path.parent.mkdir(parents = True, exist_ok = True)
             path.write_text(content)
 
         working_dir = tmp_path / "home"

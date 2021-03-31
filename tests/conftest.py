@@ -7,15 +7,17 @@ from shell_adventure.tutorial import Tutorial
 # Defines some fixtures for use in the rest of the tests
 
 @pytest.helpers.register #type: ignore
-def create_tutorial(tmp_path, puzzles: Dict[str, str], config: str) -> Tutorial:
+def create_tutorial(tmp_path, files: Dict[str, str]) -> Tutorial:
     """
-    Creates a tutorial with the given puzzles and config strings.
-    Config will be saved to tmp_path/config.yaml, puzzles will be saved to the dictionary key names under tmp_path.
+    Creates a tutorial with the given files. 
+    Files (such as puzzles) will be saved to the dictionary key names
+    under tmp_path with the matching content in the dictionary.
+    The config file should be saved under the key "config.yaml"
     """
-    for name, content in puzzles.items():
-        (tmp_path / name).write_text(content)
-    config_file = tmp_path / "config.yaml"
-    config_file.write_text(config)
 
-    tutorial = Tutorial(config_file)
-    return tutorial
+    for file, content in files.items():
+        path = tmp_path / file
+        path.parent.mkdir(parents = True, exist_ok = True)
+        path.write_text(content)
+
+    return Tutorial(tmp_path / "config.yaml")

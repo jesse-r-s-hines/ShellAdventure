@@ -35,13 +35,17 @@ PUZZLES = dedent("""
 
 class TestIntegration:
     def test_basic(self, tmp_path):
-        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {"puzzles.py": PUZZLES}, """
-            modules:
-                - puzzles.py
-            puzzles:
-                - puzzles.move
-                - puzzles.cd_puzzle
-        """)
+        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
+            "config.yaml": """
+                modules:
+                    - puzzles.py
+                puzzles:
+                    - puzzles.move
+                    - puzzles.cd_puzzle
+            """,
+            "puzzles.py": PUZZLES,
+        })
+
         with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
             assert docker.from_env().containers.get(tutorial.container.id) != None
 
@@ -79,12 +83,15 @@ class TestIntegration:
             docker.from_env().containers.get(tutorial.container.id)
 
     def test_cwd(self, tmp_path):
-        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {"puzzles.py": PUZZLES}, """
-            modules:
-                - puzzles.py
-            puzzles:
-                - puzzles.cd_puzzle
-        """)
+        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
+            "config.yaml": """
+                modules:
+                    - puzzles.py
+                puzzles:
+                    - puzzles.cd_puzzle
+            """,
+            "puzzles.py": PUZZLES,
+        })
 
         with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
             # Connect to bash
