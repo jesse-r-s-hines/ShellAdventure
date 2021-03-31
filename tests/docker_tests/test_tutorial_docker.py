@@ -98,6 +98,8 @@ class TestTutorialDocker:
         
     def test_private_methods_arent_puzzles(self, tmp_path):
         puzzles = dedent("""
+            from textwrap import dedent # Don't use the imported method.
+
             def _private_method():
                 return "not a puzzle"
 
