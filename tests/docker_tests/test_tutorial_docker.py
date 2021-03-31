@@ -175,6 +175,35 @@ class TestTutorialDocker:
 
         assert tutorial.solve_puzzle(puzzle.id) == (True, "Correct!")
 
+    def test_solve_puzzle_randomized(self, tmp_path):
+        puzzles = dedent("""
+            def move():
+                src = File(rand.name())
+                src.write_text("stuff")
+                
+                dst = File(rand.name()) # Don't create yet
+
+                def checker():
+                    return not src.exists() and dst.exists()
+
+                return Puzzle(
+                    question = f"{src.name} -> {dst.name}",
+                    checker = checker
+                )
+        """)
+
+        tutorial = TestTutorialDocker._create_tutorial(tmp_path, {
+            "modules/mypuzzles.py": puzzles,
+            "name_dictionary.txt": "apple\nbanana",
+        })
+        [puzzle] = tutorial.generate(["mypuzzles.move"])
+
+        assert tutorial.solve_puzzle(puzzle.id) == (False, "Incorrect!")
+        src, dst = puzzle.question.split(" -> ")
+
+        os.system(f"mv {src} {dst}")
+        assert tutorial.solve_puzzle(puzzle.id) == (True, "Correct!")
+
     def test_student_cwd(self, tmp_path):
         tutorial = TestTutorialDocker._create_tutorial(tmp_path, {"modules/mypuzzles.py": SIMPLE_PUZZLES})
         cwd = (tmp_path / "home" / "folder")

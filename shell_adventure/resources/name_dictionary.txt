@@ -645,7 +645,6 @@ bother
 bottle
 bottling
 bottom
-bottom-line
 boudoir
 bough
 boulder
@@ -720,7 +719,6 @@ brood
 brook
 broom
 brother
-brother-in-law
 brow
 brown
 brownie
@@ -1364,7 +1362,6 @@ cooperation
 coordination
 coordinator
 cop
-cop-out
 cope
 copper
 copy
@@ -1492,13 +1489,11 @@ croissant
 crook
 crop
 cross
-cross-stitch
 crotch
 croup
 crow
 crowd
 crown
-crucifixion
 crude
 cruelty
 cruise
@@ -1509,7 +1504,6 @@ crush
 crust
 cry
 crystal
-crystallography
 cub
 cube
 cuckoo
@@ -1609,7 +1603,6 @@ decadence
 decency
 decimal
 decision
-decision-making
 deck
 declaration
 declination
@@ -2202,7 +2195,6 @@ faith
 faithful
 fall
 fallacy
-falling-out
 fame
 familiar
 familiarity
@@ -2221,7 +2213,6 @@ fashion
 fat
 fate
 father
-father-in-law
 fatigue
 fatigues
 faucet
@@ -2640,8 +2631,6 @@ gravity
 gravy
 gray
 grease
-great-grandfather
-great-grandmother
 greatness
 greed
 greenhouse
@@ -2701,7 +2690,6 @@ hair
 haircut
 hake
 half
-half-sister
 halibut
 hall
 halloween
@@ -2811,7 +2799,6 @@ heyday
 hiccups
 hide
 hierarchy
-high-rise
 highland
 highlight
 highway
@@ -2980,7 +2967,6 @@ impropriety
 improvement
 impudence
 impulse
-in-laws
 inability
 inauguration
 inbox
@@ -3243,7 +3229,6 @@ knight
 knitting
 knock
 knot
-know-how
 knowledge
 knuckle
 koala
@@ -3511,7 +3496,6 @@ maintainer
 maintenance
 maize
 major
-major-league
 majority
 makeover
 maker
@@ -3717,7 +3701,6 @@ minister
 mink
 minnow
 minor
-minor-league
 minority
 mint
 minute
@@ -3805,7 +3788,6 @@ most
 motel
 moth
 mother
-mother-in-law
 motion
 motivation
 motive
@@ -3998,7 +3980,6 @@ octopus
 odometer
 odyssey
 oeuvre
-off-ramp
 offence
 offense
 offer
@@ -4356,7 +4337,6 @@ pilot
 pimple
 pin
 pinafore
-pince-nez
 pine
 pineapple
 pinecone
@@ -5170,9 +5150,6 @@ segment
 seizure
 selection
 self
-self-confidence
-self-control
-self-esteem
 seller
 selling
 semantics
@@ -5327,7 +5304,6 @@ sinuosity
 sip
 sir
 sister
-sister-in-law
 sitar
 site
 situation
@@ -5615,11 +5591,9 @@ stimulation
 stimulus
 sting
 stinger
-stir-fry
 stitch
 stitcher
 stock
-stock-in-trade
 stockings
 stole
 stomach
@@ -5817,7 +5791,6 @@ tale
 talent
 talk
 talking
-tam-o'-shanter
 tamale
 tambour
 tambourine
@@ -5999,7 +5972,6 @@ toilet
 tolerance
 tolerant
 toll
-tom-tom
 tomatillo
 tomato
 tomb
@@ -6428,7 +6400,6 @@ weird
 welcome
 welfare
 well
-well-being
 west
 western
 wetland
@@ -6487,7 +6458,6 @@ wish
 wisteria
 wit
 witch
-witch-hunt
 withdrawal
 witness
 wok

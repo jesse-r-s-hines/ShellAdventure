@@ -1,4 +1,4 @@
-from typing import Set
+from typing import List
 from pathlib import Path
 from shell_adventure.support import PathLike
 import random
@@ -6,12 +6,13 @@ import random
 class RandomHelper:
     """ RandomHelper is a class that generates random names, contents, and file paths. """
 
-    _name_dictionary: Set[str]
+    _name_dictionary: List[str]
     """ A set of strings that will be used to generate random names. """
 
     def __init__(self, name_dictionary: PathLike):
-        self._name_dictionary = set( Path(name_dictionary).read_text().splitlines() )
-        self._name_dictionary.discard("")
+        names = set(Path(name_dictionary).read_text().splitlines())
+        names.discard("") # remove empty entries
+        self._name_dictionary = list(names) # choice() only works on list.
 
     def name(self):
         if len(self._name_dictionary) == 0:

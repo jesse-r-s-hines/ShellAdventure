@@ -28,6 +28,13 @@ SIMPLE_TUTORIAL = """
 """
 
 class TestTutorial:
+    def test_simple_tutorial(self, tmp_path):
+        # Create the files
+        tutorial = pytest.helpers.create_tutorial(tmp_path, {"config.yaml": SIMPLE_TUTORIAL, "mypuzzles.py": SIMPLE_PUZZLES})
+        tutorial = Tutorial(f"{tmp_path / 'config.yaml'}") # Strings should also work for path
+        assert tutorial.config_file == tmp_path / "config.yaml"
+        assert str(tutorial.name_dictionary).endswith("resources/name_dictionary.txt")
+
     def test_creation(self, tmp_path):
         tutorial = pytest.helpers.create_tutorial(tmp_path, {
             "config.yaml": f"""
@@ -37,21 +44,17 @@ class TestTutorial:
                 puzzles:
                     - puzzle1.move
                     - puzzle2.move
+                name_dictionary: "my_dictionary.txt"
             """,
             "puzzle1.py": SIMPLE_PUZZLES,
             "puzzle2.py": SIMPLE_PUZZLES,
+            "my_dictionary.txt": "a\nb\nc\n",
         })
         assert tutorial.data_dir == tmp_path
+        assert tutorial.name_dictionary == tmp_path / "my_dictionary.txt"
 
-        # Should contain the default module and my module
         assert {m.resolve() for m in tutorial.module_paths} == {tmp_path / "puzzle1.py", tmp_path / "puzzle2.py"}
         assert {pt.generator for pt in tutorial.puzzles} == {"puzzle1.move", "puzzle2.move"}
-
-    def test_str_path_creation(self, tmp_path):
-        # Create the files
-        tutorial = pytest.helpers.create_tutorial(tmp_path, {"config.yaml": SIMPLE_TUTORIAL, "mypuzzles.py": SIMPLE_PUZZLES})
-        tutorial = Tutorial(f"{tmp_path / 'config.yaml'}") # Strings should also work for path
-        assert tutorial.config_file == tmp_path / "config.yaml"
 
     def test_empty(self, tmp_path):
         with pytest.raises(Exception, match="Invalid config"):
