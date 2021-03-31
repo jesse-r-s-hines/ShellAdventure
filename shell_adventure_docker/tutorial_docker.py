@@ -9,15 +9,10 @@ from shell_adventure import support
 from shell_adventure.support import Puzzle, PathLike, Message
 from .file import File
 from .permissions import change_user
+from shell_adventure_docker.random_helper import RandomHelper
 
 class TutorialDocker:
     """ Contains the information for a running tutorial docker side. """
-
-    _puzzle_module_inject: ClassVar[Dict[str, object]] = {
-        "Puzzle": Puzzle,
-        "File": File,
-    }
-    """ The classes/modules/packages to inject into the puzzle generator modules. """
 
     data_dir: Path
     """ This is the path where tutorial files such as puzzles have been placed. """
@@ -34,6 +29,9 @@ class TutorialDocker:
     puzzles: Dict[str, Puzzle]
     """ Puzzles in this tutorial, mapped to their id. """
 
+    random: RandomHelper
+    """ An instance of RandomHelper which will generate random names and such. """
+
     def __init__(self, data_dir: PathLike, home: PathLike = "/home/student"):
         """
         Create a tutorial from a config_file and a PID to the shell session the student is running.
@@ -42,7 +40,8 @@ class TutorialDocker:
         self.data_dir = Path(data_dir)
         self.home = Path(home)
 
-        # TODO test this
+        self.random = RandomHelper(self.data_dir / "name_dictionary.txt")
+
         # Load modules
         module_list = [self._get_module(file) for file in (self.data_dir / "modules").glob("*.py")]
         self.modules = {module.__name__: module for module in module_list}
@@ -67,8 +66,14 @@ class TutorialDocker:
         spec = importlib.util.spec_from_file_location(module_name, file_path)
         module = importlib.util.module_from_spec(spec)
 
+        injections = { # The classes/modules/packages to inject into the modules.
+            "Puzzle": Puzzle,
+            "File": File,
+            "rand": self.random
+        }
+
         # Inject names into the modules
-        for name, obj in TutorialDocker._puzzle_module_inject.items():
+        for name, obj in injections.items():
             setattr(module, name, obj)
 
         spec.loader.exec_module(module) # type: ignore # MyPy is confused about the types here

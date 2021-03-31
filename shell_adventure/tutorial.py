@@ -5,7 +5,7 @@ import docker, docker.errors
 from docker.models.containers import Container
 from pathlib import Path, PurePosixPath;
 from . import support
-from .support import Puzzle, PuzzleTree, PathLike, Message
+from .support import Puzzle, PuzzleTree, PathLike, Message, PKG
 import tempfile
 import textwrap
 from retry.api import retry_call
@@ -48,6 +48,8 @@ class Tutorial:
             self.module_paths.append(module)
 
         self.puzzles = [PuzzleTree(gen) for gen in config.get("puzzles")]
+        name_dictionary = config.get("name_dictionary", PKG / "resources/name_dictionary.txt")
+        self.name_dictionary = Path(self.data_dir, name_dictionary) # relative to config file
 
         self._volume: tempfile.TemporaryDirectory = None # The volume that the container is using.
         self.container = None
@@ -65,6 +67,8 @@ class Tutorial:
         for module in self.module_paths:
             dest = volume / "modules" / module.name
             shutil.copyfile(module, dest) # Copy to volume
+        
+        shutil.copyfile(self.name_dictionary, volume / "name_dictionary.txt")
 
         # TODO add this to config file
         # (volume / "resources").mkdir()
