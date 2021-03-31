@@ -1,6 +1,6 @@
 from typing import List, Tuple, Dict, ClassVar
 from . import tutorial
-from .support import Puzzle, PathLike
+from .support import Puzzle, PathLike, PKG
 from pathlib import Path, PurePosixPath
 import tkinter as tk
 from tkinter import StringVar, ttk, font, messagebox
@@ -8,8 +8,6 @@ import tkinter.simpledialog as simpledialog
 from ttkthemes import ThemedTk
 from PIL import ImageTk, Image
 from .scrolled_frame import VerticalScrolledFrame
-
-PKG_PATH = Path(__file__).parent
 
 class WrappingLabel(ttk.Label):
     """Label that automatically adjusts the wrap to the size"""
@@ -72,7 +70,7 @@ class GUI(ThemedTk):
         # fetch icons files. We have to save to a field or tkinter will lose the images somehow.
         file_icons = {}
         for key, file in icon_files.items():
-            img = Image.open(PKG_PATH / "icons" / file).resize((16, 16), Image.ANTIALIAS)
+            img = Image.open(PKG / "icons" / file).resize((16, 16), Image.ANTIALIAS)
             file_icons[key] = ImageTk.PhotoImage(img)
         return file_icons
 
