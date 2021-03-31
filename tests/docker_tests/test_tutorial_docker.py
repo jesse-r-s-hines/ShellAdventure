@@ -25,14 +25,18 @@ class TestTutorialDocker:
     @staticmethod
     def _create_tutorial(tmp_path, files: Dict[str, str]) -> TutorialDocker:
         """
-        Creates a tutorial with the given files.
+        Creates a tutorial with the given files. Sets up some default files.
         Files will be saved to the dictionary key names under tmp_path/tutorial.
         Will cd into tmp_path/home and set tutorial.home to tmp_path/home
         """
         data_dir = tmp_path / "tutorial"
         data_dir.mkdir()
 
-        files = {"name_dictionary.txt": "apple\nbanana\n", **files}
+        default_files = {
+            "name_dictionary.txt": "apple\nbanana\n"
+        }
+        files = {**default_files, **files} # merge
+
         for file, content in files.items():
             path = data_dir / file
             path.parent.mkdir(parents = True, exist_ok = True)
