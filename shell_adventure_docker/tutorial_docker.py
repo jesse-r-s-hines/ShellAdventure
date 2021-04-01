@@ -156,9 +156,18 @@ class TutorialDocker:
         assert real_folder.is_absolute()
         # Convert to PurePosixPath since we are going to send it over to a system that may be Windows. And the file doesn't exist on host.
         with change_user("root"): # Access all files
-            # I was getting `PermissionError: Operation not permitted: '/proc/1/map_files/400000-423000'`. The file is a symlink, but the
-            # proc directory is special and stat gets confused. Resolving the link first fixes it.
-            return [(f.resolve().is_dir(), f.is_symlink(), PurePosixPath(f)) for f in real_folder.iterdir()]
+            try:
+                files = []
+                for file in real_folder.iterdir():
+                    try:
+                        # I was getting `PermissionError: Operation not permitted: '/proc/1/map_files/400000-423000'`. The file is a symlink, but the
+                        # proc directory is special and stat gets confused. Resolving the link first fixes it.
+                        files.append( (file.resolve().is_dir(), file.is_symlink(), PurePosixPath(file)) )
+                    except:
+                        pass # If something goes wrong (file doesn't exist anymore, special files in /proc, etc) just ignore it
+                return files
+            except: # if folder doesn't exist just return [] for now.
+                return [] # TODO should we return None or something instead?
 
     # The method is used both as a response to a message and in the puzzle code
     def student_cwd(self) -> File:
