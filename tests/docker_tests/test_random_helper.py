@@ -3,9 +3,10 @@ from shell_adventure_docker.random_helper import RandomHelper
 from pathlib import Path
 
 class TestRandomHelper:
-    def test_name(self, tmp_path):
-        (tmp_path / "dict.txt").write_text("apple\n\n\n\nbanana\norange\n")
-        random = RandomHelper(tmp_path / "dict.txt")
+    def test_name(self):
+        random = RandomHelper(
+            name_dictionary = "apple\n\n\n\nbanana\norange\n"
+        )
 
         assert random.name() in {"apple", "banana", "orange"}
         assert random.name() in {"apple", "banana", "orange"}

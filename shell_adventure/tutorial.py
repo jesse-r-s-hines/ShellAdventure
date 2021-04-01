@@ -14,17 +14,30 @@ from datetime import datetime, timedelta
 class Tutorial:
     """ Contains the information for a running tutorial. """
 
+    # Config fields
     config_file: Path
     """ The path to the config file for this tutorial """
 
     data_dir: Path
     """ This is the path where tutorial files such as puzzles have been placed. """
 
+    module_paths: List[Path]
+    """ List of absolute paths to the puzzle generation modules. """
+
+    name_dictionary: Path
+    """ Path to a dictionary containing random names for files. """
+
+    # Other fields
     container: Container
     """ The docker container that the student is in. """
     
     puzzles: List[PuzzleTree]
     """ The tree of puzzles in this tutorial. """
+
+    start_time: datetime
+    """ Time the tutorial started. """
+    end_time: datetime
+    """ Time the tutorial ended. """
 
     def __init__(self, config_file: PathLike):
         """
@@ -39,7 +52,7 @@ class Tutorial:
             # TODO use a custom exception
             if not isinstance(config, dict): raise Exception("Invalid config file.")
 
-        self.module_paths: List[Path] = []
+        self.module_paths = []
         for module in config.get("modules"):
             # Files are relative to the config file (if module is absolute, Path will use that, if relative it will join with first)
             module = Path(self.data_dir, module)
@@ -51,42 +64,18 @@ class Tutorial:
         name_dictionary = config.get("name_dictionary", PKG / "resources/name_dictionary.txt")
         self.name_dictionary = Path(self.data_dir, name_dictionary) # relative to config file
 
-        self._volume: tempfile.TemporaryDirectory = None # The volume that the container is using.
         self.container = None
         self._conn: Connection = None # Connection to the docker container.
 
-        self.start_time: datetime = None # The time the tutorial started.
-        self.end_time: datetime = None # The time the tutorial ended
+        self.start_time = None
+        self.end_time = None
 
-    def _gather_files(self, volume: Path):
-        """ Moves the files for the tutorial into self.volume. """
-        # if not resources: resources = []
-
-        # Gather puzzle modules and put them in container volume
-        (volume / "modules").mkdir()
-        for module in self.module_paths:
-            dest = volume / "modules" / module.name
-            shutil.copyfile(module, dest) # Copy to volume
-        
-        shutil.copyfile(self.name_dictionary, volume / "name_dictionary.txt")
-
-        # TODO add this to config file
-        # (volume / "resources").mkdir()
-        # for resource in resources:
-        #     dest = volume / "resources" / resource.name
-        #     shutil.copyfile(resource, dest) # Copy to volume
-
-    def _launch_container(self, volume: str, command: Union[List[str], str]) -> Container:
-        """
-        Launches the container with the given command. Returns the container.
-        The volume will be mapped to /tmp/shell-adventure/ in the container.
-        """
+    def _launch_container(self, command: Union[List[str], str]) -> Container:
+        """ Launches the container with the given command. Returns the container. """
         docker_client = docker.from_env()
 
         container = docker_client.containers.run('shell-adventure',
             user = "root",
-            # Make a volume to share our puzzle files with the container.
-            volumes = {volume: {'bind': '/tmp/shell-adventure', 'mode': 'rw'}},
             network_mode = "host",
             command = command,
 
@@ -105,18 +94,20 @@ class Tutorial:
         guarantee that the container gets cleaned up.
         """
 
-        # We can't use "with" since we the caller to be able to use the tutorial object before it is closed.
-        
-        self._volume = tempfile.TemporaryDirectory(prefix="shell-adventure-")
-        self._gather_files(Path(self._volume.name)) # Gather modules and resources into the volume.
-        self.container = self._launch_container(self._volume.name,
-            ["python3", "-m", "shell_adventure_docker.start", "/tmp/shell-adventure", "/home/student"]
-        )
+        # We can't use "with" since the caller needs to be able to use the tutorial object before it is closed.
+
+        self.container = self._launch_container(["python3", "-m", "shell_adventure_docker.start"])
 
         try:
             # retry the connection a few times since the container may take a bit to get started.
             self._conn = retry_call(lambda: Client(support.conn_addr, authkey = support.conn_key), tries = 20, delay = 0.2)
-            self._conn.send( (Message.GENERATE, [pt.generator for pt in self.puzzles]) )
+            
+            self._conn.send((Message.SETUP, {
+                "home": "/home/student",
+                "modules": {file.stem: file.read_text() for file in self.module_paths},
+                "puzzles": [pt.generator for pt in self.puzzles],
+                "name_dictionary": self.name_dictionary.read_text(),
+            }))
             generated_puzzles = self._conn.recv()
 
             # store the puzzles in the PuzzleTree
@@ -144,7 +135,6 @@ class Tutorial:
             self.container.stop(timeout = 4)
             logs = self.container.logs()
             self.container.remove()
-            self._volume.cleanup()
             
             return logs.decode()
         else:

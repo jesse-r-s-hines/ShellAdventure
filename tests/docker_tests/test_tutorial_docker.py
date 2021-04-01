@@ -23,80 +23,73 @@ SIMPLE_PUZZLES = dedent("""
 
 class TestTutorialDocker:
     @staticmethod
-    def _create_tutorial(tmp_path, files: Dict[str, str]) -> TutorialDocker:
+    def _create_tutorial(working_dir, **setup) -> TutorialDocker:
         """
-        Creates a tutorial with the given files. Sets up some default files.
-        Files will be saved to the dictionary key names under tmp_path/tutorial.
-        Will cd into tmp_path/home and set tutorial.home to tmp_path/home
+        Factory for TutorialDocker. Pass args that will be passed to setup().
+        Provides some default for setup() args
+        tutorial.home to working_dir
         """
-        data_dir = tmp_path / "tutorial"
-        data_dir.mkdir()
-
-        default_files = {
-            "name_dictionary.txt": "apple\nbanana\n"
+        default_setup = {
+            "home": working_dir,
+            "modules": {"puzzles": SIMPLE_PUZZLES},
+            "puzzles": ["puzzles.move"],
+            "name_dictionary": "apple\nbanana\n",
         }
-        files = {**default_files, **files} # merge
+        setup = {**default_setup, **setup} # merge
 
-        for file, content in files.items():
-            path = data_dir / file
-            path.parent.mkdir(parents = True, exist_ok = True)
-            path.write_text(content)
+        tutorial = TutorialDocker()
+        tutorial.setup(**setup)
 
-        working_dir = tmp_path / "home"
-        working_dir.mkdir()
-        os.chdir(working_dir)
-
-        tutorial = TutorialDocker(data_dir, home = working_dir)
         return tutorial
 
-    def test_creation(self, tmp_path):
-        tutorial = TestTutorialDocker._create_tutorial(tmp_path, {"modules/mypuzzles.py": SIMPLE_PUZZLES})
+    def test_creation(self, working_dir):
+        tutorial = TestTutorialDocker._create_tutorial(working_dir,
+            modules = {"mypuzzles": SIMPLE_PUZZLES},
+            puzzles = ["mypuzzles.move"],
+        )
 
         assert set(tutorial.modules.keys()) == {"mypuzzles"}
         assert {m.__name__ for m in tutorial.modules.values()} == {"mypuzzles"}
 
         assert list(tutorial.generators.keys()) == ["mypuzzles.move"]
-        assert tutorial.puzzles == {} # Not generated yet
 
-    def test_str_path_creation(self, tmp_path):
-        tutorial = TestTutorialDocker._create_tutorial(tmp_path, {"modules/mypuzzles.py": SIMPLE_PUZZLES})
-        tutorial = TutorialDocker(f"{tmp_path / 'tutorial'}") # Strings should also work for path
-        assert "mypuzzles" in tutorial.modules
+        [puzzle] = list(tutorial.puzzles.values())
+        assert puzzle.question == "Rename A.txt to B.txt"
+        assert (working_dir / "A.txt").exists()
 
-    def test_multiple_modules(self, tmp_path):
-        tutorial = TestTutorialDocker._create_tutorial(tmp_path, {
-            "modules/mypuzzles1.py": SIMPLE_PUZZLES,
-            "modules/mypuzzles2.py": SIMPLE_PUZZLES,
-        })
+    def test_multiple_modules(self, working_dir):
+        tutorial = TestTutorialDocker._create_tutorial(working_dir,
+            modules = {
+                "mypuzzles1": SIMPLE_PUZZLES,
+                "mypuzzles2": SIMPLE_PUZZLES,
+            },
+            puzzles = ["mypuzzles1.move", "mypuzzles2.move"],
+        )
 
         assert "mypuzzles1.move" in tutorial.generators
         assert "mypuzzles2.move" in tutorial.generators
+        assert len(tutorial.puzzles) == 2
 
-    def test_empty(self, tmp_path):
-        tutorial = TestTutorialDocker._create_tutorial(tmp_path, {})
+    def test_empty(self, working_dir):
+        tutorial = TestTutorialDocker._create_tutorial(working_dir, modules = {}, puzzles = [])
         assert tutorial.modules == {}
+        assert tutorial.puzzles == {}
 
     # TODO test module errors when I add that
-    # def test_module_error(self, tmp_path):
+    # def test_module_error(self, working_dir):
     #     with pytest.raises():
-    #         tutorial = TestTutorial._create_tutorial(tmp_path, {
-    #             "modules/bad_module.py": "syntax error!",
+    #         tutorial = TestTutorial._create_tutorial(working_dir, modules = {
+    #             "bad_module": "syntax error!",
     #         })
 
-    def test_generate(self, tmp_path):
-        tutorial = TestTutorialDocker._create_tutorial(tmp_path, {"modules/mypuzzles.py": SIMPLE_PUZZLES})
-        puzzles = tutorial.generate(["mypuzzles.move"])
-        assert len(puzzles) == 1
-        assert puzzles == list(tutorial.puzzles.values())
-        assert puzzles[0].question == "Rename A.txt to B.txt"
-        assert (tmp_path / "home" / "A.txt").exists()
-
-    def test_generate_error(self, tmp_path):
-        tutorial = TestTutorialDocker._create_tutorial(tmp_path, {"modules/mypuzzles.py": SIMPLE_PUZZLES})
-        with pytest.raises(AssertionError, match="Unknown puzzle generator mypuzzles.not_a_puzzle"):
-            tutorial.generate(["mypuzzles.not_a_puzzle"])
+    def test_generate_error(self, working_dir):
+        with pytest.raises(Exception, match="Unknown puzzle generator mypuzzles.not_a_puzzle"):
+            tutorial = TestTutorialDocker._create_tutorial(working_dir,
+                modules = {"mypuzzles": SIMPLE_PUZZLES},
+                puzzles = ["mypuzzles.not_a_puzzle"]
+            )
         
-    def test_private_methods_arent_puzzles(self, tmp_path):
+    def test_private_methods_arent_puzzles(self, working_dir):
         puzzles = dedent("""
             from textwrap import dedent # Don't use the imported method.
 
@@ -112,12 +105,15 @@ class TestTutorialDocker:
                 )
         """)
 
-        tutorial = TestTutorialDocker._create_tutorial(tmp_path, {"modules/mypuzzles.py": puzzles})
+        tutorial = TestTutorialDocker._create_tutorial(working_dir, modules = {"mypuzzles": puzzles}, puzzles = [])
         assert list(tutorial.generators.keys()) == ["mypuzzles.move"]
 
-    def test_solve_puzzle(self, tmp_path):
-        tutorial = TestTutorialDocker._create_tutorial(tmp_path, {"modules/mypuzzles.py": SIMPLE_PUZZLES})
-        [puzzle] = tutorial.generate(["mypuzzles.move"])
+    def test_solve_puzzle(self, working_dir):
+        tutorial = TestTutorialDocker._create_tutorial(working_dir,
+            modules = {"mypuzzles": SIMPLE_PUZZLES},
+            puzzles = ["mypuzzles.move"]
+        )
+        [puzzle] = list(tutorial.puzzles.values())
 
         assert tutorial.solve_puzzle(puzzle.id) == (False, "Incorrect!")
         assert puzzle.solved == False
@@ -129,7 +125,7 @@ class TestTutorialDocker:
         assert tutorial.solve_puzzle(puzzle.id) == (True, "Correct!")
         assert puzzle.solved == True
 
-    def test_solve_puzzle_bad_return(self, tmp_path):
+    def test_solve_puzzle_bad_return(self, working_dir):
         puzzles = dedent("""
             def invalid():
                 return Puzzle(
@@ -137,13 +133,16 @@ class TestTutorialDocker:
                     checker = lambda: 100,
                 )
         """)
-        tutorial = TestTutorialDocker._create_tutorial(tmp_path, {"modules/mypuzzles.py": puzzles})
-        [puzzle] = tutorial.generate(["mypuzzles.invalid"])
+        tutorial = TestTutorialDocker._create_tutorial(working_dir,
+            modules = {"mypuzzles": puzzles},
+            puzzles = ["mypuzzles.invalid"],
+        )
+        [puzzle] = list(tutorial.puzzles.values())
 
         with pytest.raises(Exception, match="bool or str expected"):
             tutorial.solve_puzzle(puzzle.id)
 
-    def test_solve_puzzle_flag(self, tmp_path):
+    def test_solve_puzzle_flag(self, working_dir):
         puzzle = dedent("""
             def flag_puzzle():
                 return Puzzle(
@@ -151,8 +150,11 @@ class TestTutorialDocker:
                     checker = lambda flag: flag == "OK",
                 )
         """)
-        tutorial = TestTutorialDocker._create_tutorial(tmp_path, {"modules/mypuzzles.py": puzzle})
-        [puzzle] = tutorial.generate(["mypuzzles.flag_puzzle"])
+        tutorial = TestTutorialDocker._create_tutorial(working_dir,
+            modules = {"mypuzzles": puzzle},
+            puzzles = ["mypuzzles.flag_puzzle"],
+        )
+        [puzzle] = list(tutorial.puzzles.values())
 
         assert tutorial.solve_puzzle(puzzle.id) == (False, "Incorrect!")
         assert tutorial.solve_puzzle(puzzle.id, "not ok") == (False, "Incorrect!")
@@ -160,11 +162,11 @@ class TestTutorialDocker:
 
     # TODO test other puzzle errors
 
-    def test_puzzle_func_args(self, tmp_path):
+    def test_puzzle_func_args(self, working_dir):
         puzzles = dedent(f"""
             def move(home, root):
                 def checker():
-                    return home == File("{tmp_path / 'home'}") and root == File("/")
+                    return home == File("{working_dir}") and root == File("/")
 
                 return Puzzle(
                     question = f"Check home and root",
@@ -172,12 +174,15 @@ class TestTutorialDocker:
                 )
         """)
 
-        tutorial = TestTutorialDocker._create_tutorial(tmp_path, {"modules/mypuzzles.py": puzzles})
-        [puzzle] = tutorial.generate(["mypuzzles.move"])
+        tutorial = TestTutorialDocker._create_tutorial(working_dir,
+            modules = {"mypuzzles": puzzles},
+            puzzles = ["mypuzzles.move"],
+        )
+        [puzzle] = list(tutorial.puzzles.values())
 
         assert tutorial.solve_puzzle(puzzle.id) == (True, "Correct!")
 
-    def test_solve_puzzle_randomized(self, tmp_path):
+    def test_solve_puzzle_randomized(self, working_dir):
         puzzles = dedent("""
             def move():
                 src = File(rand.name())
@@ -194,11 +199,12 @@ class TestTutorialDocker:
                 )
         """)
 
-        tutorial = TestTutorialDocker._create_tutorial(tmp_path, {
-            "modules/mypuzzles.py": puzzles,
-            "name_dictionary.txt": "apple\nbanana",
-        })
-        [puzzle] = tutorial.generate(["mypuzzles.move"])
+        tutorial = TestTutorialDocker._create_tutorial(working_dir,
+            modules = {"mypuzzles": puzzles},
+            puzzles = ["mypuzzles.move"],
+            name_dictionary = "apple\nbanana",
+        )
+        [puzzle] = list(tutorial.puzzles.values())
 
         assert tutorial.solve_puzzle(puzzle.id) == (False, "Incorrect!")
         src, dst = puzzle.question.split(" -> ")
@@ -206,9 +212,9 @@ class TestTutorialDocker:
         os.system(f"mv {src} {dst}")
         assert tutorial.solve_puzzle(puzzle.id) == (True, "Correct!")
 
-    def test_student_cwd(self, tmp_path):
-        tutorial = TestTutorialDocker._create_tutorial(tmp_path, {"modules/mypuzzles.py": SIMPLE_PUZZLES})
-        cwd = (tmp_path / "home" / "folder")
+    def test_student_cwd(self, working_dir):
+        tutorial = TestTutorialDocker._create_tutorial(working_dir)
+        cwd = (working_dir / "folder")
         cwd.mkdir()
         bash = subprocess.Popen("bash", stdin = subprocess.PIPE, cwd = cwd)
 
@@ -219,10 +225,10 @@ class TestTutorialDocker:
         finally:
             bash.kill()
 
-    def test_student_cwd_spaces(self, tmp_path):
-        cwd = (tmp_path / " ")
+    def test_student_cwd_spaces(self, working_dir):
+        cwd = (working_dir / " ")
         cwd.mkdir()
-        tutorial = TestTutorialDocker._create_tutorial(tmp_path, {"modules/mypuzzles.py": SIMPLE_PUZZLES})
+        tutorial = TestTutorialDocker._create_tutorial(working_dir)
         bash = subprocess.Popen("bash", stdin = subprocess.PIPE, cwd = cwd)
 
         try:
@@ -232,34 +238,33 @@ class TestTutorialDocker:
         finally:
             bash.kill()
 
-    def test_connect_to_shell_not_found(self, tmp_path):
-        tutorial = TestTutorialDocker._create_tutorial(tmp_path, {"modules/mypuzzles.py": SIMPLE_PUZZLES})
+    def test_connect_to_shell_not_found(self, working_dir):
+        tutorial = TestTutorialDocker._create_tutorial(working_dir)
         with pytest.raises(ProcessLookupError, match = "No process"):
             tutorial.connect_to_shell("bash")
 
-    def test_connect_to_shell_multiple_found(self, tmp_path):
-        tutorial = TestTutorialDocker._create_tutorial(tmp_path, {"modules/mypuzzles.py": SIMPLE_PUZZLES})
+    def test_connect_to_shell_multiple_found(self, working_dir):
+        tutorial = TestTutorialDocker._create_tutorial(working_dir)
         bash1 = subprocess.Popen("bash", stdin = subprocess.PIPE)
         bash2 = subprocess.Popen("bash", stdin = subprocess.PIPE)
 
         with pytest.raises(ProcessLookupError, match = "Multiple processes"):
             tutorial.connect_to_shell("bash")
 
-    def test_get_files(self, tmp_path):
-        tutorial = TestTutorialDocker._create_tutorial(tmp_path, {"modules/mypuzzles.py": SIMPLE_PUZZLES})
+    def test_get_files(self, working_dir):
+        tutorial = TestTutorialDocker._create_tutorial(working_dir, puzzles = [])
 
         a = File("A"); a.mkdir()
         File("A/B").create()
         File("C").create()
         File("D").symlink_to(a)
 
-        files = tutorial.get_files(tmp_path / "home")
+        files = tutorial.get_files(working_dir)
         assert all([f.is_absolute() for _, _, f in files])
-        home = tmp_path / "home"
-        assert set(files) == {(True, False, home / "A"), (False, False, home / "C"), (True, True, home / "D")}
+        assert set(files) == {(True, False, working_dir / "A"), (False, False, working_dir / "C"), (True, True, working_dir / "D")}
 
-    def test_get_special_files(self, tmp_path):
-        tutorial = TestTutorialDocker._create_tutorial(tmp_path, {"modules/mypuzzles.py": SIMPLE_PUZZLES})
+    def test_get_special_files(self, working_dir):
+        tutorial = TestTutorialDocker._create_tutorial(working_dir)
         
         def get_files_recursive(folder):
             all_files = []

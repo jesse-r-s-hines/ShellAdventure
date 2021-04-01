@@ -49,10 +49,6 @@ class TestIntegration:
         with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
             assert docker.from_env().containers.get(tutorial.container.id) != None
 
-            # Assert files were transfered to the volume
-            modules = Path(tutorial._volume.name, "modules").glob("*.py")
-            assert {m.name for m in modules} == {"puzzles.py"}
-
             # Puzzles were generated
             for pt in tutorial.puzzles:
                 assert pt.puzzle != None

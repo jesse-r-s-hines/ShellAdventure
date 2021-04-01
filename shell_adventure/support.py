@@ -110,8 +110,8 @@ class Message(Enum):
     
     STOP = 0
     """ Stop the tutorial. Usage: (STOP,) """
-    GENERATE = 1
-    """ Generate puzzles. Usage: (GENERATE, generator_list) """
+    SETUP = 1
+    """ Send settings and puzzle modules. Generate puzzles. Usage: (GENERATE, kwargs) """
     CONNECT_TO_SHELL = 2
     """ Tells the container that a shell session with the given name has started and to connect to it. Usage: (CONNECT_TO_SHELL, name) """
     SOLVE = 3

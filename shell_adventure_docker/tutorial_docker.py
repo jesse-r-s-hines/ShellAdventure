@@ -14,9 +14,6 @@ from shell_adventure_docker.random_helper import RandomHelper
 class TutorialDocker:
     """ Contains the information for a running tutorial docker side. """
 
-    data_dir: Path
-    """ This is the path where tutorial files such as puzzles have been placed. """
-
     home: Path
     """ This is the folder that puzzle generators and checkers will be run in. Defaults to /home/student but can be changed for testing purposes. """
 
@@ -32,75 +29,84 @@ class TutorialDocker:
     random: RandomHelper
     """ An instance of RandomHelper which will generate random names and such. """
 
-    def __init__(self, data_dir: PathLike, home: PathLike = "/home/student"):
-        """
-        Create a tutorial from a config_file and a PID to the shell session the student is running.
-        Any resources the config file uses should be placed in the same directory as the config file.
-        """
-        self.data_dir = Path(data_dir)
-        self.home = Path(home)
+    shell_pid: int
+    """ The pid of the shell session the tutorial is connected to. """
 
-        self.random = RandomHelper(self.data_dir / "name_dictionary.txt")
-
-        # Load modules
-        module_list = [self._get_module(file) for file in (self.data_dir / "modules").glob("*.py")]
-        self.modules = {module.__name__: module for module in module_list}
-
-        # Get puzzle generators from the modules
+    def __init__(self):
+        """ Create a tutorial. You need to call setup() afterwards to actually set and generate the puzzles etc. """
+        # We don't really do anything in here, the tutorial is initialized in the "setup" method when we are actually sent the settings.
+        self.home = None
+        self.random = None
+        self.modules = []
         self.generators = {}
-        for module_name, module in self.modules.items():
-            for func_name, func in inspect.getmembers(module, inspect.isfunction):
-                # Exclude imported functions, lambdas, and private functions
-                if func.__module__ == module_name and func.__name__ != "<lambda>" and not func_name.startswith("_"):
-                    self.generators[f"{module_name}.{func_name}"] = func
-
-        self.puzzles = {} # Populated when we generate the puzzles.
+        self.puzzles = {}
         self.shell_pid: int = None
 
-    def _get_module(self, file_path: Path) -> ModuleType:
+    def _create_module(self, name: str, code: str) -> ModuleType:
         """
-        Gets a module object from a file path to the module. The file path is relative to the config file.
+        Constructs a module object from a string of python code.
         Injects some functions and classes into the module's namespace. TODO doc which classes and functions
         """
-        module_name = file_path.stem # strip ".py"
-        spec = importlib.util.spec_from_file_location(module_name, file_path)
-        module = importlib.util.module_from_spec(spec)
-
-        injections = { # The classes/modules/packages to inject into the modules.
+        module = ModuleType(name)
+        module.__dict__.update({ # The classes/modules/packages to inject into the modules.
             "Puzzle": Puzzle,
             "File": File,
             "rand": self.random
-        }
-
-        # Inject names into the modules
-        for name, obj in injections.items():
-            setattr(module, name, obj)
-
-        spec.loader.exec_module(module) # type: ignore # MyPy is confused about the types here
-
+        })
+        exec(code, module.__dict__) # Uses funcs as globals.
         return module
 
-    ### Message actions, these functions can be called by sending a message over the connection
+    def _get_generators(self, module: ModuleType):
+        """ Extracts puzzle generator functions from a module as a map of {name: func} """
+        generators = {}
+        for func_name, func in inspect.getmembers(module, inspect.isfunction):
+            # Exclude imported functions, lambdas, and private functions
+            if func.__module__ == module.__name__ and func.__name__ != "<lambda>" and not func_name.startswith("_"):
+                generators[f"{module.__name__}.{func_name}"] = func
 
-    def generate(self, puzzle_generators: List[str]) -> List[Puzzle]:
-        """
-        Takes a list of puzzle generators and generates them. Stores the puzzles in self.puzzles.
-        Returns the generated puzzles as a list.
-        """
+        return generators
+
+    def _generate_puzzle(self, puzzle_generator: str) -> Puzzle:
+        """   Takes a puzzle generators and generates a puzzle from it. """
+        # TODO custom exception 
+        if puzzle_generator not in self.generators: raise Exception(f"Unknown puzzle generator {puzzle_generator}.")
+
         args = { # TODO add documentation for args you can take in generator function
             "home": File(self.home), # can't use home() since the user is actually root. #TODO add docs that File.home() doesn't work as expected. 
             "root": File("/"),
         }
 
-        for gen in puzzle_generators:
-            # TODO Should probably raise custom exception instead of using assert (which can be removed at will)
-            assert gen in self.generators, f"Unknown puzzle generator {gen}."
-            os.chdir(self.home) # Make sure generators are called with home as the cwd
-            puzzle: Puzzle = support.call_with_args(self.generators[gen], args)
-            self.puzzles[puzzle.id] = puzzle
-            # TODO error checking
+        os.chdir(self.home) # Make sure generators are called with home as the cwd
+        puzzle: Puzzle = support.call_with_args(self.generators[puzzle_generator], args)
+        # TODO error checking
 
-        return list(self.puzzles.values())
+        return puzzle
+
+    ### Message actions, these functions can be called by sending a message over the connection
+    
+    def setup(self, home: PathLike, modules: Dict[str, str], puzzles: List[str], name_dictionary: str) -> List[Puzzle]:
+        """
+        Initializes the tutorial with the given settings. Generates the puzzles in the modules.
+        The initialization is done separate from the constructor so that it can be done after the connection with the host is setup.
+        Returns the generated puzzles as a list.
+        """
+        self.home = Path(home)
+        self.random = RandomHelper(name_dictionary)
+
+        # Load modules
+        self.modules = {name: self._create_module(name, code) for name, code in modules.items()}
+
+        # Get puzzle generators from the modules
+        self.generators = {}
+        for module in self.modules.values(): 
+            self.generators.update( self._get_generators(module) )
+
+        puzzle_list = [self._generate_puzzle(gen) for gen in puzzles]
+        self.puzzles = {p.id: p for p in puzzle_list}
+
+        self.shell_pid: int = None
+
+        return puzzle_list
 
     def solve_puzzle(self, puzzle_id: str, flag: str = None) -> Tuple[bool, str]:
         """
@@ -173,15 +179,19 @@ class TutorialDocker:
 
     def run(self):
         """
-        Sets up a connection between the tutorial inside the docker container and the driving application outside.
-        Listen for requests from the app
+        Sets up a connection between the tutorial inside the docker container and the driving application outside and
+        listen for requests from the host.
         """ 
 
         with Listener(support.conn_addr, authkey = support.conn_key) as listener:
             with listener.accept() as conn:
+                # Receive the initial SETUP message.
+                message, kwargs = conn.recv()
+                if message != Message.SETUP: raise Exception("Expected initial SETUP message.") # TODO custom exception
+                conn.send( self.setup(**kwargs) )
+
                 actions = {
                     # Map message type to a function that will be called. The return of the lambda will be sent back to host. 
-                    Message.GENERATE: self.generate,
                     Message.CONNECT_TO_SHELL: self.connect_to_shell,
                     Message.SOLVE: self.solve_puzzle,
                     Message.GET_STUDENT_CWD: lambda: PurePosixPath(self.student_cwd()),
