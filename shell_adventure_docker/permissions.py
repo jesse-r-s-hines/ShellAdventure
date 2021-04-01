@@ -1,6 +1,5 @@
 
 from __future__ import annotations # Don't evaluate annotations until after the module is run.
-from typing import Union, Tuple
 from . import file
 import os, stat, pwd, grp
 from contextlib import contextmanager

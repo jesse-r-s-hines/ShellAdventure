@@ -1,15 +1,13 @@
 from typing import List, Tuple, Dict, Any, Callable, ClassVar, Union
-import yaml, shutil
+import yaml, textwrap
 from multiprocessing.connection import Client, Connection
 import docker, docker.errors
 from docker.models.containers import Container
 from pathlib import Path, PurePosixPath;
-from . import support
-from .support import Puzzle, PuzzleTree, PathLike, Message, PKG
-import tempfile
-import textwrap
 from retry.api import retry_call
 from datetime import datetime, timedelta
+from . import support
+from .support import Puzzle, PuzzleTree, PathLike, Message, PKG
 
 class Tutorial:
     """ Contains the information for a running tutorial. """

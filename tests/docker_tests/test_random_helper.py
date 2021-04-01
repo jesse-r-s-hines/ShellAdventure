@@ -1,6 +1,5 @@
 import pytest
 from shell_adventure_docker.random_helper import RandomHelper
-from pathlib import Path
 
 class TestRandomHelper:
     def test_name(self):

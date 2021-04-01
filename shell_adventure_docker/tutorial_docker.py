@@ -3,7 +3,7 @@ from types import ModuleType
 from pathlib import Path, PurePosixPath;
 import subprocess, os
 from multiprocessing.connection import Listener
-import importlib.util, inspect
+import inspect
 from retry.api import retry_call
 from shell_adventure import support
 from shell_adventure.support import Puzzle, PathLike, Message

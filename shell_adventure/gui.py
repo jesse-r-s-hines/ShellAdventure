@@ -1,14 +1,13 @@
 from typing import List, Tuple, Dict, ClassVar
-from . import tutorial
-from .support import Puzzle, PathLike, PKG
-from pathlib import Path, PurePosixPath
+from pathlib import PurePosixPath
 import tkinter as tk
 from tkinter import StringVar, ttk, font, messagebox
 import tkinter.simpledialog as simpledialog
 from ttkthemes import ThemedTk
 from PIL import ImageTk, Image
 from .scrolled_frame import VerticalScrolledFrame
-
+from . import tutorial
+from .support import Puzzle, PKG
 class WrappingLabel(ttk.Label):
     """Label that automatically adjusts the wrap to the size"""
     def __init__(self, master=None, **kwargs):

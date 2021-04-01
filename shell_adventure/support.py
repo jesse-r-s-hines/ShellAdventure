@@ -7,7 +7,6 @@ This file is shared between the Docker side code and host,
 from typing import Union, Callable, List, Dict, Any, Set, ClassVar
 import os, inspect, uuid, inspect
 from pathlib import Path
-from multiprocessing.connection import Client
 from enum import Enum
 
 PathLike = Union[str, os.PathLike]

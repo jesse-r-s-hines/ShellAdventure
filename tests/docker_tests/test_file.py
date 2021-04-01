@@ -1,7 +1,6 @@
 import pytest
 from shell_adventure_docker.file import File
-from shell_adventure_docker.permissions import change_user
-from shell_adventure_docker.permissions import Permissions
+from shell_adventure_docker.permissions import Permissions, change_user
 import os, stat
 
 class TestFile:
