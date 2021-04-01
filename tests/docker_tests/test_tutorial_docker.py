@@ -238,18 +238,18 @@ class TestTutorialDocker:
         finally:
             bash.kill()
 
-    def test_connect_to_shell_not_found(self, working_dir):
-        tutorial = TestTutorialDocker._create_tutorial(working_dir)
-        with pytest.raises(ProcessLookupError, match = "No process"):
-            tutorial.connect_to_shell("bash")
+    # def test_connect_to_shell_not_found(self, working_dir):
+    #     tutorial = TestTutorialDocker._create_tutorial(working_dir)
+    #     with pytest.raises(ProcessLookupError, match = "No process"):
+    #         tutorial.connect_to_shell("bash")
 
-    def test_connect_to_shell_multiple_found(self, working_dir):
-        tutorial = TestTutorialDocker._create_tutorial(working_dir)
-        bash1 = subprocess.Popen("bash", stdin = subprocess.PIPE)
-        bash2 = subprocess.Popen("bash", stdin = subprocess.PIPE)
+    # def test_connect_to_shell_multiple_found(self, working_dir):
+    #     tutorial = TestTutorialDocker._create_tutorial(working_dir)
+    #     bash1 = subprocess.Popen("bash", stdin = subprocess.PIPE)
+    #     bash2 = subprocess.Popen("bash", stdin = subprocess.PIPE)
 
-        with pytest.raises(ProcessLookupError, match = "Multiple processes"):
-            tutorial.connect_to_shell("bash")
+    #     with pytest.raises(ProcessLookupError, match = "Multiple processes"):
+    #         tutorial.connect_to_shell("bash")
 
     def test_get_files(self, working_dir):
         tutorial = TestTutorialDocker._create_tutorial(working_dir, puzzles = [])

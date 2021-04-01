@@ -139,8 +139,7 @@ class TutorialDocker:
         """ Finds a running shell session with the given name and stores it's pid. Returns the pid. """
         try:
             # retry a few times since exec'ing into the container can take a bit, or something else may have spun up its own temporary bash session
-            result = retry_call(lambda: subprocess.check_output(["pidof", name]), tries=40, delay=0.2) # type: ignore
-            self.shell_pid = int(result)
+            self.shell_pid = retry_call(lambda: int(subprocess.check_output(["pidof", name])), tries=40, delay=0.2) # type: ignore
         except subprocess.CalledProcessError:
             raise ProcessLookupError(f'No process named "{name}" found.')
         except ValueError: # int parse fails because more than one pid was returned
