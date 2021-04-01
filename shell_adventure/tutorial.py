@@ -115,7 +115,7 @@ class Tutorial:
                 pt.puzzle = puzzle
         except BaseException as e: # BaseException includes KeyboardInterrupt
             logs = self.stop() # If an error occurs in __enter__, __exit__ isn't called.
-            raise TutorialError("An error occurred while generating puzzles.", container_logs = logs) from e
+            raise TutorialError("An error occurred while starting tutorial.", container_logs = logs) from e
 
         self.start_time = datetime.now()
 
@@ -145,39 +145,29 @@ class Tutorial:
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self.stop()
+        logs = self.stop()
+        if exc_type and issubclass(exc_type, BaseException):
+            raise TutorialError("An error occured in the tutorial.", container_logs = logs) from exc_value
 
     def solve_puzzle(self, puzzle: Puzzle, flag: str = None) -> Tuple[bool, str]:
         """ Tries to solve the puzzle. Returns (success, feedback) and sets the Puzzle as solved if the checker succeeded. """
-        try:
-            self._conn.send( (Message.SOLVE, puzzle.id, flag) )
-            (solved, feedback) = self._conn.recv()
-            puzzle.solved = solved
-            return (solved, feedback)
-        except BaseException as e:
-            logs = self.stop()
-            raise TutorialError(f'An error occurred while solving puzzle {puzzle.id}: "{puzzle.question}"', container_logs = logs) from e
+        self._conn.send( (Message.SOLVE, puzzle.id, flag) )
+        (solved, feedback) = self._conn.recv()
+        puzzle.solved = solved
+        return (solved, feedback)
 
     def connect_to_shell(self, name: str) -> int:
         """
         Connects the tutorial to a running shell session with the given name. The shell session should have a unique name.
         Returns the PID (in docker) of the shell session.
         """
-        try:
-            self._conn.send( (Message.CONNECT_TO_SHELL, name) )
-            return self._conn.recv() # wait for response
-        except BaseException as e:
-            logs = self.stop()
-            raise TutorialError(f'An error occurred while connecting to shell.', container_logs = logs) from e
+        self._conn.send( (Message.CONNECT_TO_SHELL, name) )
+        return self._conn.recv() # wait for response
 
     def get_student_cwd(self) -> PurePosixPath:
         """ Get the path to the students current directory/ """
-        try:
-            self._conn.send( (Message.GET_STUDENT_CWD,) )
-            return self._conn.recv()
-        except BaseException as e:
-            logs = self.stop()
-            raise TutorialError(f'An error occurred while getting student cwd', container_logs = logs) from e
+        self._conn.send( (Message.GET_STUDENT_CWD,) )
+        return self._conn.recv()
 
     def get_files(self, folder: PurePosixPath) -> List[Tuple[bool, bool, PurePosixPath]]:
         """
@@ -186,12 +176,8 @@ class Tutorial:
         """
         assert folder.is_absolute()
 
-        try:
-            self._conn.send( (Message.GET_FILES, folder) )
-            return self._conn.recv()
-        except BaseException as e:
-            logs = self.stop()
-            raise TutorialError(f'An error occurred while getting files in "{folder}"', container_logs = logs) from e
+        self._conn.send( (Message.GET_FILES, folder) )
+        return self._conn.recv()
 
     def time(self) -> timedelta:
         """ Returns the time that the student has spend on the tutorial so far. """
