@@ -87,3 +87,36 @@ class TestRandomHelper:
         for _ in range(10): # Should not use lorem ipsum since we are within range.
             assert len(random.paragraphs(10).split("\n\n")) == 10
             assert random.paragraphs(10).endswith("\n")
+
+    def test_random_folder_basic(self, tmp_path):
+        random = RandomHelper("a\nb\nc\nd\ne")
+
+        file = random.folder(tmp_path)
+        assert tmp_path in file.parents
+        assert not file.exists()
+
+    def test_random_folder(self, tmp_path):
+        random = RandomHelper("a\nb\nc\nd\ne")
+
+        file1 = random.folder(tmp_path, depth = 1)
+        assert file1.parent == tmp_path
+
+        file2 = random.folder(file1, depth = 1, create_new_chance=0)
+        assert file2.parent == file1
+
+    def test_mark_shared(self, tmp_path):
+        random = RandomHelper("a\nb\nc\nd\ne")
+
+        random.mark_shared(tmp_path)
+        assert tmp_path in random._shared_folders
+
+        (tmp_path / "file.txt").touch()
+        with pytest.raises(Exception, match="Can only mark folders as shared"):
+            random.mark_shared(tmp_path / "file.txt")
+
+
+        file1 = random.folder(tmp_path, depth = 1)
+        assert file1.parent == tmp_path
+
+        file2 = random.folder(file1, depth = 1, create_new_chance=0)
+        assert file2.parent == file1

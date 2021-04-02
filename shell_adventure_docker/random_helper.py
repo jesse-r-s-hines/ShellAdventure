@@ -1,5 +1,6 @@
 from typing import List, Tuple, Union
 import random, re, lorem
+from shell_adventure_docker.file import File
 
 class RandomHelper:
     """ RandomHelper is a class that generates random names, contents, and file paths. """
@@ -9,6 +10,10 @@ class RandomHelper:
 
     _content_sources: List[List[str]]
     """ The sources that will be used to generate random content. List of files, each file is a list of paragraphs. """
+
+    # It would be more efficient to store these as tree.
+    _shared_folders: List[File]
+    """     A list of shared folders. random.folder() can use existing folders if they are shared. """
 
     def __init__(self, name_dictionary: str, content_sources: List[str] = []):
         """
@@ -32,6 +37,8 @@ class RandomHelper:
             # # split paragraphs into lists of sentences
             # para_sentences = [re.findall(r".*?\.\s+", para, flags = re.DOTALL) for para in paragraphs] 
             self._content_sources.append(paragraphs)
+
+        self._shared_folders = []
 
     def name(self):
         """ Returns a random word that can be used as a file name. """
@@ -59,3 +66,50 @@ class RandomHelper:
             return "\n\n".join(source[index:index+count]) + "\n"
         else:
             return lorem.get_paragraph(count = count, sep = "\n\n") + "\n"
+
+    def folder(self, parent: File, depth: Union[int, Tuple[int, int]] = (1, 3), create_new_chance: float = 0.5) -> File:
+        """
+        Makes a File to a random folder under parent. Does not create the file on disk.
+        
+        The returned File can include new folders in the path with random names, and it can include existing
+        folders that are "shared". Folders are only "shared" if they were created via folder() or explicitly
+        marked shared via mark_shared().
+        
+        Since folders created by this method can be "reused" in other calls to folder() you should not modify
+        the parent folders in puzzles. This way, folders created by puzzles won't intefere with one another,
+        but multiple puzzles can occur in the same directory.
+
+        depth: Either an int or a (min, max) tuple. The returned file will have a depth under parent within
+               the given range (inclusive)
+        create_new_chance: float in [0, 1]. The percentage chance that a new folder will be created even if
+                           shared folders are available.
+
+        >>> rand = Random("")
+        >>> rand.folder(home)
+        File("/home/student/random/nested/folder")
+        >>> rand.folder(home)
+        File("/home/student/random/folder2")
+        >>> folder = rand.folder(home)
+        >>> folder.mkdir(parents = True)
+        """
+
+        if isinstance(depth, tuple): depth = random.randint(depth[0], depth[1])
+        folder = parent.resolve()
+        
+        for i in range(depth):
+            choices = [subfolder for subfolder in self._shared_folders if subfolder.parent == folder]
+            if len(choices) == 0 or random.uniform(0, 1) < create_new_chance: # Create new shared folder
+                # TODO check if folder already exists and if so rename.
+                # This can only happen if a hardcoded puzzle name happens to match the generated one.
+                folder = folder / self.name()
+                self.mark_shared(folder)
+            else:
+                folder = random.choice(choices)
+
+        return folder
+
+    def mark_shared(self, folder: File):
+        """ Marks a folder as shared. The folder does not have to exist yet. """
+        if folder.exists() and not folder.is_dir():
+            raise Exception(f"Can't mark {folder} as shared, it already exists as a file. Can only mark folders as shared.")
+        self._shared_folders.append(folder)
