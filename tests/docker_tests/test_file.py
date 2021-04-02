@@ -160,12 +160,18 @@ class TestFile:
 
     def test_random(self, working_dir):
         try:
+            working_dir = File(working_dir)
+
             File._random = RandomHelper("a\nb\nc")
-            subfile = File(working_dir).random_folder(depth = 1)
+            subfile = working_dir.random_folder(depth = 1)
             assert subfile.parent == working_dir
 
-            new_folder = File(working_dir) / "my_new_folder"
+            new_folder = working_dir / "my_new_folder"
             new_folder.mark_shared()
             assert new_folder in File._random._shared_folders
+
+            new_file = working_dir.random_file("txt")
+            assert new_file.parent == working_dir
+            assert new_file.name in ["a.txt", "b.txt", "c.txt"]
         finally:
             File._random = None

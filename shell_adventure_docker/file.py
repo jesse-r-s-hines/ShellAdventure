@@ -3,7 +3,7 @@ from typing import Union, List, ClassVar, Tuple
 from pathlib import PosixPath
 import os, shutil, shlex
 from .permissions import Permissions, LinkedPermissions, change_user
-from .random_helper import RandomHelper
+from . import random_helper
 
 class File(PosixPath):
     """
@@ -11,7 +11,7 @@ class File(PosixPath):
     Refer to pathlib documentation at https://docs.python.org/3/library/pathlib.html
     """
 
-    _random: ClassVar[RandomHelper] = None
+    _random: ClassVar[random_helper.RandomHelper] = None
     """ The RandomHelper which will be used when creating random files and folders. """
 
     def chown(self, owner: Union[str, int] = None, group: Union[str, int] = None):
@@ -70,6 +70,15 @@ class File(PosixPath):
         if isinstance(val, Permissions):
             val = int(val)
         self.chmod(val)
+
+    def random_file(self, ext = None) -> File:
+        """
+        Creates a File with a random name. The file is not created on disk and is not marked as shared.
+        You can pass an extension which will be added to the random name.
+        Will not create a file with a name that already exists.
+        """
+        if (File._random == None): raise Exception("Can't make random files until File._random has been initialized.")
+        return File._random.file(self, ext = ext)
 
     def random_folder(self, depth: Union[int, Tuple[int, int]] = (1, 3), create_new_chance: float = 0.5) -> File:
         """

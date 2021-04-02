@@ -95,14 +95,30 @@ class TestRandomHelper:
         assert tmp_path in file.parents
         assert not file.exists()
 
+        file = random.folder(tmp_path, depth = 2)
+        assert file in random._shared_folders
+        assert file.parents[0] in random._shared_folders
+        assert file.parents[1] not in random._shared_folders
+
     def test_random_folder(self, tmp_path):
-        random = RandomHelper("a\nb\nc\nd\ne")
+        random = RandomHelper("a\nb\n")
 
         file1 = random.folder(tmp_path, depth = 1)
         assert file1.parent == tmp_path
+        assert file1.name in ["a", "b"]
 
         file2 = random.folder(file1, depth = 1, create_new_chance=0)
         assert file2.parent == file1
+        assert file2.name in ["a", "b"]
+
+    def test_random_folder_already_exists(self, tmp_path):
+        random = RandomHelper("a\nb\n")
+        (tmp_path / "a").mkdir()
+
+        assert random.folder(tmp_path, depth = 1, create_new_chance = 1).name == "b"
+
+        with pytest.raises(Exception, match = "Out of unique names"):
+            random.folder(tmp_path, depth = 1, create_new_chance = 1) # "a" already exists, "b" was generated.
 
     def test_mark_shared(self, tmp_path):
         random = RandomHelper("a\nb\nc\nd\ne")
@@ -120,3 +136,28 @@ class TestRandomHelper:
 
         file2 = random.folder(file1, depth = 1, create_new_chance=0)
         assert file2.parent == file1
+
+    def test_random_file(self, tmp_path):
+        random = RandomHelper("a\nb\n")
+
+        file = random.file(tmp_path)
+        assert file.parent == tmp_path
+        assert file.name in ["a", "b"]
+
+        file = random.file(tmp_path, "txt")
+        assert file.name in ["a.txt", "b.txt"]
+
+    def test_random_file_already_exists(self, tmp_path):
+        random = RandomHelper("a\nb\n")
+        (tmp_path / "a").touch()
+        assert random.file(tmp_path).name == "b"
+
+        with pytest.raises(Exception, match = "Out of unique names"):
+            random.file(tmp_path) # "a" already exists, "b" was generated.
+
+        random = RandomHelper("a\nb\n")
+        (tmp_path / "a.txt").touch()
+        assert random.file(tmp_path, ext = "txt").name == "b.txt"
+
+        with pytest.raises(Exception, match = "Out of unique names"):
+            random.file(tmp_path) # "a.txt" already exists, "b" was generated.

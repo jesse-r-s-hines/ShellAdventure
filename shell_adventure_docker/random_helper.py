@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import List, Tuple, Union
 import random, re, lorem
-from . import file
+from . import file as f
 
 class RandomHelper:
     """ RandomHelper is a class that generates random names, contents, and file paths. """
@@ -13,7 +13,7 @@ class RandomHelper:
     """ The sources that will be used to generate random content. List of files, each file is a list of paragraphs. """
 
     # It would be more efficient to store these as tree.
-    _shared_folders: List[file.File]
+    _shared_folders: List[f.File]
     """     A list of shared folders. random.folder() can use existing folders if they are shared. """
 
     def __init__(self, name_dictionary: str, content_sources: List[str] = []):
@@ -68,26 +68,36 @@ class RandomHelper:
         else:
             return lorem.get_paragraph(count = count, sep = "\n\n") + "\n"
 
-    def folder(self, parent: file.File, depth: Union[int, Tuple[int, int]] = (1, 3), create_new_chance: float = 0.5) -> file.File:
-        """ Makes a File to a random folder under parent. See File.random_folder() for more docs. """
+    def file(self, parent: f.File, ext = None) -> f.File:
+        """ Creates a File with a random name. See File.rand_file() for more details. """
+        parent = parent.resolve()
+        ext = "" if ext == None else f".{ext}"
+        new_file = f.File("/") # garanteed to exist.
+
+        # check if file already exists. This can happen if a hardcoded name happens to match the random one.
+        while new_file.exists():
+            new_file = parent / f"{self.name()}{ext}"
+
+        return new_file
+
+    def folder(self, parent: f.File, depth: Union[int, Tuple[int, int]] = (1, 3), create_new_chance: float = 0.5) -> f.File:
+        """ Makes a File to a random folder under parent. See File.random_folder() for more details. """
 
         if isinstance(depth, tuple): depth = random.randint(depth[0], depth[1])
         folder = parent.resolve()
         
         for i in range(depth):
             choices = [subfolder for subfolder in self._shared_folders if subfolder.parent == folder]
-            if len(choices) == 0 or random.uniform(0, 1) < create_new_chance: # Create new shared folder
-                # TODO check if folder already exists and if so rename.
-                # This can only happen if a hardcoded puzzle name happens to match the generated one.
-                folder = folder / self.name()
+            if len(choices) == 0 or random.uniform(0, 1) <= create_new_chance: # Create new shared folder
+                folder = self.file(folder) # create random file under folder
                 self.mark_shared(folder)
             else:
                 folder = random.choice(choices)
 
         return folder
 
-    def mark_shared(self, folder: file.File):
+    def mark_shared(self, folder: f.File):
         """ Marks a folder as shared. The folder does not have to exist yet. """
         if folder.exists() and not folder.is_dir():
-            raise Exception(f"Can't mark {folder} as shared, it already exists as a file. Can only mark folders as shared.")
+            raise Exception(f"Can't mark {folder} as shared, it already exists as a f. Can only mark folders as shared.")
         self._shared_folders.append(folder.resolve())
