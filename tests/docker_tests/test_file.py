@@ -1,7 +1,9 @@
+from re import sub
 import pytest
+import os, stat
 from shell_adventure_docker.file import File
 from shell_adventure_docker.permissions import Permissions, change_user
-import os, stat
+from shell_adventure_docker.random_helper import RandomHelper
 
 class TestFile:
     def test_basic(self, working_dir):
@@ -155,3 +157,15 @@ class TestFile:
 
         file.permissions.others.write = False # Still "linked" to the actual file
         assert stat.S_IMODE(os.stat("file.txt").st_mode) == 0o664
+
+    def test_random(self, working_dir):
+        try:
+            File._random = RandomHelper("a\nb\nc")
+            subfile = File(working_dir).random_folder(depth = 1)
+            assert subfile.parent == working_dir
+
+            new_folder = File(working_dir) / "my_new_folder"
+            new_folder.mark_shared()
+            assert new_folder in File._random._shared_folders
+        finally:
+            File._random = None

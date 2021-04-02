@@ -1,6 +1,7 @@
+from __future__ import annotations
 from typing import List, Tuple, Union
 import random, re, lorem
-from shell_adventure_docker.file import File
+from . import file
 
 class RandomHelper:
     """ RandomHelper is a class that generates random names, contents, and file paths. """
@@ -12,7 +13,7 @@ class RandomHelper:
     """ The sources that will be used to generate random content. List of files, each file is a list of paragraphs. """
 
     # It would be more efficient to store these as tree.
-    _shared_folders: List[File]
+    _shared_folders: List[file.File]
     """     A list of shared folders. random.folder() can use existing folders if they are shared. """
 
     def __init__(self, name_dictionary: str, content_sources: List[str] = []):
@@ -67,31 +68,8 @@ class RandomHelper:
         else:
             return lorem.get_paragraph(count = count, sep = "\n\n") + "\n"
 
-    def folder(self, parent: File, depth: Union[int, Tuple[int, int]] = (1, 3), create_new_chance: float = 0.5) -> File:
-        """
-        Makes a File to a random folder under parent. Does not create the file on disk.
-        
-        The returned File can include new folders in the path with random names, and it can include existing
-        folders that are "shared". Folders are only "shared" if they were created via folder() or explicitly
-        marked shared via mark_shared().
-        
-        Since folders created by this method can be "reused" in other calls to folder() you should not modify
-        the parent folders in puzzles. This way, folders created by puzzles won't intefere with one another,
-        but multiple puzzles can occur in the same directory.
-
-        depth: Either an int or a (min, max) tuple. The returned file will have a depth under parent within
-               the given range (inclusive)
-        create_new_chance: float in [0, 1]. The percentage chance that a new folder will be created even if
-                           shared folders are available.
-
-        >>> rand = Random("")
-        >>> rand.folder(home)
-        File("/home/student/random/nested/folder")
-        >>> rand.folder(home)
-        File("/home/student/random/folder2")
-        >>> folder = rand.folder(home)
-        >>> folder.mkdir(parents = True)
-        """
+    def folder(self, parent: file.File, depth: Union[int, Tuple[int, int]] = (1, 3), create_new_chance: float = 0.5) -> file.File:
+        """ Makes a File to a random folder under parent. See File.random_folder() for more docs. """
 
         if isinstance(depth, tuple): depth = random.randint(depth[0], depth[1])
         folder = parent.resolve()
@@ -108,8 +86,8 @@ class RandomHelper:
 
         return folder
 
-    def mark_shared(self, folder: File):
+    def mark_shared(self, folder: file.File):
         """ Marks a folder as shared. The folder does not have to exist yet. """
         if folder.exists() and not folder.is_dir():
             raise Exception(f"Can't mark {folder} as shared, it already exists as a file. Can only mark folders as shared.")
-        self._shared_folders.append(folder)
+        self._shared_folders.append(folder.resolve())

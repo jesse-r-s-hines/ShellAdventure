@@ -49,6 +49,8 @@ class TestTutorialDocker:
             puzzles = ["mypuzzles.move"],
         )
 
+        assert File._random != None # File._random should be set
+
         assert set(tutorial.modules.keys()) == {"mypuzzles"}
         assert {m.__name__ for m in tutorial.modules.values()} == {"mypuzzles"}
 
@@ -57,6 +59,7 @@ class TestTutorialDocker:
         [puzzle] = list(tutorial.puzzles.values())
         assert puzzle.question == "Rename A.txt to B.txt"
         assert (working_dir / "A.txt").exists()
+
 
     def test_multiple_modules(self, working_dir):
         tutorial = TestTutorialDocker._create_tutorial(working_dir,

@@ -9,7 +9,7 @@ from shell_adventure import support
 from shell_adventure.support import Puzzle, PathLike, Message
 from .file import File
 from .permissions import change_user
-from shell_adventure_docker.random_helper import RandomHelper
+from .random_helper import RandomHelper
 
 class TutorialDocker:
     """ Contains the information for a running tutorial docker side. """
@@ -93,6 +93,8 @@ class TutorialDocker:
         """
         self.home = Path(home)
         self.random = RandomHelper(name_dictionary, content_sources)
+        # Unfortunately we have to have a static variable in File to allow File methods to access the RandomHelper
+        File._random = self.random 
 
         # Load modules
         self.modules = {name: self._create_module(name, code) for name, code in modules.items()}
