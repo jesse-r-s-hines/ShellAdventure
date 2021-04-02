@@ -34,6 +34,7 @@ class TestTutorialDocker:
             "modules": {"puzzles": SIMPLE_PUZZLES},
             "puzzles": ["puzzles.move"],
             "name_dictionary": "apple\nbanana\n",
+            "content_sources": [],
         }
         setup = {**default_setup, **setup} # merge
 
@@ -186,7 +187,7 @@ class TestTutorialDocker:
         puzzles = dedent("""
             def move():
                 src = File(rand.name())
-                src.write_text("stuff")
+                src.write_text(rand.paragraphs(3))
                 
                 dst = File(rand.name()) # Don't create yet
 

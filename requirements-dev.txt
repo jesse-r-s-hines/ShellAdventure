@@ -2,3 +2,4 @@
 pytest
 pytest-cov
 pytest-helpers-namespace
+python-lorem # This is only used inside the docker container so we don't actually need it in production.

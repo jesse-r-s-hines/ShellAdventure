@@ -43,13 +43,17 @@ class TestTutorial:
                     - puzzle1.move
                     - puzzle2.move
                 name_dictionary: "my_dictionary.txt"
+                content_sources:
+                    - content.txt
             """,
             "puzzle1.py": SIMPLE_PUZZLES,
             "puzzle2.py": SIMPLE_PUZZLES,
             "my_dictionary.txt": "a\nb\nc\n",
+            "content.txt": "STUFF\n\nSTUFF\n\nMORE STUFF\n"
         })
         assert tutorial.data_dir == tmp_path
         assert tutorial.name_dictionary == tmp_path / "my_dictionary.txt"
+        assert tutorial.content_sources == [tmp_path / "content.txt"]
 
         assert {m.resolve() for m in tutorial.module_paths} == {tmp_path / "puzzle1.py", tmp_path / "puzzle2.py"}
         assert {pt.generator for pt in tutorial.puzzles} == {"puzzle1.move", "puzzle2.move"}

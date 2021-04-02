@@ -25,6 +25,9 @@ class Tutorial:
     name_dictionary: Path
     """ Path to a dictionary containing random names for files. """
 
+    content_sources: List[Path]
+    """ A list of files that will be used to generate text content in files. """
+
     # Other fields
     container: Container
     """ The docker container that the student is in. """
@@ -50,6 +53,7 @@ class Tutorial:
             # TODO use a custom exception
             if not isinstance(config, dict): raise Exception("Invalid config file.")
 
+        # TODO validation
         self.module_paths = []
         for module in config.get("modules"):
             # Files are relative to the config file (if module is absolute, Path will use that, if relative it will join with first)
@@ -59,8 +63,11 @@ class Tutorial:
             self.module_paths.append(module)
 
         self.puzzles = [PuzzleTree(gen) for gen in config.get("puzzles")]
+
         name_dictionary = config.get("name_dictionary", PKG / "resources/name_dictionary.txt")
         self.name_dictionary = Path(self.data_dir, name_dictionary) # relative to config file
+
+        self.content_sources = [Path(self.data_dir, f) for f in config.get("content_sources", [])] # relative to config file
 
         self.container = None
         self._conn: Connection = None # Connection to the docker container.
@@ -105,6 +112,7 @@ class Tutorial:
                 "modules": {file.stem: file.read_text() for file in self.module_paths},
                 "puzzles": [pt.generator for pt in self.puzzles],
                 "name_dictionary": self.name_dictionary.read_text(),
+                "content_sources": [file.read_text() for file in self.content_sources],
             }))
             generated_puzzles = self._conn.recv()
 

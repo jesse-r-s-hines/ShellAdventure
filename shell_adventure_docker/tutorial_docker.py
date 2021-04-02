@@ -84,14 +84,15 @@ class TutorialDocker:
 
     ### Message actions, these functions can be called by sending a message over the connection
     
-    def setup(self, home: PathLike, modules: Dict[str, str], puzzles: List[str], name_dictionary: str) -> List[Puzzle]:
+    def setup(self, home: PathLike, modules: Dict[str, str], puzzles: List[str],
+              name_dictionary: str, content_sources: List[str]) -> List[Puzzle]:
         """
         Initializes the tutorial with the given settings. Generates the puzzles in the modules.
         The initialization is done separate from the constructor so that it can be done after the connection with the host is setup.
         Returns the generated puzzles as a list.
         """
         self.home = Path(home)
-        self.random = RandomHelper(name_dictionary)
+        self.random = RandomHelper(name_dictionary, content_sources)
 
         # Load modules
         self.modules = {name: self._create_module(name, code) for name, code in modules.items()}
