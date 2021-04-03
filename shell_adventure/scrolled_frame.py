@@ -55,13 +55,11 @@ class VerticalScrolledFrame(ttk.Frame):
         #     self.canvas.config(width=self.interior.winfo_reqwidth())
 
     def _configure_canvas(self, event):
-        if (self.interior.winfo_reqwidth()  != self.winfo_width() or
-            self.interior.winfo_reqheight() != self.winfo_height()):
+        if self.interior.winfo_reqwidth() != self.winfo_width():
             # update the inner frame's width to fill the canvas
             # Jesse: Changing this to from `self.winfo_width` to `event.width` seems to fix a minor
-            #   spacing issue where the scrollbar was covering part of the buttons. Also made the inner
-            #   frame take the whole height as well as the width.
-            self.canvas.itemconfigure(self.interior_id, width=event.width, height = event.height)
+            #   spacing issue where the scrollbar was covering part of the buttons.
+            self.canvas.itemconfigure(self.interior_id, width=event.width)
 
     # This can now handle either windows or linux platforms
     def _on_mousewheel(self, event, scroll=None):
