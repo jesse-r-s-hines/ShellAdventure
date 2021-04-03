@@ -147,11 +147,11 @@ class GUI(ThemedTk):
         old_tags = list(self.file_tree.item(iid, option = "tags"))
         self.file_tree.item(iid, tags = old_tags + [tag])
 
-    def load_folder(self, folder: str, open_new: bool = False):
+    def load_folder(self, folder: str, was_open: bool = False):
         """
         Updates the given folder in the file tree. Indicates the student_cwd if it is under folder, and opens it.
         Pass the iid of the node which is the path to the file except that "" is the root.
-        If open_new is True, new folders will be opened, otherwise all subfolders except cwd will start closed.
+        If was_open is True, new folders will be opened, otherwise all subfolders except cwd will start closed.
         """
         self._add_tree_tag(folder, "loaded")
 
@@ -169,7 +169,7 @@ class GUI(ThemedTk):
             file_text = file.name # The text to display for the file
             file_icon = self.file_icons[(is_dir, is_symlink)]
             file_in_tree = file_id in old_files
-            file_was_open = old_files.pop(file_id, False)
+            file_was_open = old_files.pop(file_id, False) # We want to keep open folders that were already open
 
             tags = ["dir"] if is_dir else ["file"]
             if is_symlink: tags.append("symlink")
@@ -188,10 +188,10 @@ class GUI(ThemedTk):
                 # If a directory is new, or was already open, open it. Don't open symlinks (to avoid infinite recursion)
                 # Also open the current directory (and any parents of it)
                 is_in_cwd_path = (file == self.student_cwd or file in self.student_cwd.parents)
-                should_open = file_was_open or is_in_cwd_path or (open_new and not file_in_tree and not is_symlink)
+                should_open = file_was_open or is_in_cwd_path or (was_open and not file_in_tree and not is_symlink)
                 if should_open: 
                     self.file_tree.item(file_id, open = True) # open it
-                    self.load_folder(file_id, open_new = file_was_open or open_new) # trigger update on the subfolder
+                    self.load_folder(file_id, was_open = file_was_open) # trigger update on the subfolder
                 elif not file_in_tree:
                     self.file_tree.insert(file, tk.END, tags = ["dummy"]) # insert a dummy child so that is shows as "openable"
             else:
