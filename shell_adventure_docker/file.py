@@ -38,12 +38,14 @@ class File(PosixPath):
             else:
                 super().chmod(mode)
 
-    def children(self) -> List[File]:
-        """
-        Return list of directory's contents. Raises "NotADirectoryError" if not a directory.
-        Basically an alias of Path.iterdir() but returns a list instead of a generator.
-        """
+    def _get_children(self) -> List[File]:
         return list(self.iterdir()) # type: ignore
+
+    children = property(_get_children)
+    """
+    Return list of directory's contents. Raises "NotADirectoryError" if not a directory.
+    Basically an alias of Path.iterdir() but returns a list instead of a generator.
+    """
     
     def _get_path(self) -> str:
         return str(self.resolve())

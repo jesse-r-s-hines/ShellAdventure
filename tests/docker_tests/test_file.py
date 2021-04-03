@@ -54,12 +54,12 @@ class TestFile:
             (dir / name).create()
 
         with pytest.raises(NotADirectoryError):
-            (dir / "A.txt").children()
+            (dir / "A.txt").children
         
-        assert isinstance(dir.children(), list)
-        assert isinstance(dir.children()[0], File)
+        assert isinstance(dir.children, list)
+        assert isinstance(dir.children[0], File)
 
-        names = {f.name for f in dir.children()}
+        names = {f.name for f in dir.children}
         assert names == {"A.txt", "B.txt", "C.txt"}
 
     def test_chmod(self, working_dir):
