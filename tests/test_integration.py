@@ -31,6 +31,20 @@ PUZZLES = dedent("""
             question = f"cd into dir.",
             checker = checker
         )
+
+    def random_puzzle(home):
+        src = home.random_file("txt")
+        src.write_text(rand.paragraphs(3))
+        
+        dst = home.random_folder().random_file("txt") # Don't create yet
+
+        def checker():
+            return not src.exists() and dst.exists()
+
+        return Puzzle(
+            question = f"{src} -> {dst}",
+            checker = checker
+        )
 """)
 
 class TestIntegration:
@@ -105,3 +119,35 @@ class TestIntegration:
             assert tutorial.is_finished() == True
 
             assert tutorial.get_student_cwd() == Path("/home/student/dir")
+
+    def test_random(self, tmp_path):
+        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
+            "config.yaml": """
+                modules:
+                    - puzzles.py
+                puzzles:
+                    - puzzles.random_puzzle
+                content_sources:
+                    - content.txt
+            """,
+            # Use default name generation.
+            "puzzles.py": PUZZLES,
+            "content.txt": "STUFF1\n\nSTUFF2\n\nSTUFF3\n",
+        })
+
+        with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
+            rand_puzzle = tutorial.puzzles[0].puzzle
+            src, dst = rand_puzzle.question.split(" -> ")
+
+            exit_code, output = tutorial.container.exec_run(["cat", src])
+            assert "STUFF" in output.decode()
+
+            solved, feedback = tutorial.solve_puzzle(rand_puzzle)
+            assert solved == False
+
+            tutorial.container.exec_run(["mkdir", "--parents", src, str(Path(dst).parent)])
+            tutorial.container.exec_run(["mv", src, dst])
+            solved, feedback = tutorial.solve_puzzle(rand_puzzle)
+            assert solved == True
+
+            assert tutorial.is_finished() == True

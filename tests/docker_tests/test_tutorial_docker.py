@@ -188,17 +188,17 @@ class TestTutorialDocker:
 
     def test_solve_puzzle_randomized(self, working_dir):
         puzzles = dedent("""
-            def move():
-                src = File(rand.name())
+            def move(home):
+                src = home.random_file("txt")
                 src.write_text(rand.paragraphs(3))
                 
-                dst = File(rand.name()) # Don't create yet
+                dst = home.random_folder().random_file("txt") # Don't create yet
 
                 def checker():
                     return not src.exists() and dst.exists()
 
                 return Puzzle(
-                    question = f"{src.name} -> {dst.name}",
+                    question = f"{src.relative_to(home)} -> {dst.relative_to(home)}",
                     checker = checker
                 )
         """)
@@ -206,13 +206,14 @@ class TestTutorialDocker:
         tutorial = TestTutorialDocker._create_tutorial(working_dir,
             modules = {"mypuzzles": puzzles},
             puzzles = ["mypuzzles.move"],
-            name_dictionary = "apple\nbanana",
+            name_dictionary = "\n".join("abcdefg")
         )
         [puzzle] = list(tutorial.puzzles.values())
 
         assert tutorial.solve_puzzle(puzzle.id) == (False, "Incorrect!")
-        src, dst = puzzle.question.split(" -> ")
+        src, dst = map(File, puzzle.question.split(" -> "))
 
+        os.system(f"mkdir --parents {src} {dst.parent}")
         os.system(f"mv {src} {dst}")
         assert tutorial.solve_puzzle(puzzle.id) == (True, "Correct!")
 

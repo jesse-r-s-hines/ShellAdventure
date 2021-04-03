@@ -34,7 +34,7 @@ class TestTutorial:
         assert str(tutorial.name_dictionary).endswith("resources/name_dictionary.txt")
 
     def test_creation(self, tmp_path):
-        tutorial = pytest.helpers.create_tutorial(tmp_path, {
+        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
             "config.yaml": f"""
                 modules:
                     - puzzle1.py # Relative path
