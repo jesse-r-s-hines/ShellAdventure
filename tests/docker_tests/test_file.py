@@ -33,16 +33,24 @@ class TestFile:
         assert file.exists()
         assert file.parent.exists()
         assert file.permissions == 0o644
-        assert File("A").permissions == 0o755
+        # parents use default permissions.
+        # 0o755 would normally be default but because we set umask to 0o000 default is 0o777. Maybe we should change that.
+        assert File("A").permissions == 0o777 
 
         file = File("A/C.txt")
         file.create(mode=0o666, recursive=True)
         assert file.permissions == 0o666
-        assert File("A").permissions == 0o755
+        assert File("A").permissions == 0o777
 
         file = File("A/D.txt")
         file.create()
         assert file.exists()
+
+        file = File("E/F/G.txt")
+        file.create(mode=0o111)
+        assert file.exists()
+        assert File("E/F").permissions == 0o777 
+        assert File("E/F").permissions == 0o777 
 
         file = File("A/E.txt")
         file.create(content = "STUFF")

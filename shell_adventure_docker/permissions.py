@@ -112,6 +112,9 @@ class Permissions:
         """
         return str(self.user) + str(self.group) + str(self.others)
 
+    def __repr__(self):
+        return f"Permissions({oct(int(self))})"
+
 class LinkedPermissions(Permissions):
     """ Is linked to an actual file so you get file permissions via the permissions object or modify permissions. """
     

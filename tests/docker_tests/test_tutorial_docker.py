@@ -5,7 +5,6 @@ from shell_adventure_docker.file import File
 import os, subprocess
 from textwrap import dedent;
 
-# TODO use File in here.
 SIMPLE_PUZZLES = dedent("""
     def move():
         file = File("A.txt")

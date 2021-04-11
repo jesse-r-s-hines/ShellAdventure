@@ -56,11 +56,11 @@ class File(PosixPath):
     def create(self, *, mode=0o666, exist_ok=True, recursive = True, content: str = None):
         """
         Basically an alias to Path.touch(), but will "mkdir" missing dirs in the path if recursive is set to True.
-        New directories will be made with the same mode, except with execute permissions set. You can also specify
-        a content string which will be written to the file.
+        New directories will use the default mode regardless of "mode" to match POSIX `mkdir -p` behavior.
+        You can also specify a content string which will be written to the file.
         """
         if recursive:
-            self.parent.mkdir(mode = mode | 0o111, parents = True, exist_ok=True) # mkdir is already recursive
+            self.parent.mkdir(parents = True, exist_ok=True) # mkdir is already recursive
         self.touch(mode, exist_ok)
         if content != None:
             self.write_text(content)
