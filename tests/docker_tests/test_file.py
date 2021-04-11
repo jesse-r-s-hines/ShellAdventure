@@ -184,31 +184,31 @@ class TestFile:
             File._random = None
 
     def test_same_as(self, umask000, working_dir):
-        fileA = File("A.txt")
-        fileA.create(content = "A Content")
+        file_a = File("A.txt")
+        file_a.create(content = "A Content")
 
-        fileB = File("B.txt")
-        fileB.create(content = "B Content")
+        file_b = File("B.txt")
+        file_b.create(content = "B Content")
 
-        fileA2 = File("A2.txt")
-        fileA2.create(content = "A Content")
+        file_a2 = File("A2.txt")
+        file_a2.create(content = "A Content")
 
-        fileAPerm = File("APerm.text")
-        fileAPerm.create(mode = 0o700, content = "A Content")
+        file_a_perms = File("APerm.text")
+        file_a_perms.create(mode = 0o700, content = "A Content")
 
 
-        assert fileA.same_as(fileA) == True
-        assert fileA.same_as(fileB) == False
-        assert fileA.same_as(fileA2) == True
-        assert fileA.same_as(fileAPerm) == False
+        assert file_a.same_as(file_a) == True
+        assert file_a.same_as(file_b) == False
+        assert file_a.same_as(file_a2) == True
+        assert file_a.same_as(file_a_perms) == False
 
-        fileNotExists = File("NotExists")
-        assert fileA.same_as(fileNotExists) == False
-        assert fileNotExists.same_as(fileA) == False
+        file_not_exists = File("NotExists")
+        assert file_a.same_as(file_not_exists) == False
+        assert file_not_exists.same_as(file_a) == False
 
         dir = File("dir")
         dir.mkdir()
         with pytest.raises(IsADirectoryError):
-            dir.same_as(fileA)
+            dir.same_as(file_a)
         with pytest.raises(IsADirectoryError):
-            fileA.same_as(dir)
+            file_a.same_as(dir)

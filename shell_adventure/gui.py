@@ -30,7 +30,7 @@ class GUI(ThemedTk):
 
         self.time_label = StringVar(self, value = "Time: 00:00")
         self.score_label = StringVar(self, value = "Score: 0/10")
-        # self.flagInput = StringVar(self, value="")
+        # self.flag_input = StringVar(self, value="")
 
         self.title("Shell Adventure")
         self.minsize(300, 100) # To keep you from being able to shrink everything off the screen.
