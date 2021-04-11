@@ -20,7 +20,7 @@ class TestFile:
         assert int(p) == 0o740
 
         file = File("file.txt")
-        file.create(0o766)
+        file.create(mode=0o766)
         p = LinkedPermissions(file)
         assert int(p) == 0o766
 
@@ -33,7 +33,7 @@ class TestFile:
 
     def test_checking_permissions(self, working_dir):
         file = File("file.txt")
-        file.create(0o766)
+        file.create(mode=0o766)
         perms = LinkedPermissions(file)
 
         assert perms.user.read == True
@@ -48,9 +48,9 @@ class TestFile:
 
     def test_setting_permissions(self, working_dir):
         file = File("file.txt")
-        file.create(0o000)
+        file.create(mode=0o000)
         perms = LinkedPermissions(file)
-        assert perms == Permissions(0o000)
+        assert perms == Permissions(mode=0o000)
 
         mode = 0o000
         for perm_group in ["user", "group", "others"]:
@@ -69,7 +69,7 @@ class TestFile:
         p2 = Permissions(user = "rwx", group = "r", others = "r")
         p3 = Permissions(0o444)
         file = File("file")
-        file.create(0o744)
+        file.create(mode=0o744)
         p4 = LinkedPermissions(file)
 
         assert p1 == p2

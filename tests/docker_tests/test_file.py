@@ -48,6 +48,11 @@ class TestFile:
         file.create()
         assert file.exists()
 
+        file = File("A/E.txt")
+        file.create(content = "STUFF")
+        assert file.exists()
+        assert file.read_text() == "STUFF"
+
     def test_children(self, working_dir):
         dir = File("dir")
         for name in ["A.txt", "B.txt", "C.txt"]:
@@ -123,7 +128,7 @@ class TestFile:
 
     def test_checking_setting_permissions(self, working_dir):
         file = File("root_file.txt")
-        file.create(0o764)
+        file.create(mode=0o764)
 
         assert file.permissions.user.read == True
         assert file.permissions.group.write == True
@@ -138,7 +143,7 @@ class TestFile:
 
     def test_setting_permissions_with_int(self, working_dir):
         file = File("file.txt")
-        file.create(0o000)
+        file.create(mode=0o000)
 
         file.permissions = 0o666
         assert file.permissions.user.write == True
@@ -149,7 +154,7 @@ class TestFile:
 
     def test_setting_permissions_with_object(self, working_dir):
         file = File("file.txt")
-        file.create(0o000)
+        file.create(mode=0o000)
 
         file.permissions = Permissions(0o666)
         assert file.permissions.user.write == True
