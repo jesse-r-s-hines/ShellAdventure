@@ -1,4 +1,3 @@
-#TODO
 import pytest
 from shell_adventure.tutorial import Tutorial
 from textwrap import dedent

@@ -32,13 +32,13 @@ class TestFile:
 
         assert file.exists()
         assert file.parent.exists()
-        # TODO use permissions object once I've added that
-        assert stat.S_IMODE(os.stat(file).st_mode) == 0o644
-        assert stat.S_IMODE(os.stat("A").st_mode) == 0o755
+        assert file.permissions == 0o644
+        assert File("A").permissions == 0o755
 
-        File("A/C.txt").create(mode=0o666, recursive=True)
-        assert stat.S_IMODE(os.stat("A/C.txt").st_mode) == 0o666
-        assert stat.S_IMODE(os.stat("A").st_mode) == 0o755 # Does not change permissions of existing folders.
+        file = File("A/C.txt")
+        file.create(mode=0o666, recursive=True)
+        assert file.permissions == 0o666
+        assert File("A").permissions == 0o755
 
         file = File("A/D.txt")
         file.create()
@@ -67,20 +67,19 @@ class TestFile:
         file = File("a.txt")
         file.create()
 
-        # TODO use permissions object once I've added that
-        assert stat.S_IMODE(os.stat(file).st_mode) == 0o666
+        assert file.permissions == 0o666
 
         file.chmod(0o000)
-        assert stat.S_IMODE(os.stat(file).st_mode) == 0o000
+        assert file.permissions == 0o000
 
         file.chmod(0o777)
-        assert stat.S_IMODE(os.stat(file).st_mode) == 0o777
+        assert file.permissions == 0o777
 
         file.chmod("o-wx,g-wx")
-        assert stat.S_IMODE(os.stat(file).st_mode) == 0o744
+        assert file.permissions == 0o744
 
         file.chmod("g+w,u=x")
-        assert stat.S_IMODE(os.stat(file).st_mode) == 0o164
+        assert file.permissions == 0o164
 
     def test_chmod_errors(self, umask000, working_dir):
         file = File("a.txt")
@@ -115,8 +114,7 @@ class TestFile:
 
         with change_user("student"):
             file.chmod("o-rwx")
-            # TODO use permissions object once I've added that
-            assert stat.S_IMODE(os.stat(file).st_mode) == 0o660
+            assert file.permissions == 0o660
     
         with change_user("student"):
             file.chown("student", "student")

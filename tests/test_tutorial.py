@@ -1,10 +1,8 @@
-#TODO
 from typing import *
 import pytest
 from shell_adventure.tutorial import Tutorial
 from textwrap import dedent;
 
-#TODO make this use File etc.
 SIMPLE_PUZZLES = dedent("""
     def move():
         file = File("A.txt")
