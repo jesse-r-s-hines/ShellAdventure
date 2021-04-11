@@ -182,3 +182,33 @@ class TestFile:
             assert new_file.name in ["a.txt", "b.txt", "c.txt"]
         finally:
             File._random = None
+
+    def test_same_as(self, umask000, working_dir):
+        fileA = File("A.txt")
+        fileA.create(content = "A Content")
+
+        fileB = File("B.txt")
+        fileB.create(content = "B Content")
+
+        fileA2 = File("A2.txt")
+        fileA2.create(content = "A Content")
+
+        fileAPerm = File("APerm.text")
+        fileAPerm.create(mode = 0o700, content = "A Content")
+
+
+        assert fileA.same_as(fileA) == True
+        assert fileA.same_as(fileB) == False
+        assert fileA.same_as(fileA2) == True
+        assert fileA.same_as(fileAPerm) == False
+
+        fileNotExists = File("NotExists")
+        assert fileA.same_as(fileNotExists) == False
+        assert fileNotExists.same_as(fileA) == False
+
+        dir = File("dir")
+        dir.mkdir()
+        with pytest.raises(IsADirectoryError):
+            dir.same_as(fileA)
+        with pytest.raises(IsADirectoryError):
+            fileA.same_as(dir)

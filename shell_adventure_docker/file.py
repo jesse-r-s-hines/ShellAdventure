@@ -65,8 +65,6 @@ class File(PosixPath):
         if content != None:
             self.write_text(content)
 
-
-
     @property
     def permissions(self) -> Permissions:
         """ Return a Permissions object representing the permissions of this file. """
@@ -77,6 +75,19 @@ class File(PosixPath):
         if isinstance(val, Permissions):
             val = int(val)
         self.chmod(val)
+
+    def same_as(self, other: File) -> bool:
+        """
+        Checks if two files exist and have the same contents and permissions.
+        Does not compare file names or paths.
+        """
+        if self.is_dir() or other.is_dir(): # is_dir won't throw if not exists
+            raise IsADirectoryError("File.same_as only works on files.")
+        return (
+            self.exists() and other.exists() and
+            self.permissions == other.permissions and
+            self.read_text() == other.read_text()
+        )
 
     def random_file(self, ext = None) -> File:
         """
