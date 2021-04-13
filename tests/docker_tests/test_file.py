@@ -137,11 +137,11 @@ class TestFile:
 
         file.permissions.group.execute = True
         assert file.permissions.group.execute == True
-        assert stat.S_IMODE(os.stat(file).st_mode) == 0o774
+        assert stat.S_IMODE(file.stat().st_mode) == 0o774
 
         file.permissions.group.write = False
         assert int(file.permissions) == 0o754
-        assert stat.S_IMODE(os.stat(file).st_mode) == 0o754
+        assert stat.S_IMODE(file.stat().st_mode) == 0o754
 
     def test_setting_permissions_with_int(self, umask000, working_dir):
         file = File("file.txt")
@@ -149,10 +149,10 @@ class TestFile:
 
         file.permissions = 0o666
         assert file.permissions.user.write == True
-        assert stat.S_IMODE(os.stat("file.txt").st_mode) == 0o666
+        assert stat.S_IMODE(File("file.txt").stat().st_mode) == 0o666
 
         file.permissions.others.write = False # Still "linked" to the actual file
-        assert stat.S_IMODE(os.stat("file.txt").st_mode) == 0o664
+        assert stat.S_IMODE(File("file.txt").stat().st_mode) == 0o664
 
     def test_setting_permissions_with_object(self, umask000, working_dir):
         file = File("file.txt")
@@ -160,10 +160,10 @@ class TestFile:
 
         file.permissions = Permissions(0o666)
         assert file.permissions.user.write == True
-        assert stat.S_IMODE(os.stat("file.txt").st_mode) == 0o666
+        assert stat.S_IMODE(File("file.txt").stat().st_mode) == 0o666
 
         file.permissions.others.write = False # Still "linked" to the actual file
-        assert stat.S_IMODE(os.stat("file.txt").st_mode) == 0o664
+        assert stat.S_IMODE(File("file.txt").stat().st_mode) == 0o664
 
     def test_random(self, working_dir):
         try:

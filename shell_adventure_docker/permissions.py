@@ -44,12 +44,12 @@ class LinkedPermissionsGroup(PermissionsGroup):
     
     def _get_bit(self, mask: int) -> bool:
         """ Gets the read (0o4), write (0o2), or execute (0o1) bit. """
-        mode = stat.S_IMODE(os.stat(self._file).st_mode)
+        mode = stat.S_IMODE(self._file.stat().st_mode)
         return bool((mode >> self._bit_shift) & mask)
     
     def _set_bit(self, mask: int, val: bool):
         """ Gets the read (0o4), write (0o2), or execute (0o1) bit. """
-        mode = stat.S_IMODE(os.stat(self._file).st_mode)
+        mode = stat.S_IMODE(self._file.stat().st_mode)
         if val: # set bit
             mode = mode | (mask << self._bit_shift)
         else: # clear bit at mask

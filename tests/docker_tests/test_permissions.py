@@ -60,7 +60,7 @@ class TestFile:
                 assert getattr(getattr(perms, perm_group), perm) == True
 
                 mode = (mode >> 1) | 0o400 # 0o400, 0o600, 0o700, 0o740, 0o760, ...
-                assert stat.S_IMODE(os.stat(file).st_mode) == mode, f"Test set bit {perm_group}.{perm} (mode should be {oct(mode)})"
+                assert stat.S_IMODE(file.stat().st_mode) == mode, f"Test set bit {perm_group}.{perm} (mode should be {oct(mode)})"
 
         assert perms == Permissions(0o777)
 
