@@ -1,4 +1,5 @@
-from typing import List, Tuple, Dict, Any, Callable, ClassVar, Union
+from __future__ import annotations, generators
+from typing import Generator, List, Tuple, Dict, Any, Callable, ClassVar, Union
 import yaml, textwrap
 from multiprocessing.connection import Client, Connection
 import docker, docker.errors
@@ -7,7 +8,21 @@ from pathlib import Path, PurePosixPath;
 from retry.api import retry_call
 from datetime import datetime, timedelta
 from . import support
-from .support import Puzzle, PuzzleTree, PathLike, Message, PKG
+from .support import Puzzle, PathLike, Message, PKG
+
+class PuzzleTree:
+    """ A tree node so that puzzles can be unlocked after other puzzles are solved. """
+    def __init__(self, generator: str, puzzle: Puzzle = None, dependents: List[PuzzleTree] = None):
+        self.generator = generator
+        self.puzzle = puzzle
+        self.dependents = dependents if dependents else []
+
+    def __iter__(self) -> Generator[PuzzleTree, None, None]:
+        """ Iterates over the puzzle tree (preorder) """
+        for pt in self.dependents:
+            yield pt
+            for pt2 in pt:
+                yield pt2
 
 class Tutorial:
     """ Contains the information for a running tutorial. """
@@ -62,7 +77,7 @@ class Tutorial:
             if module in self.module_paths: raise Exception(f'Multiple puzzle modules with name "{module.name}" found.')
             self.module_paths.append(module)
 
-        self.puzzles = [PuzzleTree(gen) for gen in config.get("puzzles")]
+        self.puzzles = self._parse_puzzles(config.get("puzzles"))
 
         name_dictionary = config.get("name_dictionary", PKG / "resources/name_dictionary.txt")
         self.name_dictionary = Path(self.data_dir, name_dictionary) # relative to config file
@@ -74,6 +89,29 @@ class Tutorial:
 
         self.start_time = None
         self.end_time = None
+
+    def _parse_puzzles(self, puzzles):
+        """
+        Converts YAML output of puzzles into a PuzzleTree.
+        ```yaml
+        - puzzles.a:
+          - puzzles.b:
+            - puzzles.c:
+              - puzzles.d
+              - puzzles.e
+              - puzzles.f
+        ```
+        """
+        puzzle_trees = []
+        for puz in puzzles:
+            if isinstance(puz, str):
+                gen, deps = puz, []
+            else: # It is a one element dictionary.
+                gen, deps = list(puz.items())[0]
+                if not deps: deps = []
+            puzzle_trees.append(PuzzleTree(gen, dependents = self._parse_puzzles(deps)))
+
+        return puzzle_trees
 
     def _launch_container(self, command: Union[List[str], str]) -> Container:
         """ Launches the container with the given command. Returns the container. """
@@ -107,17 +145,19 @@ class Tutorial:
             # retry the connection a few times since the container may take a bit to get started.
             self._conn = retry_call(lambda: Client(support.conn_addr, authkey = support.conn_key), tries = 20, delay = 0.2)
             
+            tmp_tree = PuzzleTree("", dependents=self.puzzles) # Put puzzles under a dummy node so we can iterate  it.
+
             self._conn.send((Message.SETUP, {
                 "home": "/home/student",
                 "modules": {file.stem: file.read_text() for file in self.module_paths},
-                "puzzles": [pt.generator for pt in self.puzzles],
+                "puzzles": [pt.generator for pt in tmp_tree],
                 "name_dictionary": self.name_dictionary.read_text(),
                 "content_sources": [file.read_text() for file in self.content_sources],
             }))
             generated_puzzles = self._conn.recv()
 
-            # store the puzzles in the PuzzleTree
-            for pt, puzzle in zip(self.puzzles, generated_puzzles):
+            # store the puzzles in the PuzzleTree (unflatten from preorder list)
+            for pt, puzzle in zip(tmp_tree, generated_puzzles):
                 pt.puzzle = puzzle
         except BaseException as e: # BaseException includes KeyboardInterrupt
             logs = self.stop() # If an error occurs in __enter__, __exit__ isn't called.
@@ -154,6 +194,23 @@ class Tutorial:
         logs = self.stop()
         if exc_type and issubclass(exc_type, BaseException):
             raise TutorialError("An error occured in the tutorial.", container_logs = logs) from exc_value
+
+    def get_current_puzzles(self) -> List[Puzzle]:
+        """ Returns a list of the currently unlocked puzzles. """
+        def get_puzzles(pt_list: List[PuzzleTree]):
+            rtrn = []
+            for pt in pt_list:
+                rtrn.append(pt.puzzle)
+                if pt.puzzle.solved:
+                    rtrn.extend(get_puzzles(pt.dependents))
+            return rtrn
+
+        return get_puzzles(self.puzzles)
+
+    def get_all_puzzles(self) -> List[Puzzle]:
+        """ Returns a list of all puzzles. (In preorder sequence)"""
+        tmp_tree = PuzzleTree("", dependents=self.puzzles) # So we can iterate over it.
+        return [pt.puzzle for pt in tmp_tree]
 
     def solve_puzzle(self, puzzle: Puzzle, flag: str = None) -> Tuple[bool, str]:
         """ Tries to solve the puzzle. Returns (success, feedback) and sets the Puzzle as solved if the checker succeeded. """
@@ -192,15 +249,15 @@ class Tutorial:
 
     def total_score(self) -> int:
         """ Returns the current score of the student. """
-        return sum((pt.puzzle.score for pt in self.puzzles))
+        return sum((puz.score for puz in self.get_all_puzzles()))
 
     def current_score(self) -> int:
         """ Returns the current score of the student. """
-        return sum((pt.puzzle.score for pt in self.puzzles if pt.puzzle.solved))
+        return sum((puz.score for puz in self.get_all_puzzles() if puz.solved))
 
     def is_finished(self) -> bool:
         """ Return true if all the puzzles in the tutorial all solved. """
-        return all((pt.puzzle.solved for pt in self.puzzles))
+        return all((puz.solved for puz in self.get_all_puzzles()))
 
 class TutorialError(Exception):
     """

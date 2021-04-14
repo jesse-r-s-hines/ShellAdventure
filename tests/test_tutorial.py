@@ -53,12 +53,40 @@ class TestTutorial:
         assert tutorial.name_dictionary == tmp_path / "my_dictionary.txt"
         assert tutorial.content_sources == [tmp_path / "content.txt"]
 
-        assert {m.resolve() for m in tutorial.module_paths} == {tmp_path / "puzzle1.py", tmp_path / "puzzle2.py"}
-        assert {pt.generator for pt in tutorial.puzzles} == {"puzzle1.move", "puzzle2.move"}
+        assert [m.resolve() for m in tutorial.module_paths] == [tmp_path / "puzzle1.py", tmp_path / "puzzle2.py"]
+        assert [pt.generator for pt in tutorial.puzzles] == ["puzzle1.move", "puzzle2.move"]
 
     def test_empty(self, tmp_path):
         with pytest.raises(Exception, match="Invalid config"):
             tutorial = pytest.helpers.create_tutorial(tmp_path, {"config.yaml": "", "mypuzzles.py": SIMPLE_PUZZLES})
+
+    def test_nested_puzzles(self, tmp_path):
+        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
+            "config.yaml": f"""
+                modules:
+                    - puzzle1.py
+                    - puzzle2.py
+                    - puzzle3.py
+                puzzles:
+                    - puzzle1.move:
+                        - puzzle2.move:
+                            - puzzle1.move
+                    - puzzle2.move
+                    - puzzle3.move:
+                name_dictionary: "my_dictionary.txt"
+                content_sources:
+                    - content.txt
+            """,
+            "puzzle1.py": SIMPLE_PUZZLES, "puzzle2.py": SIMPLE_PUZZLES, "puzzle3.py": SIMPLE_PUZZLES,
+        })
+        # First level
+        assert [pt.generator for pt in tutorial.puzzles] == ["puzzle1.move", "puzzle2.move", "puzzle3.move"]
+
+        # Second Level
+        assert [pt.generator for pt in tutorial.puzzles[0].dependents] == ["puzzle2.move"]
+
+        # Third Level
+        assert [pt.generator for pt in tutorial.puzzles[0].dependents[0].dependents] == ["puzzle1.move"]
 
     def test_missing_files(self, tmp_path):
         with pytest.raises(FileNotFoundError):

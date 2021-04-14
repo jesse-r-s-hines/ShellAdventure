@@ -20,8 +20,6 @@ class GUI(ThemedTk):
         super().__init__(theme="radiance")
 
         self.tutorial = tutorial
-        # map puzzles to their question label and button. By default, Python will use object identity for dict keys, which is what we want.
-        self.puzzles: Dict[Puzzle, Tuple[WrappingLabel, ttk.Button]] = {}
         self.student_cwd: PurePosixPath = None # The path to the student's current directory
         self.file_tree_root = PurePosixPath("/") # The root of the displayed file tree
 
@@ -40,11 +38,12 @@ class GUI(ThemedTk):
         status_bar = self.make_status_bar(self)
         status_bar.pack(side = tk.TOP, fill = tk.X, expand = False)
 
-        file_tree = self.make_file_tree(self)
-        file_tree.pack(side = tk.TOP, fill = tk.BOTH, expand = True)
+        self.file_tree = self.make_file_tree(self)
+        self.file_tree.pack(side = tk.TOP, fill = tk.BOTH, expand = True)
 
-        puzzle_frame = self.make_puzzle_frame(self)
-        puzzle_frame.pack(side = tk.BOTTOM, fill = tk.BOTH, expand = True)
+        self.puzzle_frame = self.make_puzzle_frame(self)
+        self.puzzle_frame.pack(side = tk.BOTTOM, fill = tk.BOTH, expand = True)
+        self.update_puzzle_frame()
 
         def update_loop(): # TODO make this trigger after every command instead of on a loop
             self.update_gui()
@@ -101,46 +100,49 @@ class GUI(ThemedTk):
             self.time_label.set(f"Time: {minutes:02}:{seconds:02}")
 
     def make_file_tree(self, master):
-        """ Returns the file view. Sets self.file_tree to the Treeview. """
-        self.file_tree = ttk.Treeview(master, show="tree") # don't show the heading
+        """ Returns the file view """
+        file_tree = ttk.Treeview(master, show="tree") # don't show the heading
 
-        self.file_tree.tag_configure("cwd", font = font.Font(weight="bold"))
+        file_tree.tag_configure("cwd", font = font.Font(weight="bold"))
 
         def on_open(e):
-            item = self.file_tree.focus()
-            if not self.file_tree.tag_has("loaded", item):
+            item = file_tree.focus()
+            if not file_tree.tag_has("loaded", item):
                 self.load_folder(item)
 
-        self.file_tree.tag_bind("dir", "<<TreeviewOpen>>", on_open)
+        file_tree.tag_bind("dir", "<<TreeviewOpen>>", on_open)
 
-        return self.file_tree
+        return file_tree
 
-    def make_puzzle_frame(self, master):
-        """ Returns a frame container the puzzle list. Stores the labels and buttons in the frame in self.puzzles """
+    def make_puzzle_frame(self, master) -> VerticalScrolledFrame:
+        """ Returns a frame container the puzzle list. """
         # map puzzles to their question label and button. By default, Python will use object identity for dict keys, which is what we want.
-        scrollable = VerticalScrolledFrame(master)
-        scrollable.interior.columnconfigure(0, weight = 1)
-        scrollable.interior.rowconfigure(0, weight = 1)
+        puzzle_frame = VerticalScrolledFrame(master)
+        puzzle_frame.interior.columnconfigure(0, weight = 1)
+        puzzle_frame.interior.rowconfigure(0, weight = 1)
 
-        frame = ttk.LabelFrame(scrollable.interior, text = 'Puzzles:')
+        return puzzle_frame
+
+    def update_puzzle_frame(self):
+        """ Remakes the puzzle list. """
+        for widget in self.puzzle_frame.interior.winfo_children(): # Should only contain one element
+            widget.destroy()
+
+        frame = ttk.LabelFrame(self.puzzle_frame.interior, text = 'Puzzles:')
         frame.grid(column = 0, row = 0, sticky = 'WENS')
         frame.columnconfigure(0, weight = 1)
 
-        for i, pt in enumerate(self.tutorial.puzzles):
-            puzzle = pt.puzzle
-
+        for i, puzzle in enumerate(self.tutorial.get_current_puzzles()):
             label = WrappingLabel(frame, text = f"{i+1}. {puzzle.question}", wraplength=50)
             label.grid(row = i, column = 0, padx = 5, pady = 5, sticky="EWNS")
 
-            button = ttk.Button(frame, text = "Solve",
-                command = lambda p=puzzle: self.solve_puzzle(p) # type: ignore
+            button = ttk.Button(frame,
+                text = "Solved" if puzzle.solved else "Solve",
+                command = lambda p=puzzle: self.solve_puzzle(p), # type: ignore
+                state = "disabled" if puzzle.solved else "enabled"
             )
             button.bind('<Return>', lambda e, p=puzzle: self.solve_puzzle(p)) # type: ignore
             button.grid(row = i, column = 1, padx = 5, sticky="S")
-
-            self.puzzles[puzzle] = (label, button)
-
-        return scrollable
 
     def _add_tree_tag(self, iid, tag):
         """ Adds a tag to the given item in the Treeview. """
@@ -221,9 +223,7 @@ class GUI(ThemedTk):
         messagebox.showinfo("Feedback", feedback)
 
         if solved:
-            self.puzzles[puzzle][1]["state"] = "disabled"
-            self.puzzles[puzzle][1]["text"] = "Solved"
-
+            self.update_puzzle_frame()
             if self.tutorial.is_finished(): # then quit the tutorial
                 self.destroy()
 

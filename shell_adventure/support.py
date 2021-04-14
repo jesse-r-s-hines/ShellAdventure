@@ -73,13 +73,6 @@ class Puzzle:
         data["checker"] = None
         return data
 
-class PuzzleTree:
-    """ A tree node so that puzzles can be unlocked after other puzzles are solved. """
-    def __init__(self, generator: str, puzzle: Puzzle = None, dependents: List[Puzzle] = None):
-        self.generator = generator
-        self.puzzle = puzzle
-        self.dependents = dependents if dependents else []
-
 # We aren't using this class currently
 # class CommandOutput:
 #     """ Represents the output of a command. """

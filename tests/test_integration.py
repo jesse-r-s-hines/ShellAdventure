@@ -19,6 +19,19 @@ PUZZLES = dedent("""
             score = 2,
         )
 
+    def move2():
+        file = File("C.txt")
+        file.write_text("C")
+
+        def checker():
+            return not file.exists() and File("D.txt").exists()
+
+        return Puzzle(
+            question = f"Rename C.txt to D.txt",
+            checker = checker,
+            score = 3,
+        )
+
     def cd_puzzle():
         dir = File("dir")
         dir.mkdir()
@@ -27,7 +40,7 @@ PUZZLES = dedent("""
             return cwd == dir.resolve()
 
         return Puzzle(
-            question = f"cd into dir.",
+            question = f"cd into dir",
             checker = checker
         )
 
@@ -53,8 +66,8 @@ class TestIntegration:
                 modules:
                     - puzzles.py
                 puzzles:
-                    - puzzles.move
-                    - puzzles.cd_puzzle
+                    - puzzles.move:
+                        - puzzles.move2
             """,
             "puzzles.py": PUZZLES,
         })
@@ -64,22 +77,38 @@ class TestIntegration:
 
             # Puzzles were generated
             for pt in tutorial.puzzles:
-                assert pt.puzzle != None
+                for pt2 in pt:
+                    assert pt2.puzzle != None
 
-            assert tutorial.total_score() == 3
+            assert [p.question for p in tutorial.get_current_puzzles()] == ["Rename A.txt to B.txt"]
+            assert [p.question for p in tutorial.get_all_puzzles()] == ["Rename A.txt to B.txt", "Rename C.txt to D.txt"]
+
+            assert tutorial.total_score() == 5
             assert tutorial.current_score() == 0
 
             tutorial.container.exec_run(["mv", "A.txt", "B.txt"])
 
-            move_puzzle = tutorial.puzzles[0].puzzle
+            move_puzzle = tutorial.get_current_puzzles()[0]
             solved, feedback = tutorial.solve_puzzle(move_puzzle)
             assert solved == True
             assert move_puzzle.solved == True
             assert feedback == "Correct!"
 
-            assert tutorial.total_score() == 3
+            assert tutorial.total_score() == 5
             assert tutorial.current_score() == 2
             assert tutorial.is_finished() == False
+
+            assert [p.question for p in tutorial.get_current_puzzles()] == ["Rename A.txt to B.txt", "Rename C.txt to D.txt"]
+            assert [p.question for p in tutorial.get_all_puzzles()] == ["Rename A.txt to B.txt", "Rename C.txt to D.txt"]
+    
+            tutorial.container.exec_run(["mv", "C.txt", "D.txt"])
+
+            move_puzzle2 = tutorial.get_current_puzzles()[1]
+            solved, feedback = tutorial.solve_puzzle(move_puzzle2)
+            assert solved == True
+            assert move_puzzle2.solved == True
+            assert feedback == "Correct!"
+
             assert tutorial.time() > datetime.timedelta(0)
 
         # check that the timer gets stopped and doesn't continue advancing after tutorial ends.
@@ -108,7 +137,7 @@ class TestIntegration:
                 stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
             assert tutorial.connect_to_shell("bash") > 1
 
-            cwd_puzzle = tutorial.puzzles[0].puzzle
+            cwd_puzzle = tutorial.get_all_puzzles()[0]
             solved, feedback = tutorial.solve_puzzle(cwd_puzzle)
             assert solved == True
             assert cwd_puzzle.solved == True
@@ -135,7 +164,7 @@ class TestIntegration:
         })
 
         with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
-            rand_puzzle = tutorial.puzzles[0].puzzle
+            rand_puzzle = tutorial.get_all_puzzles()[0]
             src, dst = rand_puzzle.question.split(" -> ")
 
             exit_code, output = tutorial.container.exec_run(["cat", src])

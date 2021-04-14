@@ -1,6 +1,6 @@
 modules:
   - default.py
 puzzles:
-  - default.move
-  - default.copy
+  - default.move:
+    - default.copy
   - default.cat
