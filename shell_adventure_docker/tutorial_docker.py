@@ -102,8 +102,7 @@ class TutorialDocker:
                 # This will execute the module. We don't need to keep it since we aren't going to use its functions
                 self._create_module("<string>", script) 
             else: # ScriptType.BASH
-                subprocess.run(["bash", "-c", script])
-
+                subprocess.run(["bash", "-c", script], check = True) # throw error if fails
         # Load modules
         self.modules = {name: self._create_module(name, code) for name, code in modules.items()}
 

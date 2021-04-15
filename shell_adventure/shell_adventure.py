@@ -1,4 +1,4 @@
-import sys, os, subprocess, textwrap
+import sys, os, subprocess, textwrap, traceback
 from shell_adventure.gui import GUI
 from shell_adventure.tutorial import Tutorial, TutorialError
 
@@ -26,8 +26,13 @@ if __name__ == "__main__":
 
             gui = GUI(tutorial)
     except TutorialError as e:
-        print("\n\n\n============ An error occurred in the tutorial ============")
+        print("\n\n============ An error occurred in the tutorial ============")
         print("\nContainer Logs:\n" + textwrap.indent(e.container_logs, "    ") + "\n")
-        raise e.__cause__ # "unwrap" the tutorial error.
+        if isinstance(e.__cause__, EOFError):
+            # EOFError just means the connection terminated because the container failed
+            # so we don't need to tell the user about that. Just print the container logs.
+            sys.exit(1)
+        else:
+            raise e.__cause__ from None # "unwrap" the tutorial error.
     finally:
         print() # Add newline so that the terminal's next program is on a line by itself properly.
