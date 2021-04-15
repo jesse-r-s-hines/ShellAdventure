@@ -1,5 +1,5 @@
 import pytest
-from shell_adventure.tutorial import Tutorial
+from shell_adventure.tutorial import Tutorial, TutorialError
 from textwrap import dedent
 from pathlib import Path
 import subprocess, datetime, time
@@ -221,3 +221,60 @@ class TestIntegration:
 
             exit_code, output = tutorial.container.exec_run(["cat", "file2.txt"])
             assert output.decode() == "2"
+
+
+    def test_bash_script_exception(self, tmp_path):
+        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
+            "config.yaml": """
+                setup_scripts:
+                    - setup.sh
+                modules:
+                    - puzzles.py
+                puzzles:
+                    - puzzles.move:
+            """,
+            "puzzles.py": PUZZLES,
+            "setup.sh": "echo hello; not-a-command"
+        })
+
+        with pytest.raises(TutorialError, match="command not found"):
+            with tutorial: 
+                pass # Just launch
+
+
+    def test_py_script_exception(self, tmp_path):
+        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
+            "config.yaml": """
+                setup_scripts:
+                    - setup.py
+                modules:
+                    - puzzles.py
+                puzzles:
+                    - puzzles.move:
+            """,
+            "puzzles.py": PUZZLES,
+            "setup.py": "raise Exception('BOOM')"
+        })
+
+        with pytest.raises(TutorialError, match="BOOM"):
+            with tutorial: 
+                pass # Just launch
+
+    def test_gent_exception(self, tmp_path):
+        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
+            "config.yaml": """
+                modules:
+                    - puzzles.py
+                puzzles:
+                    - puzzles.puzzle:
+            """,
+            "puzzles.py": dedent("""
+                def puzzle():
+                    raise Exception('BOOM')
+
+            """),
+        })
+
+        with pytest.raises(TutorialError, match="BOOM"):
+            with tutorial: 
+                pass # Just launch
