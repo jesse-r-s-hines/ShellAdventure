@@ -2,7 +2,7 @@ from __future__ import annotations, generators
 from typing import Generator, List, Tuple, Dict, Any, Callable, ClassVar, Union
 import yaml, textwrap
 from multiprocessing.connection import Client, Connection
-import docker, docker.errors
+import docker, docker.errors, subprocess
 from docker.models.containers import Container
 from pathlib import Path, PurePosixPath;
 from retry.api import retry_call
@@ -34,6 +34,20 @@ class Tutorial:
     """ This is the path where tutorial files such as puzzles have been placed. """
 
     # Config fields
+
+    resources: Dict[Path, PurePosixPath]
+    """
+    Paths to resources that will be put into the container.
+    Maps host path to container path. You can copy whole directories.
+    However, it will not create parent directories.
+    """ 
+
+    setup_scripts: List[Path]
+    """
+    A list of paths to bash scripts and python scripts that will be run before before puzzle generation.
+    The scripts will be run as root.
+    """
+
     module_paths: List[Path]
     """ List of absolute paths to the puzzle generation modules. """
 
@@ -45,12 +59,6 @@ class Tutorial:
 
     puzzles: List[PuzzleTree]
     """ The tree of puzzles in this tutorial. """
-
-    setup_scripts: List[Path]
-    """
-    A list of paths to bash scripts and python scripts that will be run before the tutorial.
-    The scripts will be run as root.
-    """
 
     # Other fields
     container: Container
@@ -86,6 +94,9 @@ class Tutorial:
         self.puzzles = self._parse_puzzles(config.get("puzzles"))
 
         self.setup_scripts =  [Path(self.data_dir, f) for f in config.get("setup_scripts", [])] # relative to config file
+
+        resources = config.get("resources", {})
+        self.resources = {Path(self.data_dir, src): PurePosixPath("/home/student", dst) for src, dst in resources.items()}
 
         name_dictionary = config.get("name_dictionary", PKG / "resources/name_dictionary.txt")
         self.name_dictionary = Path(self.data_dir, name_dictionary) # relative to config file
@@ -152,6 +163,10 @@ class Tutorial:
         try:
             # retry the connection a few times since the container may take a bit to get started.
             self._conn = retry_call(lambda: Client(support.conn_addr, authkey = support.conn_key), tries = 20, delay = 0.2)
+
+            # Move resources into container
+            for src, dst in self.resources.items():
+                subprocess.run(["docker", "cp", src, f"{self.container.id}:{dst}"])
             
             tmp_tree = PuzzleTree("", dependents=self.puzzles) # Put puzzles under a dummy node so we can iterate  it.
 

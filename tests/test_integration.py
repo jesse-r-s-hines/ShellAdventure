@@ -180,16 +180,19 @@ class TestIntegration:
 
             assert tutorial.is_finished() == True
 
-    def test_setup(self, tmp_path):
+    def test_setup_and_resources(self, tmp_path):
         tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
             "config.yaml": """
+                resources:
+                    resource1.txt: output.txt # Relative to home
+                    resource2.txt: /home/student/file2.txt
+                setup_scripts:
+                    - setup.sh
+                    - setup.py
                 modules:
                     - puzzles.py
                 puzzles:
                     - puzzles.puzzle:
-                setup_scripts:
-                    - setup.sh
-                    - setup.py
             """,
             "puzzles.py": dedent(r"""
                 def puzzle():
@@ -202,14 +205,19 @@ class TestIntegration:
                     )
             """),
             "setup.sh": r"""
-                echo \"$SHELL\" > output.txt
+                echo \"$SHELL\" >> output.txt
             """,
             "setup.py": dedent(r"""
                 output = File("output.txt")
                 output.write_text(output.read_text() + "python\n")
             """),
+            "resource1.txt": "resource\n",
+            "resource2.txt": "2",
         })
 
         with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
             exit_code, output = tutorial.container.exec_run(["cat", "output.txt"])
-            assert output.decode().splitlines() == ['"/bin/bash"', 'python', 'generator']
+            assert output.decode().splitlines() == ['resource', '"/bin/bash"', 'python', 'generator']
+
+            exit_code, output = tutorial.container.exec_run(["cat", "file2.txt"])
+            assert output.decode() == "2"
