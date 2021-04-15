@@ -3,7 +3,9 @@ from pathlib import PurePosixPath
 import tkinter as tk
 from tkinter import StringVar, ttk, font, messagebox
 import tkinter.simpledialog as simpledialog
+from tkinter.scrolledtext import ScrolledText
 from ttkthemes import ThemedTk
+import traceback
 from PIL import ImageTk, Image
 from .scrolled_frame import VerticalScrolledFrame
 from . import tutorial
@@ -227,10 +229,20 @@ class GUI(ThemedTk):
             if self.tutorial.is_finished(): # then quit the tutorial
                 self.destroy()
 
-    def report_callback_exception(self, *args):
+    def report_callback_exception(self, exc, val, tb):
         """ Override. """
-        # TODO make this show an error box or something?
-        # Error will be shown in stderr
-        print("\n\n\n ==== An error occurred in the tutorial === \n\n")
-        super().report_callback_exception(*args)
-        self.destroy()
+        # Default messagebox is too small and won't resize.
+        popup = tk.Toplevel()
+        popup.title("Error")
+        popup.minsize(100, 100) # To keep you from being able to shrink everything off the screen.
+
+        label = tk.Label(popup, text = str(val)) # val is the Exception object
+        label.pack()
+
+        text = ScrolledText(popup)
+        err = "\n".join(traceback.format_exception(exc, val, tb))
+        text.insert(tk.INSERT, err)
+        text["state"] = "disabled"
+        text.pack()
+
+        popup.protocol("WM_DELETE_WINDOW", lambda: self.destroy())
