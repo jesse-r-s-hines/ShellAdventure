@@ -6,7 +6,7 @@ from multiprocessing.connection import Listener
 import inspect
 from retry.api import retry_call
 from shell_adventure import support
-from shell_adventure.support import Puzzle, PathLike, Message
+from shell_adventure.support import Puzzle, PathLike, Message, ScriptType
 from .file import File
 from .permissions import change_user
 from .random_helper import RandomHelper
@@ -44,7 +44,7 @@ class TutorialDocker:
 
     def _create_module(self, name: str, code: str) -> ModuleType:
         """
-        Constructs a module object from a string of python code.
+        Constructs a module object from a string of python code. Executes the module.
         Injects some functions and classes into the module's namespace. TODO doc which classes and functions
         """
         module = ModuleType(name)
@@ -84,7 +84,7 @@ class TutorialDocker:
 
     ### Message actions, these functions can be called by sending a message over the connection
     
-    def setup(self, home: PathLike, modules: Dict[str, str], puzzles: List[str],
+    def setup(self, home: PathLike, setup_scripts: List[Tuple[ScriptType, str]], modules: Dict[str, str], puzzles: List[str],
               name_dictionary: str, content_sources: List[str]) -> List[Puzzle]:
         """
         Initializes the tutorial with the given settings. Generates the puzzles in the modules.
@@ -95,6 +95,14 @@ class TutorialDocker:
         self.random = RandomHelper(name_dictionary, content_sources)
         # Unfortunately we have to have a static variable in File to allow File methods to access the RandomHelper
         File._random = self.random 
+
+        # Run setup scripts
+        for script_type, script in setup_scripts:
+            if script_type == ScriptType.PYTHON:
+                # This will execute the module. We don't need to keep it since we aren't going to use its functions
+                self._create_module("<string>", script) 
+            else: # ScriptType.BASH
+                subprocess.run(["bash", "-c", script])
 
         # Load modules
         self.modules = {name: self._create_module(name, code) for name, code in modules.items()}

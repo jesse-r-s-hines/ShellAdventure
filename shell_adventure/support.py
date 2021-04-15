@@ -113,6 +113,11 @@ class Message(Enum):
     GET_FILES = 5
     """ Get files under a folder. Usage (GET_FILES, folder) """
 
+class ScriptType(Enum):
+    """ Enum for sending setup_scripts. """
+    BASH = 0
+    PYTHON = 1
+
 def call_with_args(func: Callable[..., Any], args: Dict[str, Any]):
     """
     Takes a function and a map of args to their names. Any values in args that have the same name as a parameter of func

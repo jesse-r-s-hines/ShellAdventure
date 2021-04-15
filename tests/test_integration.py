@@ -179,3 +179,37 @@ class TestIntegration:
             assert solved == True
 
             assert tutorial.is_finished() == True
+
+    def test_setup(self, tmp_path):
+        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
+            "config.yaml": """
+                modules:
+                    - puzzles.py
+                puzzles:
+                    - puzzles.puzzle:
+                setup_scripts:
+                    - setup.sh
+                    - setup.py
+            """,
+            "puzzles.py": dedent(r"""
+                def puzzle():
+                    output = File("output.txt")
+                    output.write_text(output.read_text() + "generator\n")
+
+                    return Puzzle(
+                        question = f"WRONG",
+                        checker = lambda: False,
+                    )
+            """),
+            "setup.sh": r"""
+                echo \"$SHELL\" > output.txt
+            """,
+            "setup.py": dedent(r"""
+                output = File("output.txt")
+                output.write_text(output.read_text() + "python\n")
+            """),
+        })
+
+        with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
+            exit_code, output = tutorial.container.exec_run(["cat", "output.txt"])
+            assert output.decode().splitlines() == ['"/bin/bash"', 'python', 'generator']

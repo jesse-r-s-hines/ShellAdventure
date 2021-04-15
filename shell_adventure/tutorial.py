@@ -8,7 +8,7 @@ from pathlib import Path, PurePosixPath;
 from retry.api import retry_call
 from datetime import datetime, timedelta
 from . import support
-from .support import Puzzle, PathLike, Message, PKG
+from .support import Puzzle, PathLike, Message, ScriptType, PKG
 
 class PuzzleTree:
     """ A tree node so that puzzles can be unlocked after other puzzles are solved. """
@@ -27,13 +27,13 @@ class PuzzleTree:
 class Tutorial:
     """ Contains the information for a running tutorial. """
 
-    # Config fields
     config_file: Path
     """ The path to the config file for this tutorial """
 
     data_dir: Path
     """ This is the path where tutorial files such as puzzles have been placed. """
 
+    # Config fields
     module_paths: List[Path]
     """ List of absolute paths to the puzzle generation modules. """
 
@@ -43,13 +43,16 @@ class Tutorial:
     content_sources: List[Path]
     """ A list of files that will be used to generate text content in files. """
 
+    puzzles: List[PuzzleTree]
+    """ The tree of puzzles in this tutorial. """
+
+    setup_scripts: List[Path]
+    """ A list of paths to bash scripts and python scripts that will be run before the tutorial. """
+
     # Other fields
     container: Container
     """ The docker container that the student is in. """
     
-    puzzles: List[PuzzleTree]
-    """ The tree of puzzles in this tutorial. """
-
     start_time: datetime
     """ Time the tutorial started. """
     end_time: datetime
@@ -78,6 +81,8 @@ class Tutorial:
             self.module_paths.append(module)
 
         self.puzzles = self._parse_puzzles(config.get("puzzles"))
+
+        self.setup_scripts =  [Path(self.data_dir, f) for f in config.get("setup_scripts", [])] # relative to config file
 
         name_dictionary = config.get("name_dictionary", PKG / "resources/name_dictionary.txt")
         self.name_dictionary = Path(self.data_dir, name_dictionary) # relative to config file
@@ -147,8 +152,16 @@ class Tutorial:
             
             tmp_tree = PuzzleTree("", dependents=self.puzzles) # Put puzzles under a dummy node so we can iterate  it.
 
+            setup_scripts = [] 
+            for file in self.setup_scripts:
+                if file.suffix == ".py":
+                    setup_scripts.append( (ScriptType.PYTHON, file.read_text()) )
+                else:
+                    setup_scripts.append( (ScriptType.BASH, file.read_text()) )
+
             self._conn.send((Message.SETUP, {
                 "home": "/home/student",
+                "setup_scripts": setup_scripts,
                 "modules": {file.stem: file.read_text() for file in self.module_paths},
                 "puzzles": [pt.generator for pt in tmp_tree],
                 "name_dictionary": self.name_dictionary.read_text(),

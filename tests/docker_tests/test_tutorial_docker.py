@@ -2,6 +2,7 @@ from typing import Dict
 import pytest
 from shell_adventure_docker.tutorial_docker import TutorialDocker
 from shell_adventure_docker.file import File
+from shell_adventure.support import ScriptType
 import os, subprocess
 from textwrap import dedent;
 
@@ -30,6 +31,7 @@ class TestTutorialDocker:
         """
         default_setup = {
             "home": working_dir,
+            "setup_scripts": [],
             "modules": {"puzzles": SIMPLE_PUZZLES},
             "puzzles": ["puzzles.move"],
             "name_dictionary": "apple\nbanana\n",
@@ -280,3 +282,32 @@ class TestTutorialDocker:
 
         # /proc has special files that sometimes throws errors when trying to get them via python. Test that they are handled properly.
         assert get_files_recursive("/proc") != []
+
+
+    def test_setup_scripts(self, working_dir):
+        tutorial = TestTutorialDocker._create_tutorial(working_dir,
+            modules = {"mypuzzles": dedent(r"""
+                def puzzle():
+                    output = File("output.txt")
+                    output.write_text(output.read_text() + "generator\n")
+
+                    return Puzzle(
+                        question = f"WRONG",
+                        checker = lambda: False,
+                    )
+            """)},
+            puzzles = ["mypuzzles.puzzle"],
+            setup_scripts = [
+                (ScriptType.BASH, dedent(r"""
+                    echo \"$SHELL\" > output.txt
+                """)),
+                (ScriptType.PYTHON, dedent(r"""
+                    rand.paragraphs(3) # check that this is in scope
+                    output = File("output.txt")
+                    output.write_text(output.read_text() + "python\n")
+                """)),
+            ]
+        )
+
+        output = working_dir / "output.txt"
+        assert output.read_text().splitlines() == ['"/bin/bash"', 'python', 'generator']
