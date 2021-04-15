@@ -311,3 +311,4 @@ class TestTutorialDocker:
 
         output = working_dir / "output.txt"
         assert output.read_text().splitlines() == ['"/bin/bash"', 'python', 'generator']
+        assert (output.owner(), output.group()) == ("root", "root")

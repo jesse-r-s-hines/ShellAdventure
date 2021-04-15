@@ -47,7 +47,10 @@ class Tutorial:
     """ The tree of puzzles in this tutorial. """
 
     setup_scripts: List[Path]
-    """ A list of paths to bash scripts and python scripts that will be run before the tutorial. """
+    """
+    A list of paths to bash scripts and python scripts that will be run before the tutorial.
+    The scripts will be run as root.
+    """
 
     # Other fields
     container: Container
@@ -188,7 +191,7 @@ class Tutorial:
             self.end_time = datetime.now()
 
             if self._conn:
-                self._conn.send("END")
+                self._conn.send( (Message.STOP,) )
                 self._conn.close()
             # The container should stop itself, but we'll make sure here as well.
             self.container.stop(timeout = 4)

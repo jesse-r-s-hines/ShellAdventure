@@ -205,9 +205,9 @@ class TutorialDocker:
         with Listener(support.conn_addr, authkey = support.conn_key) as listener:
             with listener.accept() as conn:
                 # Receive the initial SETUP message.
-                message, kwargs = conn.recv()
-                if message != Message.SETUP: raise Exception("Expected initial SETUP message.") # TODO custom exception
-                conn.send( self.setup(**kwargs) )
+                message, *args = conn.recv()
+                if message != Message.SETUP: raise Exception(f"Expected initial SETUP message, got {message}.") # TODO custom exception
+                conn.send( self.setup(**args[0]) )
 
                 actions = {
                     # Map message type to a function that will be called. The return of the lambda will be sent back to host. 
