@@ -1,6 +1,6 @@
-import sys, os, subprocess
+import sys, os, subprocess, textwrap
 from shell_adventure.gui import GUI
-from shell_adventure.tutorial import Tutorial
+from shell_adventure.tutorial import Tutorial, TutorialError
 
 def start_bash(container, name):
     """
@@ -17,9 +17,17 @@ if __name__ == "__main__":
 
     os.system('cls' if os.name == 'nt' else 'clear') # clear the terminal
 
-    with Tutorial(sys.argv[1]) as tutorial: # Creates and sets up the container with the tutorial inside
-        bash = start_bash(tutorial.container, "shell_adventure_bash")
-        tutorial.connect_to_shell("shell_adventure_bash")
-        gui = GUI(tutorial)
+    try:
+        # Context manager will make sure that the container is cleaned up, and will wrap any errors in TutorialError
+        # so that we can see the container logs.
+        with Tutorial(sys.argv[1]) as tutorial: # Creates and sets up the container with the tutorial inside
+            bash = start_bash(tutorial.container, "shell_adventure_bash")
+            tutorial.connect_to_shell("shell_adventure_bash")
 
-    print("\n") # Add some newlines so that the terminal's next program is on a line by itself properly.
+            gui = GUI(tutorial)
+    except TutorialError as e:
+        print("\n\n\n============ An error occurred in the tutorial ============")
+        print("\nContainer Logs:\n" + textwrap.indent(e.container_logs, "    ") + "\n")
+        raise e.__cause__ # "unwrap" the tutorial error.
+    finally:
+        print() # Add newline so that the terminal's next program is on a line by itself properly.

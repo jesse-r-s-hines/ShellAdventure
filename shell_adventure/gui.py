@@ -231,18 +231,6 @@ class GUI(ThemedTk):
 
     def report_callback_exception(self, exc, val, tb):
         """ Override. """
-        # Default messagebox is too small and won't resize.
-        popup = tk.Toplevel()
-        popup.title("Error")
-        popup.minsize(100, 100) # To keep you from being able to shrink everything off the screen.
-
-        label = tk.Label(popup, text = str(val)) # val is the Exception object
-        label.pack()
-
-        text = ScrolledText(popup)
-        err = "\n".join(traceback.format_exception(exc, val, tb))
-        text.insert(tk.INSERT, err)
-        text["state"] = "disabled"
-        text.pack()
-
-        popup.protocol("WM_DELETE_WINDOW", lambda: self.destroy())
+        self.destroy()
+        # Raising the exception so that we can handle it in the launch script 
+        raise val from None # none so we don't get "while handling..."

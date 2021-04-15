@@ -192,7 +192,7 @@ class Tutorial:
                 pt.puzzle = puzzle
         except BaseException as e: # BaseException includes KeyboardInterrupt
             logs = self.stop() # If an error occurs in __enter__, __exit__ isn't called.
-            raise TutorialError("An error occurred while starting tutorial.", container_logs = logs) from e
+            raise TutorialError(f"{type(e).__name__}: {e}", container_logs = logs) from e
 
         self.start_time = datetime.now()
 
@@ -224,7 +224,7 @@ class Tutorial:
     def __exit__(self, exc_type, exc_value, traceback):
         logs = self.stop()
         if exc_type and issubclass(exc_type, BaseException):
-            raise TutorialError("An error occured in the tutorial.", container_logs = logs) from exc_value
+            raise TutorialError(f"{type(exc_value).__name__}: {exc_value}", container_logs = logs) from exc_value
 
     def get_current_puzzles(self) -> List[Puzzle]:
         """ Returns a list of the currently unlocked puzzles. """
