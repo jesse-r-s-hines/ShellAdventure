@@ -181,7 +181,7 @@ class GUI(ThemedTk):
             if is_symlink: tags.append("symlink")
             if self.student_cwd == file:
                 tags.append("cwd")
-                file_text += " 🠔"
+                file_text += " <--"
             
             if file_in_tree:
                 self.file_tree.item(file, text = file_text, tags = tags, image = file_icon) # modify existing item.
