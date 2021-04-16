@@ -18,7 +18,12 @@ def umask000():
 
 @pytest.fixture()
 def working_dir(tmp_path):
-    """ Creates a temporary directory and sets it as the working directory. Retuns a path to the directory. """
+    """
+    Creates a temporary directory and sets it as the working directory.
+    Returns a path to the directory. Also sets the directory world-writable so we can test permissions and stuff in it.
+    """
     os.chdir(tmp_path)
+    # tmp_path by default is private to the test runner (root) meaning "student" can't create anything in it.
+    os.chmod(tmp_path, 0o777) # world-writable
     return tmp_path
 
