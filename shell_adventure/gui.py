@@ -35,16 +35,18 @@ class GUI(ThemedTk):
         self.title("Shell Adventure")
         self.minsize(300, 100) # To keep you from being able to shrink everything off the screen.
         self.columnconfigure(0, weight = 1, minsize = 80)
-        self.rowconfigure(0, weight = 1, minsize = 80)
+        self.rowconfigure(0, weight = 0)
+        self.rowconfigure(1, weight = 1, minsize = 80)
+        self.rowconfigure(2, weight = 0)
 
         status_bar = self.make_status_bar(self)
-        status_bar.pack(side = tk.TOP, fill = tk.X, expand = False)
+        status_bar.grid(row = 0, column = 0, sticky = "WE")
 
         self.file_tree = self.make_file_tree(self)
-        self.file_tree.pack(side = tk.TOP, fill = tk.BOTH, expand = True)
+        self.file_tree.grid(row = 1, column = 0, sticky = "NSWE")
 
         self.puzzle_frame = self.make_puzzle_frame(self)
-        self.puzzle_frame.pack(side = tk.BOTTOM, fill = tk.BOTH, expand = True)
+        self.puzzle_frame.grid(row = 2, column = 0, sticky = "NSWE")
         self.update_puzzle_frame()
 
         def update_loop(): # TODO make this trigger after every command instead of on a loop
