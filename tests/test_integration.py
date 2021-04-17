@@ -6,6 +6,8 @@ import subprocess, datetime, time
 import docker, docker.errors
 
 PUZZLES = dedent("""
+    from shell_adventure_docker import *
+
     def move():
         file = File("A.txt")
         file.write_text("A")
@@ -195,6 +197,8 @@ class TestIntegration:
                     - puzzles.puzzle:
             """,
             "puzzles.py": dedent(r"""
+                from shell_adventure_docker import *
+
                 def puzzle():
                     output = File("output.txt")
                     output.write_text(output.read_text() + "generator\n")
@@ -208,6 +212,8 @@ class TestIntegration:
                 echo \"$SHELL\" >> output.txt
             """,
             "setup.py": dedent(r"""
+                from shell_adventure_docker import *
+
                 output = File("output.txt")
                 output.write_text(output.read_text() + "python\n")
             """),
@@ -271,7 +277,6 @@ class TestIntegration:
             "puzzles.py": dedent("""
                 def puzzle():
                     raise Exception('BOOM')
-
             """),
         })
 

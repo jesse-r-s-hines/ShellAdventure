@@ -1,5 +1,5 @@
-from typing import Dict
 import pytest
+import shell_adventure_docker
 from shell_adventure_docker.tutorial_docker import TutorialDocker
 from shell_adventure_docker.file import File
 from shell_adventure.support import ScriptType
@@ -7,6 +7,8 @@ import os, subprocess
 from textwrap import dedent;
 
 SIMPLE_PUZZLES = dedent("""
+    from shell_adventure_docker import *
+
     def move():
         file = File("A.txt")
         file.write_text("A")
@@ -50,7 +52,7 @@ class TestTutorialDocker:
             puzzles = ["mypuzzles.move"],
         )
 
-        assert File._random != None # File._random should be set
+        assert shell_adventure_docker.rand != None # _random should be set
 
         assert set(tutorial.modules.keys()) == {"mypuzzles"}
         assert {m.__name__ for m in tutorial.modules.values()} == {"mypuzzles"}
@@ -96,7 +98,8 @@ class TestTutorialDocker:
         
     def test_private_methods_arent_puzzles(self, working_dir):
         puzzles = dedent("""
-            from textwrap import dedent # Don't use the imported method.
+            from shell_adventure_docker import *
+            from os import system # Don't use the imported method as a puzzle.
 
             def _private_method():
                 return "not a puzzle"
@@ -132,6 +135,8 @@ class TestTutorialDocker:
 
     def test_solve_puzzle_bad_return(self, working_dir):
         puzzles = dedent("""
+            from shell_adventure_docker import *
+
             def invalid():
                 return Puzzle(
                     question = f"This puzzle is invalid",
@@ -149,6 +154,8 @@ class TestTutorialDocker:
 
     def test_solve_puzzle_flag(self, working_dir):
         puzzle = dedent("""
+            from shell_adventure_docker import *
+
             def flag_puzzle():
                 return Puzzle(
                     question = f"Say OK",
@@ -169,6 +176,8 @@ class TestTutorialDocker:
 
     def test_puzzle_func_args(self, working_dir):
         puzzles = dedent(f"""
+            from shell_adventure_docker import *
+
             def move(home, root):
                 def checker():
                     return home == File("{working_dir}") and root == File("/")
@@ -189,6 +198,8 @@ class TestTutorialDocker:
 
     def test_solve_puzzle_randomized(self, working_dir):
         puzzles = dedent("""
+            from shell_adventure_docker import *
+
             def move(home):
                 src = home.random_file("txt")
                 src.write_text(rand.paragraphs(3))
@@ -287,6 +298,8 @@ class TestTutorialDocker:
     def test_setup_scripts(self, working_dir):
         tutorial = TestTutorialDocker._create_tutorial(working_dir,
             modules = {"mypuzzles": dedent(r"""
+                from shell_adventure_docker import *
+
                 def puzzle():
                     output = File("output.txt")
                     output.write_text(output.read_text() + "generator\n")
@@ -302,7 +315,9 @@ class TestTutorialDocker:
                     echo \"$SHELL\" > output.txt
                 """)),
                 (ScriptType.PYTHON, dedent(r"""
-                    rand.paragraphs(3) # check that this is in scope
+                    from shell_adventure_docker import *
+
+                    rand.paragraphs(3) # check that this is not null
                     output = File("output.txt")
                     output.write_text(output.read_text() + "python\n")
                 """)),

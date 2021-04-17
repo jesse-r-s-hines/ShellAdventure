@@ -1,18 +1,15 @@
 from __future__ import annotations
-from typing import Union, List, ClassVar, Tuple
+from typing import Union, List, Tuple
 from pathlib import PosixPath
 import os, shutil, shlex
 from .permissions import Permissions, LinkedPermissions, change_user
-from . import random_helper
+import shell_adventure_docker # For access to globals
 
 class File(PosixPath):
     """
     File is an extention of pathlib.PosixPath, with a few convenience methods added.
     Refer to pathlib documentation at https://docs.python.org/3/library/pathlib.html
     """
-
-    _random: ClassVar[random_helper.RandomHelper] = None
-    """ The RandomHelper which will be used when creating random files and folders. """
 
     def chown(self, owner: Union[str, int] = None, group: Union[str, int] = None):
         """
@@ -95,8 +92,9 @@ class File(PosixPath):
         You can pass an extension which will be added to the random name.
         Will not create a file with a name that already exists.
         """
-        if (File._random == None): raise Exception("Can't make random files until File._random has been initialized.")
-        return File._random.file(self, ext = ext)
+        if (shell_adventure_docker.rand == None):
+            raise Exception("Can't make random files until _random has been initialized.")
+        return shell_adventure_docker.rand.file(self, ext = ext)
 
     def random_folder(self, depth: Union[int, Tuple[int, int]] = (1, 3), create_new_chance: float = 0.5) -> File:
         """
@@ -123,10 +121,12 @@ class File(PosixPath):
         # random_folder() doesn't create the file on disk. Use mkdir() with parents = True to make the folder.
         >>> folder.mkdir(parents = True) 
         """
-        if (File._random == None): raise Exception("Can't make random files until File._random has been initialized.")
-        return File._random.folder(self, depth, create_new_chance)
+        if (shell_adventure_docker.rand == None):
+            raise Exception("Can't make random files until _random has been initialized.")
+        return shell_adventure_docker.rand.folder(self, depth, create_new_chance)
 
     def mark_shared(self):
         """ Marks the a File as shared. File should be a directory, though it does not have to exist yet. """
-        if (File._random == None): raise Exception("Can't mark shared files until File._random has been initialized.")
-        self._random.mark_shared(self)
+        if (shell_adventure_docker.rand == None):
+            raise Exception("Can't mark shared files until _random has been initialized.")
+        shell_adventure_docker.rand.mark_shared(self)

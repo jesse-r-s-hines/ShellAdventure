@@ -1,7 +1,7 @@
 """
 Contains miscellaneous support classes and values.
-This file is shared between the Docker side code and host,
-`shell_adventure/support.py` is a symlink to `shell_adventure_docker/support.py`
+This file is shared between the Docker side code and host. It will be copied into the container
+as part of the shell_adventure package.
 """
 
 from typing import Union, Callable, List, Dict, Any, Set, ClassVar

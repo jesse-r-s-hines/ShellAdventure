@@ -5,6 +5,8 @@ from textwrap import dedent;
 from pathlib import PurePosixPath
 
 SIMPLE_PUZZLES = dedent("""
+    from shell_adventure_docker import *
+
     def move():
         file = File("A.txt")
         file.write_text("A")

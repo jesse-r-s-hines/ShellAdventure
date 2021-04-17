@@ -1,3 +1,5 @@
+from shell_adventure_docker import *
+
 def move():
     src = File("A.txt")
     src.write_text("A")

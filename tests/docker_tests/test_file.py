@@ -1,6 +1,6 @@
-from re import sub
 import pytest
 import os, stat
+import shell_adventure_docker
 from shell_adventure_docker.file import File
 from shell_adventure_docker.permissions import Permissions, change_user
 from shell_adventure_docker.random_helper import RandomHelper
@@ -169,19 +169,19 @@ class TestFile:
         try:
             working_dir = File(working_dir)
 
-            File._random = RandomHelper("a\nb\nc")
+            shell_adventure_docker.rand = RandomHelper("a\nb\nc")
             subfile = working_dir.random_folder(depth = 1)
             assert subfile.parent == working_dir
 
             new_folder = working_dir / "my_new_folder"
             new_folder.mark_shared()
-            assert new_folder in File._random._shared_folders
+            assert new_folder in shell_adventure_docker.rand._shared_folders
 
             new_file = working_dir.random_file("txt")
             assert new_file.parent == working_dir
             assert new_file.name in ["a.txt", "b.txt", "c.txt"]
         finally:
-            File._random = None
+            shell_adventure_docker.rand = None
 
     def test_same_as(self, umask000, working_dir):
         file_a = File("A.txt")

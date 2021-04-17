@@ -10,6 +10,7 @@ from shell_adventure.support import Puzzle, PathLike, Message, ScriptType
 from .file import File
 from .permissions import change_user
 from .random_helper import RandomHelper
+import shell_adventure_docker # For access to globals
 
 class TutorialDocker:
     """ Contains the information for a running tutorial docker side. """
@@ -43,16 +44,8 @@ class TutorialDocker:
         self.shell_pid: int = None
 
     def _create_module(self, name: str, code: str) -> ModuleType:
-        """
-        Constructs a module object from a string of python code. Executes the module.
-        Injects some functions and classes into the module's namespace. TODO doc which classes and functions
-        """
+        """ Constructs a module object from a string of python code. Executes the module. """
         module = ModuleType(name)
-        module.__dict__.update({ # The classes/modules/packages to inject into the modules.
-            "Puzzle": Puzzle,
-            "File": File,
-            "rand": self.random
-        })
         exec(code, module.__dict__) # Uses funcs as globals.
         return module
 
@@ -94,7 +87,7 @@ class TutorialDocker:
         self.home = Path(home)
         self.random = RandomHelper(name_dictionary, content_sources)
         # Unfortunately we have to have a static variable in File to allow File methods to access the RandomHelper
-        File._random = self.random 
+        shell_adventure_docker.rand = self.random 
 
         # Run setup scripts
         for script_type, script in setup_scripts:
