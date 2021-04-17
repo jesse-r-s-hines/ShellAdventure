@@ -52,7 +52,9 @@ class TestTutorialDocker:
             puzzles = ["mypuzzles.move"],
         )
 
-        assert shell_adventure_docker.rand != None # _random should be set
+        assert shell_adventure_docker._tutorial is tutorial # should be set
+        assert shell_adventure_docker.rand is tutorial.random # _random should be set
+        assert File.home() == working_dir # File.home() should use tutorial home
 
         assert set(tutorial.modules.keys()) == {"mypuzzles"}
         assert {m.__name__ for m in tutorial.modules.values()} == {"mypuzzles"}

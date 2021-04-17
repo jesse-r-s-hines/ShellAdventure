@@ -84,10 +84,11 @@ class TutorialDocker:
         The initialization is done separate from the constructor so that it can be done after the connection with the host is setup.
         Returns the generated puzzles as a list.
         """
-        self.home = Path(home)
+        self.home = Path(home).resolve()
         self.random = RandomHelper(name_dictionary, content_sources)
-        # Unfortunately we have to have a static variable in File to allow File methods to access the RandomHelper
-        shell_adventure_docker.rand = self.random 
+        # Unfortunately we have to have some package level variables allow File methods to access the RandomHelper and TutorialDocker
+        shell_adventure_docker._tutorial = self
+        shell_adventure_docker.rand = self.random
 
         # Run setup scripts
         for script_type, script in setup_scripts:

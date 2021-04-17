@@ -183,32 +183,5 @@ class TestFile:
         finally:
             shell_adventure_docker.rand = None
 
-    def test_same_as(self, umask000, working_dir):
-        file_a = File("A.txt")
-        file_a.create(content = "A Content")
-
-        file_b = File("B.txt")
-        file_b.create(content = "B Content")
-
-        file_a2 = File("A2.txt")
-        file_a2.create(content = "A Content")
-
-        file_a_perms = File("APerm.text")
-        file_a_perms.create(mode = 0o700, content = "A Content")
-
-
-        assert file_a.same_as(file_a) == True
-        assert file_a.same_as(file_b) == False
-        assert file_a.same_as(file_a2) == True
-        assert file_a.same_as(file_a_perms) == False
-
-        file_not_exists = File("NotExists")
-        assert file_a.same_as(file_not_exists) == False
-        assert file_not_exists.same_as(file_a) == False
-
-        dir = File("dir")
-        dir.mkdir()
-        with pytest.raises(IsADirectoryError):
-            dir.same_as(file_a)
-        with pytest.raises(IsADirectoryError):
-            file_a.same_as(dir)
+    def test_home(self, umask000, working_dir):
+        assert File.home() == File("/root") # No tutorial set up.

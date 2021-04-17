@@ -86,6 +86,14 @@ class File(PosixPath):
             self.read_text() == other.read_text()
         )
 
+    @classmethod
+    def home(cls):
+        """ Return the home directory of the student. """
+        if shell_adventure_docker._tutorial: # Get home directory from tutorial
+            return shell_adventure_docker._tutorial.home
+        else: # Default to PosixPath
+            return PosixPath.home()
+
     def random_file(self, ext = None) -> File:
         """
         Creates a File with a random name. The file is not created on disk and is not marked as shared.
