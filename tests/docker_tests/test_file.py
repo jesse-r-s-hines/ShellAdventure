@@ -28,7 +28,8 @@ class TestFile:
 
         with pytest.raises(FileNotFoundError):
             file.create(recursive=False)
-        file.create(mode=0o644, recursive=True)
+        created_file = file.create(mode=0o644, recursive=True)
+        assert created_file == file
 
         assert file.exists()
         assert file.parent.exists()

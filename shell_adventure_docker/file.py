@@ -62,6 +62,8 @@ class File(PosixPath):
         if content != None:
             self.write_text(content)
 
+        return self
+
     @property
     def permissions(self) -> Permissions:
         """ Return a Permissions object representing the permissions of this file. """
