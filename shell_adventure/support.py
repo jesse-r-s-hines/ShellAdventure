@@ -24,25 +24,10 @@ class Puzzle:
     """ Represents a single puzzle in the tutorial. """
 
     question: str
-    """ The question to be asked. """
 
     score: int
-    """ The score given on success. Defaults to 1. """
 
     checker: Callable[..., Union[str,bool]]
-    """
-    The function that will grade whether the puzzle was completed correctly or not.
-    The function can take the following parameters. All parameters are optional, and order does not matter,
-    but must have the same name as listed here.
-
-    output: Dict[str, CommandOutput]
-        A dict of all commands entered to their outputs, in the order they were entered.
-    flag: str
-        If the flag parameter is present, an input dialog will be shown to the student when sumbitting a puzzle,
-        and their input will be passed to this parameter.
-    file_system: FileSystem
-        A frozen FileSystem object. Most methods that modify the file system will be disabled.
-    """
 
     solved: bool
     """ Whether the puzzle is solved yet """
@@ -57,6 +42,29 @@ class Puzzle:
     """ A set of the checker args that are recognized. """
 
     def __init__(self, question: str, checker: Callable[..., Union[str,bool]] , score = 1):
+        """
+        Construct a Puzzle object.
+
+        Parameters:
+
+        question:
+            The question to be asked.
+        checker:
+            The function that will grade whether the puzzle was completed correctly or not.
+            The function can take the following parameters. All parameters are optional, and order does not matter,
+            but must have the same name as listed here.
+            flag: str
+                If the flag parameter is present, an input dialog will be shown to the student when sumbitting a puzzle,
+                and their input will be passed to this parameter.
+            cwd: File
+                The path to the students current directory
+
+            The function will return a string or a boolean. If it returns True, the puzzle is solved. If it returns
+            False or a string, the puzzle was not solved, and the string will be shown as feedback to the student.
+        score:
+            The score given on success. Defaults to 1. 
+        """
+
         self.question = question
         self.score = score
         self.checker = checker # type: ignore # MyPy fusses about "Cannot assign to a method"

@@ -73,7 +73,7 @@ class LinkedPermissionsGroup(PermissionsGroup):
 class Permissions:
     """
     Plain old data structure that represents basic Linux permissions, with user, group, and others sections.
-    Currently doesn't include special permission bits such as the stick bit.
+    Currently doesn't include special permission bits such as the sticky bit.
     """
 
     def __init__(self, mode: int = None, *, user: str = "", group: str = "", others: str = ""):
@@ -128,8 +128,8 @@ class LinkedPermissions(Permissions):
 @contextmanager
 def change_user(user: str, group: str = None):
     """
-    Changes the effective user of the process to user (by name). Group will default to the group with the same name as user.
-    Use in a context manager like:
+    Changes the effective user of the process to user (by name), and changes it back when the context manager exits.
+    Group will default to the group with the same name as user. Use in a context manager like:
     ```
     with change_user("root"):
         # do stuff as root

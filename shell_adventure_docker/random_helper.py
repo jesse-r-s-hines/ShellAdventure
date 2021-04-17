@@ -42,7 +42,7 @@ class RandomHelper:
         self._shared_folders = []
 
     def name(self):
-        """ Returns a random word that can be used as a file name. """
+        """ Returns a random word that can be used as a file name. The name is taken from the name_dictionary. """
         if len(self._name_dictionary) == 0:
             raise Exception("Out of unique names.") # TODO custom exception.
         choice = random.choice(self._name_dictionary)
@@ -51,8 +51,12 @@ class RandomHelper:
 
     def paragraphs(self, count: Union[int, Tuple[int, int]] = (1, 3)) -> str:
         """
-        Return a random sequence of paragraphs from the content sources.
+        Return a random sequence of paragraphs from the content_sources.
         If no content sources are provided or there isn't enough content to provide the size it will default to a lorem ipsum generator.
+
+        paramaters:
+            count: Either an int or a (min, max) tuple. If a tuple is given, will return a random number of paragraphs
+                   in the range, inclusive.
         """
         if isinstance(count, tuple): count = random.randint(count[0], count[1])
         # filter sources too small for chosen size
