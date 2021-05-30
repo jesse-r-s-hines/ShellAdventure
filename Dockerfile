@@ -54,6 +54,8 @@ RUN useradd -ms /bin/bash student && \
 USER student
 WORKDIR /home/student
 
+COPY docker_files/.bashrc /home/student/.bashrc
+
 ENV PYTHONPATH=/usr/local
 
 COPY shell_adventure_docker /usr/local/shell_adventure_docker/
