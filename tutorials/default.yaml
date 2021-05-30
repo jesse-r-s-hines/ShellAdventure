@@ -4,3 +4,4 @@ puzzles:
   - default.move:
     - default.copy
   - default.cat
+  - default.random_puzzle

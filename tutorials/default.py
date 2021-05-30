@@ -8,7 +8,7 @@ def move():
         dst = File("B.txt")
         if dst.exists():
             if not src.exists() and dst.read_text() == "A":
-                return True
+                return True # Solved
             elif src.exists():
                 return 'You need to "mv" not "cp"'
         else:
@@ -43,6 +43,18 @@ def cat():
     file.write_text("42\n")
 
     return Puzzle(
-        question = f"Find the number in secret.txt",
+        question = f"What's in secret.txt?",
         checker = lambda flag: flag == "42",
+    )
+
+
+def random_puzzle(home):
+    src = home.random_file("txt")
+    src.write_text(rand.paragraphs(3))
+    
+    dst = home.random_folder().random_file("txt") # Don't create yet
+
+    return Puzzle(
+        question = f"Move {src.relative_to(home)} to {dst.relative_to(home)}",
+        checker = lambda: not src.exists() and dst.exists()
     )
