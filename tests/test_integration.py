@@ -7,6 +7,7 @@ import docker, docker.errors
 
 PUZZLES = dedent("""
     from shell_adventure_docker import *
+    import getpass
 
     def move():
         file = File("A.txt")
@@ -58,6 +59,12 @@ PUZZLES = dedent("""
         return Puzzle(
             question = f"{src} -> {dst}",
             checker = checker
+        )
+
+    def user_puzzle():
+        return Puzzle(
+            question = "Who are you?",
+            checker = lambda: getpass.getuser() == "root" # checker functions run as root
         )
 """)
 
@@ -182,6 +189,22 @@ class TestIntegration:
 
             assert tutorial.is_finished() == True
 
+    def test_user(self, tmp_path):
+        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
+            "config.yaml": """
+                modules:
+                    - puzzles.py
+                puzzles:
+                    - puzzles.user_puzzle
+            """,
+            "puzzles.py": PUZZLES,
+        })
+
+        with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
+            puzzle = tutorial.get_all_puzzles()[0]
+            solved, feedback = tutorial.solve_puzzle(puzzle)
+            assert solved == True
+    
     def test_setup_and_resources(self, tmp_path):
         tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
             "config.yaml": """
@@ -228,7 +251,6 @@ class TestIntegration:
             exit_code, output = tutorial.container.exec_run(["cat", "file2.txt"])
             assert output.decode() == "2"
 
-
     def test_bash_script_exception(self, tmp_path):
         tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
             "config.yaml": """
@@ -246,7 +268,6 @@ class TestIntegration:
         with pytest.raises(TutorialError, match="command not found"):
             with tutorial: 
                 pass # Just launch
-
 
     def test_py_script_exception(self, tmp_path):
         tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
@@ -266,7 +287,7 @@ class TestIntegration:
             with tutorial: 
                 pass # Just launch
 
-    def test_gent_exception(self, tmp_path):
+    def test_generation_exception(self, tmp_path):
         tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
             "config.yaml": """
                 modules:
@@ -283,3 +304,4 @@ class TestIntegration:
         with pytest.raises(TutorialError, match="BOOM"):
             with tutorial: 
                 pass # Just launch
+            
