@@ -219,17 +219,20 @@ class GUI(ThemedTk):
         self.score_label.set(f"Score: {self.tutorial.current_score()}/{self.tutorial.total_score()}")
 
     def solve_puzzle(self, puzzle: Puzzle):
+        do_check = True
         flag = None
         if "flag" in puzzle.checker_args:
             flag = simpledialog.askstring("Input", puzzle.question, parent = self)
+            if flag == None: do_check = False # If you "cancel" don't run autograder
 
-        solved, feedback = self.tutorial.solve_puzzle(puzzle, flag)
-        messagebox.showinfo("Feedback", feedback)
+        if do_check:
+            solved, feedback = self.tutorial.solve_puzzle(puzzle, flag)
+            messagebox.showinfo("Feedback", feedback)
 
-        if solved:
-            self.update_puzzle_frame()
-            if self.tutorial.is_finished(): # then quit the tutorial
-                self.destroy()
+            if solved:
+                self.update_puzzle_frame()
+                if self.tutorial.is_finished(): # then quit the tutorial
+                    self.destroy()
 
     def report_callback_exception(self, exc, val, tb):
         """ Override. """
