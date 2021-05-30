@@ -29,6 +29,7 @@ RUN apt-get update && \
         sudo \
         tree \
         unzip \
+        vim-tiny \
         wget \
         zip \
     && \

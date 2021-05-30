@@ -103,6 +103,7 @@
 | userdel     | delete a user account and related files                               |
 | usermod     | modify a user account                                                 |
 | users       | print the user names of users currently logged in to the current host |
+| vi          | Vi IMproved, a programmer's text editor                               |
 | wc          | print newline, word, and byte counts for each file                    |
 | wget        | The non-interactive network downloader.                               |
 | whatis      | display one-line manual page descriptions                             |
