@@ -8,7 +8,7 @@ def start_bash(container, name):
     Returns the exec process.
     """
     # docker exec the unix exec bash built-in which lets us change the name of the process
-    return subprocess.Popen(["docker", "exec", "-it", container.id, "bash", "-c", f"exec -a {name} bash"])
+    return subprocess.Popen(["docker", "exec", "-it", "--user", "student", container.id, "bash", "-c", f"exec -a {name} bash"])
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:

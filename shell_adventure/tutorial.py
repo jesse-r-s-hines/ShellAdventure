@@ -140,7 +140,9 @@ class Tutorial:
             user = "root",
             network_mode = "host",
             command = command,
-
+            cap_add = [
+                "CAP_SYS_PTRACE", # Allows us to call `pwdx` to get working directory of student
+            ],
             tty = True,
             stdin_open = True,
             # remove = True, # Auto remove makes getting output logs difficult. We'll have to remove the container ourselves.
