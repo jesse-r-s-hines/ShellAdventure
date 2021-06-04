@@ -115,4 +115,3 @@ if ! shopt -oq posix; then
     . /etc/bash_completion
   fi
 fi
-student@jesse-ThinkPad-E570:~$ 
