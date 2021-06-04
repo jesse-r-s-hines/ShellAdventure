@@ -104,7 +104,7 @@ class Tutorial:
         self.content_sources = [Path(self.data_dir, f) for f in config.get("content_sources", [])] # relative to config file
 
         self.container = None
-        self._conn: Connection = None # Connection to the docker container.
+        self._conn_to_container: Connection = None # Connection to send messages to docker container.
 
         self.start_time = None
         self.end_time = None
@@ -164,7 +164,7 @@ class Tutorial:
 
         try:
             # retry the connection a few times since the container may take a bit to get started.
-            self._conn = retry_call(lambda: Client(support.conn_addr, authkey = support.conn_key), tries = 20, delay = 0.2)
+            self._conn_to_container = retry_call(lambda: Client(support.conn_addr_to_container, authkey = support.conn_key), tries = 20, delay = 0.2)
 
             # Move resources into container
             for src, dst in self.resources.items():
@@ -179,7 +179,7 @@ class Tutorial:
                 else:
                     setup_scripts.append( (ScriptType.BASH, file.read_text()) )
 
-            self._conn.send((Message.SETUP, {
+            self._conn_to_container.send((Message.SETUP, {
                 "home": "/home/student",
                 "setup_scripts": setup_scripts,
                 "modules": {file.stem: file.read_text() for file in self.module_paths},
@@ -187,7 +187,7 @@ class Tutorial:
                 "name_dictionary": self.name_dictionary.read_text(),
                 "content_sources": [file.read_text() for file in self.content_sources],
             }))
-            generated_puzzles = self._conn.recv()
+            generated_puzzles = self._conn_to_container.recv()
 
             # store the puzzles in the PuzzleTree (unflatten from preorder list)
             for pt, puzzle in zip(tmp_tree, generated_puzzles):
@@ -207,9 +207,9 @@ class Tutorial:
         if not self.end_time: # Check that we haven't already stopped the container
             self.end_time = datetime.now()
 
-            if self._conn:
-                self._conn.send( (Message.STOP,) )
-                self._conn.close()
+            if self._conn_to_container:
+                self._conn_to_container.send( (Message.STOP,) )
+                self._conn_to_container.close()
             # The container should stop itself, but we'll make sure here as well.
             self.container.stop(timeout = 4)
             logs = self.container.logs()
@@ -247,8 +247,8 @@ class Tutorial:
 
     def solve_puzzle(self, puzzle: Puzzle, flag: str = None) -> Tuple[bool, str]:
         """ Tries to solve the puzzle. Returns (success, feedback) and sets the Puzzle as solved if the checker succeeded. """
-        self._conn.send( (Message.SOLVE, puzzle.id, flag) )
-        (solved, feedback) = self._conn.recv()
+        self._conn_to_container.send( (Message.SOLVE, puzzle.id, flag) )
+        (solved, feedback) = self._conn_to_container.recv()
         puzzle.solved = solved
         return (solved, feedback)
 
@@ -257,13 +257,13 @@ class Tutorial:
         Connects the tutorial to a running shell session with the given name. The shell session should have a unique name.
         Returns the PID (in docker) of the shell session.
         """
-        self._conn.send( (Message.CONNECT_TO_SHELL, name) )
-        return self._conn.recv() # wait for response
+        self._conn_to_container.send( (Message.CONNECT_TO_SHELL, name) )
+        return self._conn_to_container.recv() # wait for response
 
     def get_student_cwd(self) -> PurePosixPath:
         """ Get the path to the students current directory/ """
-        self._conn.send( (Message.GET_STUDENT_CWD,) )
-        return self._conn.recv()
+        self._conn_to_container.send( (Message.GET_STUDENT_CWD,) )
+        return self._conn_to_container.recv()
 
     def get_files(self, folder: PurePosixPath) -> List[Tuple[bool, bool, PurePosixPath]]:
         """
@@ -272,8 +272,8 @@ class Tutorial:
         """
         assert folder.is_absolute()
 
-        self._conn.send( (Message.GET_FILES, folder) )
-        return self._conn.recv()
+        self._conn_to_container.send( (Message.GET_FILES, folder) )
+        return self._conn_to_container.recv()
 
     def time(self) -> timedelta:
         """ Returns the time that the student has spend on the tutorial so far. """
