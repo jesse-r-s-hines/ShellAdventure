@@ -60,7 +60,7 @@ class TutorialDocker:
         return generators
 
     def _generate_puzzle(self, puzzle_generator: str) -> Puzzle:
-        """   Takes a puzzle generators and generates a puzzle from it. """
+        """ Takes a puzzle generators and generates a puzzle from it. """
         # TODO custom exception 
         if puzzle_generator not in self.generators: raise Exception(f"Unknown puzzle generator {puzzle_generator}.")
 

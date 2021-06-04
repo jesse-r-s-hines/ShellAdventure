@@ -14,7 +14,7 @@ class RandomHelper:
 
     # It would be more efficient to store these as tree.
     _shared_folders: List[f.File]
-    """     A list of shared folders. random.folder() can use existing folders if they are shared. """
+    """ A list of shared folders. random.folder() can use existing folders if they are shared. """
 
     def __init__(self, name_dictionary: str, content_sources: List[str] = []):
         """

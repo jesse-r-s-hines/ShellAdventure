@@ -10,6 +10,7 @@ from PIL import ImageTk, Image
 from .scrolled_frame import VerticalScrolledFrame
 from . import tutorial
 from .support import Puzzle, PKG
+
 class WrappingLabel(ttk.Label):
     """Label that automatically adjusts the wrap to the size"""
     def __init__(self, master=None, **kwargs):

@@ -84,7 +84,7 @@ class Puzzle:
         return data
 
 # We aren't using this class currently
-# class CommandOutput:
+# class CommandOutput: # TODO
 #     """ Represents the output of a command. """
 
 #     exit_code: int
