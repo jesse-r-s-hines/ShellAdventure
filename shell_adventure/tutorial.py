@@ -1,8 +1,10 @@
 from __future__ import annotations, generators
 from typing import Generator, List, Tuple, Dict, Any, Callable, ClassVar, Union
 import yaml, textwrap
-from multiprocessing.connection import Client, Connection
+from multiprocessing.connection import Listener, Client, Connection
 import docker, docker.errors, subprocess
+from threading import Thread
+from docker.models.images import Image
 from docker.models.containers import Container
 from pathlib import Path, PurePosixPath;
 from retry.api import retry_call
@@ -61,6 +63,8 @@ class Tutorial:
     """ The tree of puzzles in this tutorial. """
 
     # Other fields
+    docker_client: docker.DockerClient
+    """ The DockerClient """
     container: Container
     """ The docker container that the student is in. """
     
@@ -68,6 +72,9 @@ class Tutorial:
     """ Time the tutorial started. """
     end_time: datetime
     """ Time the tutorial ended. """
+
+    undo_list: List[Image]
+    """ A list of Docker commits that store the state after each command the student enters. """
 
     def __init__(self, config_file: PathLike):
         """
@@ -103,8 +110,12 @@ class Tutorial:
 
         self.content_sources = [Path(self.data_dir, f) for f in config.get("content_sources", [])] # relative to config file
 
+        self.docker_client = docker.from_env()
         self.container = None
         self._conn_to_container: Connection = None # Connection to send messages to docker container.
+        self._listener_thread: Thread = None # Thread running a Listener that will trigger the docker commits.
+                                             # The Docker container should send a signal after every bash command the student enters.
+        self.undo_list = []
 
         self.start_time = None
         self.end_time = None
@@ -134,9 +145,7 @@ class Tutorial:
 
     def _launch_container(self, command: Union[List[str], str]) -> Container:
         """ Launches the container with the given command. Returns the container. """
-        docker_client = docker.from_env()
-
-        container = docker_client.containers.run('shell-adventure',
+        container = self.docker_client.containers.run('shell-adventure',
             user = "root",
             network_mode = "host",
             command = command,
@@ -150,6 +159,20 @@ class Tutorial:
         )
         return container
     
+    def _listen(self):
+        """
+        Listen for the docker container to tell us when a command has been entered.
+        Launch in a seperate thread.
+        """
+        with Listener(support.conn_addr_from_container, authkey = support.conn_key) as listener:
+            while True:
+                with listener.accept() as conn:
+                    data = conn.recv()
+                    if data == Message.STOP:
+                        return
+                    elif data == Message.MAKE_COMMIT:
+                        self.commit()
+
     def start(self):
         """
         Starts the tutorial.
@@ -196,6 +219,9 @@ class Tutorial:
             logs = self.stop() # If an error occurs in __enter__, __exit__ isn't called.
             raise TutorialError(f"{type(e).__name__}: {e}", container_logs = logs) from e
 
+        self._listener_thread = Thread(target=self._listen)
+        self._listener_thread.start()
+
         self.start_time = datetime.now()
 
     def stop(self) -> str:
@@ -210,6 +236,12 @@ class Tutorial:
             if self._conn_to_container:
                 self._conn_to_container.send( (Message.STOP,) )
                 self._conn_to_container.close()
+
+            if self._listener_thread:
+                with Client(support.conn_addr_from_container, authkey = support.conn_key) as conn:
+                    conn.send(Message.STOP)
+                    self._listener_thread.join()
+
             # The container should stop itself, but we'll make sure here as well.
             self.container.stop(timeout = 4)
             logs = self.container.logs()
@@ -227,6 +259,11 @@ class Tutorial:
         logs = self.stop()
         if exc_type and issubclass(exc_type, BaseException):
             raise TutorialError(f"{type(exc_value).__name__}: {exc_value}", container_logs = logs) from exc_value
+
+    def commit(self):
+        """ Take a snapshot of the current state so we can use UNDO to get back to it. """
+        image = self.container.commit()
+        self.undo_list.append(image)
 
     def get_current_puzzles(self) -> List[Puzzle]:
         """ Returns a list of the currently unlocked puzzles. """

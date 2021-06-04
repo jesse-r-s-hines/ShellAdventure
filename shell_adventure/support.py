@@ -122,6 +122,8 @@ class Message(Enum):
     """ Get the path to the students current directory. Usage (GET_CWD,) """
     GET_FILES = 5
     """ Get files under a folder. Usage (GET_FILES, folder) """
+    MAKE_COMMIT = 6
+    """ Make a Docker commit of the container so we can undo a command. """
 
 class ScriptType(Enum):
     """ Enum for sending setup_scripts. """
