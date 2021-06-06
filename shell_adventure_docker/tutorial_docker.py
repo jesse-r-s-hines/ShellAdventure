@@ -118,19 +118,7 @@ class TutorialDocker:
             "flag": flag,
             "cwd": self.student_cwd(),
         }
-        checker_result = support.call_with_args(puzzle.checker, args)
-
-        if checker_result == True:
-            puzzle.solved = True
-            feedback = "Correct!"
-        elif checker_result == False:
-            feedback = "Incorrect!"
-        elif isinstance(checker_result, str):
-            feedback = checker_result
-        else:
-            raise Exception(f'Checker function for puzzle "{puzzle.question}" returned {type(checker_result).__name__}, bool or str expected.')
-
-        return (puzzle.solved, feedback)
+        return puzzle.solve(args)
 
     def connect_to_shell(self, name: str) -> int:
         """ Finds a running shell session with the given name and stores it's pid. Returns the pid. """

@@ -30,7 +30,7 @@ class Puzzle:
 
     score: int
 
-    checker: AutoGrader
+    _checker: AutoGrader
 
     solved: bool
     """ Whether the puzzle is solved yet """
@@ -70,18 +70,39 @@ class Puzzle:
 
         self.question = question
         self.score = score
-        self.checker = checker # type: ignore # MyPy fusses about "Cannot assign to a method"
+        self._checker = checker # type: ignore # MyPy fusses about "Cannot assign to a method"
         self.solved = False
         self.id = str(uuid.uuid4())
-        self.checker_args = set(inspect.getfullargspec(self.checker).args)
+        self.checker_args = set(inspect.getfullargspec(self._checker).args)
         if not self.checker_args.issubset(Puzzle.allowed_checker_args): # TODO use custom exception
             raise Exception(f'Unrecognized parameters ({", ".join(self.checker_args - Puzzle.allowed_checker_args)}), ' +
                             f'checker functions can only have some combination of parameters ({", ".join(Puzzle.allowed_checker_args)}).')
 
+    def solve(self, args: Dict[str, Any]):
+        """
+        Tries to solve the puzzle, passes the given args to the checker lambda.
+        Returns (success, feedback) and sets the Puzzle as solved if the checker succeeded.
+        """
+        checker_result = call_with_args(self._checker, args)
+
+        solved = False
+        if checker_result == True:
+            solved = True
+            feedback = "Correct!"
+        elif checker_result == False:
+            feedback = "Incorrect!"
+        elif isinstance(checker_result, str):
+            feedback = checker_result
+        else:
+            raise Exception(f'Checker function for puzzle "{self.question}" returned {type(checker_result).__name__}, bool or str expected.')
+
+        self.solved = solved
+        return (solved, feedback)
+
     def __getstate__(self):
         # Can't pickle lambdas, but we don't need it host side.
         data = self.__dict__.copy()
-        data["checker"] = None
+        data["_checker"] = None
         return data
 
 PuzzleGenerator = Callable[..., Puzzle]

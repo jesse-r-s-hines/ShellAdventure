@@ -13,6 +13,24 @@ class TestSupport:
         with pytest.raises(Exception, match=r"Unrecognized parameters \(blah\)"):
             puzzle = Puzzle("Solve this puzzle.", checker = lambda blah: False)
 
+    def test_solve_puzzle(self):
+        puzzle = Puzzle("Solve this puzzle.", checker = lambda: "Feedback!")
+        assert puzzle.solve({}) == (False, "Feedback!")
+
+        puzzle = Puzzle("Solve this puzzle.", checker = lambda flag: flag == "a")
+        assert puzzle.solve({"flag": "a"}) == (True, "Correct!")\
+        # Calling twice on a puzzle resets the solved state.
+        assert puzzle.solve({"flag": "b"}) == (False, "Incorrect!")
+
+
+    def test_solve_puzzle_bad_return(self):
+        puzzle = Puzzle(
+            question = f"This puzzle is invalid",
+            checker = lambda: 100,
+        )
+        with pytest.raises(Exception, match="bool or str expected"):
+            puzzle.solve({})
+
     def test_pickle_puzzle(self, tmp_path):
         puzzle = Puzzle("Solve this puzzle.", checker = lambda flag: False, score = 1)
         puzzle.solved = True
@@ -25,8 +43,8 @@ class TestSupport:
         assert puzzle.solved == new_puzzle.solved
         assert puzzle.id == new_puzzle.id
         assert puzzle.checker_args == {"flag"}
-        assert new_puzzle.checker == None # Can't pickle lambdas
-        assert puzzle.checker != None # Doesn't affect original
+        assert new_puzzle._checker == None # Can't pickle lambdas
+        assert puzzle._checker != None # Doesn't affect original
 
     def test_call_with_args(self):
         args = {"a": 1, "b": 2, "c": 3}
