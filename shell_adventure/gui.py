@@ -49,7 +49,7 @@ class GUI(ThemedTk):
         self.file_tree = self.make_file_tree(self)
         self.file_tree.grid(row = 1, column = 0, sticky = "NSWE")
 
-        undo_frame, self.undo_button = self.make_undo_frame(self)
+        undo_frame, self.undo_button, self.restart_button = self.make_undo_frame(self)
         undo_frame.grid(row = 2, column = 0, sticky = "NSWE")
 
         self.puzzle_frame = self.make_puzzle_frame(self)
@@ -76,6 +76,7 @@ class GUI(ThemedTk):
         """ Returns a map of icons. """
         icon_files = { 
             "undo": "undo.png",
+            "restart": "restart.png",
         }
         # fetch icons files. We have to save to a field or tkinter will lose the images somehow.
         icons = {}
@@ -113,13 +114,20 @@ class GUI(ThemedTk):
     def make_undo_frame(self, master):
         """ Returns a frame showing the undo and restart buttons and the undo and reset buttons themselves """
         undo_frame = ttk.Frame(master)
-        undo_button = ttk.Button(undo_frame,
-            text = "Undo", image = self.icons["undo"], compound = "left",
+
+        restart_button = ttk.Button(undo_frame,
+            text = "Restart", image = self.icons["restart"], compound = "left",
             command = lambda: self.undo()
         )
-        undo_button.grid(row = 0, column = 0)
+        restart_button.grid(row = 0, column = 0)
 
-        return (undo_frame, undo_button)
+        undo_button = ttk.Button(undo_frame,
+            text = "Undo", image = self.icons["undo"], compound = "left",
+            command = lambda: self.restart()
+        )
+        undo_button.grid(row = 0, column = 1)
+
+        return (undo_frame, undo_button, restart_button)
         
     def start_timer_loop(self):
         """ Starts a loop which will update the timer every second. """
@@ -248,6 +256,7 @@ class GUI(ThemedTk):
 
         self.score_label.set(f"Score: {self.tutorial.current_score()}/{self.tutorial.total_score()}")
         self.undo_button["state"] = "enabled" if self.tutorial.can_undo() else "disabled"
+        self.restart_button["state"] = "enabled" if self.tutorial.can_undo() else "disabled"
 
     def solve_puzzle(self, puzzle: Puzzle):
         do_check = True
@@ -267,6 +276,11 @@ class GUI(ThemedTk):
 
     def undo(self):
         self.tutorial.undo()
+        self.undo_callback()
+        self.update_puzzle_frame()
+
+    def restart(self):
+        self.tutorial.restart()
         self.undo_callback()
         self.update_puzzle_frame()
 
