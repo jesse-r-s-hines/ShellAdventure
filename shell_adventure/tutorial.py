@@ -149,9 +149,9 @@ class Tutorial:
 
         return puzzle_trees
 
-    def _launch_container(self, command: Union[List[str], str]) -> Container:
-        """ Launches the container with the given command. Returns the container. """
-        container = self.docker_client.containers.run('shell-adventure',
+    def _launch_container(self, image: Union[str, Image], command: Union[List[str], str]) -> Container:
+        """ Launches the given container with the given command. Returns the container. """
+        container = self.docker_client.containers.run(image,
             user = "root",
             network_mode = "host",
             command = command,
@@ -189,7 +189,7 @@ class Tutorial:
 
         # We can't use "with" since the caller needs to be able to use the tutorial object before it is closed.
 
-        self.container = self._launch_container(["python3", "-m", "shell_adventure_docker.start"])
+        self.container = self._launch_container('shell-adventure', ["python3", "-m", "shell_adventure_docker.start"])
 
         try:
             # retry the connection a few times since the container may take a bit to get started.
