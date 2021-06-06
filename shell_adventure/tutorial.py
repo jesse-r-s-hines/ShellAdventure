@@ -268,7 +268,7 @@ class Tutorial:
 
     def commit(self):
         """ Take a snapshot of the current state so we can use UNDO to get back to it. """
-        image = self.container.commit()
+        image = self.container.commit("shell-adventure", f"undo-snaphost-{len(self.undo_list)}")
         puzzles = {p.id: p.solved for p in self.get_all_puzzles()}
         self.undo_list.append( Snapshot(image, puzzles) )
 
