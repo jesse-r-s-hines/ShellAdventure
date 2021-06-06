@@ -1,4 +1,4 @@
-from typing import List, Tuple, Dict, ClassVar
+from typing import Callable, List, Tuple, Dict, ClassVar
 from pathlib import PurePosixPath
 import tkinter as tk
 from tkinter import StringVar, ttk, font, messagebox
@@ -18,13 +18,15 @@ class WrappingLabel(ttk.Label):
         self.bind('<Configure>', lambda e: self.config(wraplength = e.width))
 
 class GUI(ThemedTk):
-    def __init__(self, tutorial: tutorial.Tutorial):
+    def __init__(self, tutorial: tutorial.Tutorial, undo_callback: Callable): # TODO find a better way to restart the bash session
         """ Creates and launches the Shell Adventure GUI. Pass it the tutorial object. """
         super().__init__(theme="radiance")
 
         self.tutorial = tutorial
+        self.undo_callback = undo_callback
         self.student_cwd: PurePosixPath = None # The path to the student's current directory
         self.file_tree_root = PurePosixPath("/") # The root of the displayed file tree
+        self.icons = self.get_icons() # We have to keep a reference to the icons or they will get deleted
 
         self.file_tree: ttk.Treeview = None
         self.file_icons = self.get_file_icons()
@@ -39,6 +41,7 @@ class GUI(ThemedTk):
         self.rowconfigure(0, weight = 0)
         self.rowconfigure(1, weight = 1, minsize = 80)
         self.rowconfigure(2, weight = 0)
+        self.rowconfigure(3, weight = 0)
 
         status_bar = self.make_status_bar(self)
         status_bar.grid(row = 0, column = 0, sticky = "WE")
@@ -46,8 +49,11 @@ class GUI(ThemedTk):
         self.file_tree = self.make_file_tree(self)
         self.file_tree.grid(row = 1, column = 0, sticky = "NSWE")
 
+        undo_frame, self.undo_button = self.make_undo_frame(self)
+        undo_frame.grid(row = 2, column = 0, sticky = "NSWE")
+
         self.puzzle_frame = self.make_puzzle_frame(self)
-        self.puzzle_frame.grid(row = 2, column = 0, sticky = "NSWE")
+        self.puzzle_frame.grid(row = 3, column = 0, sticky = "NSWE")
         self.update_puzzle_frame()
 
         def update_loop(): # TODO make this trigger after every command instead of on a loop
@@ -65,6 +71,18 @@ class GUI(ThemedTk):
         #     self.load_folder(str(file_id), open_new = file_was_open or open_new) # trigger update on the subfolder
 
         self.mainloop()
+
+    def get_icons(self) -> Dict[str, ImageTk.PhotoImage]: # TODO combine this and get_file_icons()
+        """ Returns a map of icons. """
+        icon_files = { 
+            "undo": "undo.png",
+        }
+        # fetch icons files. We have to save to a field or tkinter will lose the images somehow.
+        icons = {}
+        for key, file in icon_files.items():
+            img = Image.open(PKG / "icons" / file).resize((16, 16), Image.ANTIALIAS)
+            icons[key] = ImageTk.PhotoImage(img)
+        return icons
 
     def get_file_icons(self) -> Dict[Tuple[bool, bool], ImageTk.PhotoImage]:
         """ Returns a map of icons representing 4 file types. Maps (is_dir, is_symlink) tuples to the icons """
@@ -92,6 +110,17 @@ class GUI(ThemedTk):
         
         return status_bar
 
+    def make_undo_frame(self, master):
+        """ Returns a frame showing the undo and restart buttons and the undo and reset buttons themselves """
+        undo_frame = ttk.Frame(master)
+        undo_button = ttk.Button(undo_frame,
+            text = "Undo", image = self.icons["undo"], compound = "left",
+            command = lambda: self.undo()
+        )
+        undo_button.grid(row = 0, column = 0)
+
+        return (undo_frame, undo_button)
+        
     def start_timer_loop(self):
         """ Starts a loop which will update the timer every second. """
         self.after(1000, self.start_timer_loop)
@@ -218,6 +247,7 @@ class GUI(ThemedTk):
         self.load_folder("")
 
         self.score_label.set(f"Score: {self.tutorial.current_score()}/{self.tutorial.total_score()}")
+        self.undo_button["state"] = "enabled" if self.tutorial.can_undo() else "disabled"
 
     def solve_puzzle(self, puzzle: Puzzle):
         do_check = True
@@ -234,6 +264,11 @@ class GUI(ThemedTk):
                 self.update_puzzle_frame()
                 if self.tutorial.is_finished(): # then quit the tutorial
                     self.destroy()
+
+    def undo(self):
+        self.tutorial.undo()
+        self.undo_callback()
+        self.update_puzzle_frame()
 
     def report_callback_exception(self, exc, val, tb):
         """ Override. """

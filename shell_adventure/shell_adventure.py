@@ -2,29 +2,28 @@ import sys, os, subprocess, textwrap, traceback
 from shell_adventure.gui import GUI
 from shell_adventure.tutorial import Tutorial, TutorialError
 
-def start_bash(container, name):
+def start_bash(tutorial):
     """
     Starts a bash session in the docker container in a detached process. The process in the container will have the given name.
     Returns the exec process.
     """
     # docker exec the unix exec bash built-in which lets us change the name of the process
-    return subprocess.Popen(["docker", "exec", "-it", "--user", "student", container.id, "bash", "-c", f"exec -a {name} bash"])
+    os.system('cls' if os.name == 'nt' else 'clear') # clear the terminal
+    name = "shell_adventure_bash"
+    bash = subprocess.Popen(["docker", "exec", "-it", "--user", "student", tutorial.container.id, "bash", "-c", f"exec -a {name} bash"])
+    tutorial.connect_to_shell(name)
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
         print("No tutorial config file given.")
         exit(1)
 
-    os.system('cls' if os.name == 'nt' else 'clear') # clear the terminal
-
     try:
         # Context manager will make sure that the container is cleaned up, and will wrap any errors in TutorialError
         # so that we can see the container logs.
         with Tutorial(sys.argv[1]) as tutorial: # Creates and sets up the container with the tutorial inside
-            bash = start_bash(tutorial.container, "shell_adventure_bash")
-            tutorial.connect_to_shell("shell_adventure_bash")
-
-            gui = GUI(tutorial)
+            start_bash(tutorial)
+            gui = GUI(tutorial, undo_callback = lambda: start_bash(tutorial) )
     except TutorialError as e:
         print("\n\n============ An error occurred in the tutorial ============")
         print("\nContainer Logs:\n" + textwrap.indent(e.container_logs, "    ") + "\n")
