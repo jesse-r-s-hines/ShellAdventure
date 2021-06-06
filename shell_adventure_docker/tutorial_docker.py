@@ -1,4 +1,4 @@
-from typing import List, Tuple, Dict, Any, Callable, ClassVar
+from typing import List, Tuple, Dict, Any
 from types import ModuleType
 from pathlib import Path, PurePosixPath;
 import subprocess, os
@@ -6,7 +6,7 @@ from multiprocessing.connection import Listener
 import inspect
 from retry.api import retry_call
 from shell_adventure import support
-from shell_adventure.support import Puzzle, PathLike, Message, ScriptType
+from shell_adventure.support import Puzzle, PathLike, Message, PuzzleGenerator, ScriptType
 from .file import File
 from .permissions import change_user
 from .random_helper import RandomHelper
@@ -39,7 +39,7 @@ class TutorialDocker:
         return module
 
     @staticmethod
-    def _get_generators(module: ModuleType) -> Dict[str, Callable[[], Puzzle]]:
+    def _get_generators(module: ModuleType) -> Dict[str, PuzzleGenerator]:
         """ Extracts puzzle generator functions from a module as a map of {name: func} """
         generators = {}
         for func_name, func in inspect.getmembers(module, inspect.isfunction):
@@ -49,7 +49,7 @@ class TutorialDocker:
 
         return generators
 
-    def _generate_puzzle(self, generator: Callable[[], Puzzle]) -> Puzzle:
+    def _generate_puzzle(self, generator: PuzzleGenerator) -> Puzzle:
         """ Takes a puzzle generators and generates a puzzle from it. """
         args = { # TODO add documentation for args you can take in generator function
             "home": File(self.home), # can't use home() since the user is actually root. #TODO add docs that File.home() doesn't work as expected. 
@@ -88,7 +88,7 @@ class TutorialDocker:
         modules_list = [TutorialDocker._create_module(name, code) for name, code in modules.items()]
 
         # Get puzzle generators from the modules
-        generators: Dict[str, Callable[[], Puzzle]] = {}
+        generators: Dict[str, PuzzleGenerator] = {}
         for module in modules_list: 
             generators.update( TutorialDocker._get_generators(module) )
 

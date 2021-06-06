@@ -101,7 +101,7 @@ Add `from shell_adventure_docker import *` to your puzzle modules to import `Puz
 
 ```python
 class Puzzle:
-    def __init__(self, question: str, checker: Callable[..., Union[str,bool]] , score = 1):
+    def __init__(self, question: str, checker: Callable[..., Union[str,bool]], score = 1):
         """
         Construct a Puzzle object.
 

@@ -4,6 +4,7 @@ This file is shared between the Docker side code and host. It will be copied int
 as part of the shell_adventure package.
 """
 
+from __future__ import annotations
 from typing import Union, Callable, List, Dict, Any, Set, ClassVar
 import os, inspect, uuid, inspect
 from pathlib import Path
@@ -29,7 +30,7 @@ class Puzzle:
 
     score: int
 
-    checker: Callable[..., Union[str,bool]]
+    checker: AutoGrader
 
     solved: bool
     """ Whether the puzzle is solved yet """
@@ -43,7 +44,7 @@ class Puzzle:
     allowed_checker_args: ClassVar[Set[str]] = {"cwd", "flag"}
     """ A set of the checker args that are recognized. """
 
-    def __init__(self, question: str, checker: Callable[..., Union[str,bool]] , score = 1):
+    def __init__(self, question: str, checker: AutoGrader, score = 1):
         """
         Construct a Puzzle object.
 
@@ -82,6 +83,10 @@ class Puzzle:
         data = self.__dict__.copy()
         data["checker"] = None
         return data
+
+PuzzleGenerator = Callable[..., Puzzle]
+AutoGrader = Callable[..., Union[str,bool]]
+
 
 # We aren't using this class currently
 # class CommandOutput: # TODO
