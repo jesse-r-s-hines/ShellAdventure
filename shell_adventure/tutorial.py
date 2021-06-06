@@ -277,7 +277,7 @@ class Tutorial:
 
     def undo(self):
         """ Undo the last step the student entered. Does nothing if there is nothing to undo. """
-        if len(self.undo_list) > 1: # The top image is current state
+        if self.can_undo(): # The top image is current state
             # TODO Refactor to remove duplication here
             self._conn_to_container.send( (Message.STOP,) )
             self._conn_to_container.close()
@@ -305,6 +305,10 @@ class Tutorial:
             # Set the puzzle solved state
             for puzzle, solved in zip(self.get_all_puzzles(), snapshot.puzzles_solved.values()): # The lists are in the same order
                 puzzle.solved = solved
+
+    def can_undo(self):
+        """ Returns true if can undo at least once, false otherwise. """
+        return len(self.undo_list) > 1
 
     def get_current_puzzles(self) -> List[Puzzle]:
         """ Returns a list of the currently unlocked puzzles. """

@@ -413,6 +413,7 @@ class TestIntegration:
             tutorial.commit() # Bash PROMPT_COMMAND would normally run a commit before first command
 
             assert len(tutorial.undo_list) == 1
+            assert not tutorial.can_undo()
             tutorial.undo() # Should do nothing since we have nothing to undo
             assert len(tutorial.undo_list) == 1
 
@@ -421,13 +422,15 @@ class TestIntegration:
             run_command(tutorial, "touch C\n")
             run_command(tutorial, "touch D\n")
             assert len(tutorial.undo_list) == 5
+            assert tutorial.can_undo()
 
             tutorial.undo()
             tutorial.undo()
             tutorial.undo()
             tutorial.undo()
             assert len(tutorial.undo_list) == 1
-            tutorial.undo() # Hit the bottom of the undo stack (only current state in the stack)
+            assert not tutorial.can_undo()
+            tutorial.undo() # Hit the bottom of the undo stack, nothing should happen (only current state in the stack)
             assert len(tutorial.undo_list) == 1
 
     def test_undo_sets_tutorial(self, tmp_path):
