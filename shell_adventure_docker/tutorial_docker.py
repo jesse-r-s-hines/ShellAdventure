@@ -18,17 +18,8 @@ class TutorialDocker:
     home: Path
     """ This is the folder that puzzle generators and checkers will be run in. Defaults to /home/student but can be changed for testing purposes. """
 
-    modules: Dict[str, ModuleType]
-    """ Puzzle modules mapped to their name. """
-
-    generators: Dict[str, Callable[[], Puzzle]]
-    """ All available puzzle generator functions mapped to their name. """
-
     puzzles: Dict[str, Puzzle]
     """ Puzzles in this tutorial, mapped to their id. """
-
-    random: RandomHelper
-    """ An instance of RandomHelper which will generate random names and such. """
 
     shell_pid: int
     """ The pid of the shell session the tutorial is connected to. """
@@ -37,19 +28,18 @@ class TutorialDocker:
         """ Create a tutorial. You need to call setup() afterwards to actually set and generate the puzzles etc. """
         # We don't really do anything in here, the tutorial is initialized in the "setup" method when we are actually sent the settings.
         self.home = None
-        self.random = None
-        self.modules = []
-        self.generators = {}
         self.puzzles = {}
         self.shell_pid: int = None
 
-    def _create_module(self, name: str, code: str) -> ModuleType:
+    @staticmethod
+    def _create_module(name: str, code: str) -> ModuleType:
         """ Constructs a module object from a string of python code. Executes the module. """
         module = ModuleType(name)
         exec(code, module.__dict__) # Uses funcs as globals.
         return module
 
-    def _get_generators(self, module: ModuleType):
+    @staticmethod
+    def _get_generators(module: ModuleType) -> Dict[str, Callable[[], Puzzle]]:
         """ Extracts puzzle generator functions from a module as a map of {name: func} """
         generators = {}
         for func_name, func in inspect.getmembers(module, inspect.isfunction):
@@ -59,18 +49,15 @@ class TutorialDocker:
 
         return generators
 
-    def _generate_puzzle(self, puzzle_generator: str) -> Puzzle:
+    def _generate_puzzle(self, generator: Callable[[], Puzzle]) -> Puzzle:
         """ Takes a puzzle generators and generates a puzzle from it. """
-        # TODO custom exception 
-        if puzzle_generator not in self.generators: raise Exception(f"Unknown puzzle generator {puzzle_generator}.")
-
         args = { # TODO add documentation for args you can take in generator function
             "home": File(self.home), # can't use home() since the user is actually root. #TODO add docs that File.home() doesn't work as expected. 
             "root": File("/"),
         }
 
         os.chdir(self.home) # Make sure generators are called with home as the cwd
-        puzzle: Puzzle = support.call_with_args(self.generators[puzzle_generator], args)
+        puzzle: Puzzle = support.call_with_args(generator, args)
         # TODO error checking
 
         return puzzle
@@ -85,30 +72,36 @@ class TutorialDocker:
         Returns the generated puzzles as a list.
         """
         self.home = Path(home).resolve()
-        self.random = RandomHelper(name_dictionary, content_sources)
         # Unfortunately we have to have some package level variables allow File methods to access the RandomHelper and TutorialDocker
         shell_adventure_docker._tutorial = self
-        shell_adventure_docker.rand = self.random
+        shell_adventure_docker.rand = RandomHelper(name_dictionary, content_sources)
 
         # Run setup scripts
         for script_type, script in setup_scripts:
             if script_type == ScriptType.PYTHON:
                 # This will execute the module. We don't need to keep it since we aren't going to use its functions
-                self._create_module("<string>", script) 
+                TutorialDocker._create_module("<string>", script) 
             else: # ScriptType.BASH
-                subprocess.run(["bash", "-c", script], check = True) # throw error if fails
+                subprocess.run(["bash", "-c", script], check = True) # throw error if fail
+
         # Load modules
-        self.modules = {name: self._create_module(name, code) for name, code in modules.items()}
+        modules_list = [TutorialDocker._create_module(name, code) for name, code in modules.items()]
 
         # Get puzzle generators from the modules
-        self.generators = {}
-        for module in self.modules.values(): 
-            self.generators.update( self._get_generators(module) )
+        generators: Dict[str, Callable[[], Puzzle]] = {}
+        for module in modules_list: 
+            generators.update( TutorialDocker._get_generators(module) )
 
-        puzzle_list = [self._generate_puzzle(gen) for gen in puzzles]
+        puzzle_list: List[Puzzle] = []
+        for gen_name in puzzles:
+            if gen_name not in generators:
+                raise Exception(f"Unknown puzzle generator {gen_name}.") # TODO custom exception 
+            puzzle_list.append(self._generate_puzzle(generators[gen_name]))
+
         self.puzzles = {p.id: p for p in puzzle_list}
 
-        self.shell_pid: int = None
+        # Reset rand after generation is complete. You can't use it during the tutorial since we don't restore it on undo
+        shell_adventure_docker.rand = None
 
         return puzzle_list
 

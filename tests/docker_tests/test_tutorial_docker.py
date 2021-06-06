@@ -53,13 +53,8 @@ class TestTutorialDocker:
         )
 
         assert shell_adventure_docker._tutorial is tutorial # should be set
-        assert shell_adventure_docker.rand is tutorial.random # _random should be set
+        assert shell_adventure_docker.rand == None # _random should be None after generation is complete
         assert File.home() == working_dir # File.home() should use tutorial home
-
-        assert set(tutorial.modules.keys()) == {"mypuzzles"}
-        assert {m.__name__ for m in tutorial.modules.values()} == {"mypuzzles"}
-
-        assert list(tutorial.generators.keys()) == ["mypuzzles.move"]
 
         [puzzle] = list(tutorial.puzzles.values())
         assert puzzle.question == "Rename A.txt to B.txt"
@@ -75,13 +70,10 @@ class TestTutorialDocker:
             puzzles = ["mypuzzles1.move", "mypuzzles2.move"],
         )
 
-        assert "mypuzzles1.move" in tutorial.generators
-        assert "mypuzzles2.move" in tutorial.generators
         assert len(tutorial.puzzles) == 2
 
     def test_empty(self, working_dir):
         tutorial = TestTutorialDocker._create_tutorial(working_dir, modules = {}, puzzles = [])
-        assert tutorial.modules == {}
         assert tutorial.puzzles == {}
 
     # TODO test module errors when I add that
@@ -98,7 +90,13 @@ class TestTutorialDocker:
                 puzzles = ["mypuzzles.not_a_puzzle"]
             )
         
-    def test_private_methods_arent_puzzles(self, working_dir):
+
+    def test_get_generators(self):
+        module = TutorialDocker._create_module("mypuzzles", SIMPLE_PUZZLES)
+        generators = TutorialDocker._get_generators(module)
+        assert list(generators.keys()) == ["mypuzzles.move"]
+
+    def test_private_methods_arent_puzzles(self):
         puzzles = dedent("""
             from shell_adventure_docker import *
             from os import system # Don't use the imported method as a puzzle.
@@ -115,8 +113,9 @@ class TestTutorialDocker:
                 )
         """)
 
-        tutorial = TestTutorialDocker._create_tutorial(working_dir, modules = {"mypuzzles": puzzles}, puzzles = [])
-        assert list(tutorial.generators.keys()) == ["mypuzzles.move"]
+        module = TutorialDocker._create_module("mypuzzles", puzzles)
+        generators = TutorialDocker._get_generators(module)
+        assert list(generators.keys()) == ["mypuzzles.move"]
 
     def test_solve_puzzle(self, working_dir):
         tutorial = TestTutorialDocker._create_tutorial(working_dir,
