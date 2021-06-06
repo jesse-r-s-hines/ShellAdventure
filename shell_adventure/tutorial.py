@@ -26,6 +26,12 @@ class PuzzleTree:
             for pt2 in pt:
                 yield pt2
 
+class Snapshot:
+    """ Represents a snapshot of the state of the tutorial, so we can restore it during undo. """
+    def __init__(self, image: Image, puzzle_solved: Dict[str, bool]):
+        self.image = image # Docker image
+        self.puzzle_solved = puzzle_solved # {puzzle_id: solved} # We need to undo solving a puzzle
+
 class Tutorial:
     """ Contains the information for a running tutorial. """
 
@@ -73,8 +79,8 @@ class Tutorial:
     end_time: datetime
     """ Time the tutorial ended. """
 
-    undo_list: List[Image]
-    """ A list of Docker commits that store the state after each command the student enters. """
+    undo_list: List[Snapshot]
+    """ A list of Snapshots that store the state after each command the student enters. """
 
     def __init__(self, config_file: PathLike):
         """
@@ -263,7 +269,8 @@ class Tutorial:
     def commit(self):
         """ Take a snapshot of the current state so we can use UNDO to get back to it. """
         image = self.container.commit()
-        self.undo_list.append(image)
+        puzzles = {p.id: p.solved for p in self.get_all_puzzles()}
+        self.undo_list.append( Snapshot(image, puzzles) )
 
     def get_current_puzzles(self) -> List[Puzzle]:
         """ Returns a list of the currently unlocked puzzles. """
