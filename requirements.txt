@@ -4,3 +4,4 @@ pyaml
 retry
 ttkthemes
 Pillow
+dill
