@@ -166,7 +166,9 @@ class Message(Enum):
     """ Get the path to the students current directory. Usage (GET_CWD,) """
     GET_FILES = 5
     """ Get files under a folder. Usage (GET_FILES, folder) """
-    MAKE_COMMIT = 6
+    RESTORE = 6
+    """ Restore from a snapshot after an UNDO. Like SETUP, but we don't regenerate the puzzles. Usage: (RESTORE, kwargs) """
+    MAKE_COMMIT = 7
     """ Make a Docker commit of the container so we can undo a command. """
 
 class ScriptType(Enum):

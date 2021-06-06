@@ -1,9 +1,10 @@
+from typing import List
 import pytest
 import shell_adventure_docker
 from shell_adventure_docker.tutorial_docker import TutorialDocker
 from shell_adventure_docker.file import File
-from shell_adventure.support import ScriptType
-import os, subprocess
+from shell_adventure.support import ScriptType, Puzzle
+import os, subprocess, pickle
 from textwrap import dedent;
 
 SIMPLE_PUZZLES = dedent("""
@@ -328,3 +329,19 @@ class TestTutorialDocker:
         output = working_dir / "output.txt"
         assert output.read_text().splitlines() == ['"/bin/bash"', 'python', 'generator']
         assert (output.owner(), output.group()) == ("root", "root")
+
+    def test_restore(self, working_dir):
+        tutorial = TestTutorialDocker._create_tutorial(working_dir,
+            modules = {"mypuzzles": SIMPLE_PUZZLES},
+            puzzles = ["mypuzzles.move"]
+        )
+        puzzles: List[Puzzle] = list(tutorial.puzzles.values())
+        puzzles = pickle.loads(pickle.dumps(puzzles)) # Emulate sending/receiving the puzzles
+        puz = puzzles[0].id
+
+        tutorial = TutorialDocker()
+        tutorial.restore(home = working_dir, puzzles = puzzles)
+
+        assert tutorial.solve_puzzle(puz) == (False, "Incorrect!")
+        os.system("mv A.txt B.txt")
+        assert tutorial.solve_puzzle(puz) == (True, "Correct!")

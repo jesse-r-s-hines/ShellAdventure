@@ -28,9 +28,9 @@ class PuzzleTree:
 
 class Snapshot:
     """ Represents a snapshot of the state of the tutorial, so we can restore it during undo. """
-    def __init__(self, image: Image, puzzle_solved: Dict[str, bool]):
+    def __init__(self, image: Image, puzzles_solved: Dict[str, bool]):
         self.image = image # Docker image
-        self.puzzle_solved = puzzle_solved # {puzzle_id: solved} # We need to undo solving a puzzle
+        self.puzzles_solved = puzzles_solved # {puzzle_id: solved} # We need to undo solving a puzzle
 
 class Tutorial:
     """ Contains the information for a running tutorial. """
@@ -252,6 +252,9 @@ class Tutorial:
             self.container.stop(timeout = 4)
             logs = self.container.logs()
             self.container.remove()
+
+            for snapshot in reversed(self.undo_list): # We can't delete an image that has images based on it so go backwards
+                self.docker_client.images.remove(image = snapshot.image.id)
             
             return logs.decode()
         else:
@@ -271,6 +274,37 @@ class Tutorial:
         image = self.container.commit("shell-adventure", f"undo-snaphost-{len(self.undo_list)}")
         puzzles = {p.id: p.solved for p in self.get_all_puzzles()}
         self.undo_list.append( Snapshot(image, puzzles) )
+
+    def undo(self):
+        """ Undo the last step the student entered. Does nothing if there is nothing to undo. """
+        if len(self.undo_list) > 1: # The top image is current state
+            # TODO Refactor to remove duplication here
+            self._conn_to_container.send( (Message.STOP,) )
+            self._conn_to_container.close()
+            # The container should stop itself, but wait until it does
+            self.container.stop(timeout = 4)
+            self.container.remove()
+
+            current_state = self.undo_list.pop() # Top of the list is the current state, which we will discard
+            self.docker_client.images.remove(image = current_state.image.id)
+
+            snapshot = self.undo_list[-1]
+
+            # Restart the tutorial. This will loose any running processes, and state in the tutorial. However, the only state we actually need
+            # is the puzzle list.
+            self.container = self._launch_container(snapshot.image, ["python3", "-m", "shell_adventure_docker.start"])
+            self._conn_to_container = retry_call(lambda: Client(support.conn_addr_to_container, authkey = support.conn_key), tries = 20, delay = 0.2)
+    
+            tmp_tree = PuzzleTree("", dependents=self.puzzles) # Put puzzles under a dummy node so we can iterate  it.
+            self._conn_to_container.send((Message.RESTORE, {
+                "home": "/home/student",
+                "puzzles": [pt.puzzle for pt in tmp_tree],
+            }))
+            self._conn_to_container.recv() # Wait until complete
+
+            # Set the puzzle solved state
+            for puzzle, solved in zip(self.get_all_puzzles(), snapshot.puzzles_solved.values()): # The lists are in the same order
+                puzzle.solved = solved
 
     def get_current_puzzles(self) -> List[Puzzle]:
         """ Returns a list of the currently unlocked puzzles. """

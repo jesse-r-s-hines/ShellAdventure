@@ -105,6 +105,19 @@ class TutorialDocker:
 
         return puzzle_list
 
+    def restore(self, home: PathLike, puzzles: List[Puzzle]):
+        """
+        Restore the tutorial after we've loading a snapshot. This is for usage after an undo. Docker commit keeps all filesystem state, but
+        we have to restart the container and processes. We don't need to regenerate the puzzles, but we do need to resend the puzzle objects so
+        we can use the checkers.
+        """
+        # TODO Refactor this to not be so duplicated
+        self.home = Path(home).resolve()
+        shell_adventure_docker._tutorial = self
+        self.puzzles = {p.id: p for p in puzzles}
+        for puz in self.puzzles.values(): puz.extract() # Convert the pickled checker back into a function
+
+
     def solve_puzzle(self, puzzle_id: str, flag: str = None) -> Tuple[bool, str]:
         """
         Tries to solve the puzzle with the given id.
@@ -178,13 +191,18 @@ class TutorialDocker:
 
         with Listener(support.conn_addr_to_container, authkey = support.conn_key) as listener:
             with listener.accept() as conn:
-                # Receive the initial SETUP message.
+                # Receive the initial setup message.
+                actions = { # Map message type to a function that will be called. The return of the lambda will be sent back to host.
+                    Message.SETUP: self.setup,
+                    Message.RESTORE: self.restore,
+                }
                 message, *args = conn.recv()
-                if message != Message.SETUP: raise Exception(f"Expected initial SETUP message, got {message}.") # TODO custom exception
-                conn.send( self.setup(**args[0]) )
+                if message not in actions: raise Exception(f"Expected initial SETUP or RESTORE message, got {message}.")
+                conn.send(actions[message](**args[0]))
+
 
                 actions = {
-                    # Map message type to a function that will be called. The return of the lambda will be sent back to host. 
+                    # Map message type to a function that will be called. The return of the lambda will be sent back to host.
                     Message.CONNECT_TO_SHELL: self.connect_to_shell,
                     Message.SOLVE: self.solve_puzzle,
                     Message.GET_STUDENT_CWD: lambda: PurePosixPath(self.student_cwd()),
@@ -198,4 +216,5 @@ class TutorialDocker:
                     if message == Message.STOP:
                         return
                     else: # call the lambda with *args, send the return value.
-                        conn.send(actions[message](*args))
+                        if message not in actions: raise Exception(f"Unrecognized message {message}.")
+                        conn.send(actions[message](*args)) 
