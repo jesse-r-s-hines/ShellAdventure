@@ -5,8 +5,8 @@ as part of the shell_adventure package.
 """
 
 from __future__ import annotations
-from typing import Union, Callable, List, Dict, Any, Set, ClassVar
-import os, inspect, uuid, inspect
+from typing import Union, Callable, List, Dict, Any, Set, ClassVar, cast
+import os, uuid, inspect, dill
 from pathlib import Path
 from enum import Enum
 
@@ -30,7 +30,12 @@ class Puzzle:
 
     score: int
 
-    _checker: AutoGrader
+    _checker: Union[AutoGrader, bytes]
+    """
+    The function that will be used to autograde the puzzle.
+    When a Puzzle is sent to the host, _checker will be left as pickled version of the checker.
+    We don't want to unpickle the checker on the host since there may be modules on the client that aren't on the host.
+    """
 
     solved: bool
     """ Whether the puzzle is solved yet """
@@ -83,6 +88,8 @@ class Puzzle:
         Tries to solve the puzzle, passes the given args to the checker lambda.
         Returns (success, feedback) and sets the Puzzle as solved if the checker succeeded.
         """
+        if isinstance(self._checker, bytes):
+            raise Exception("You need to extract() the Puzzle before you can call the checker.")
         checker_result = call_with_args(self._checker, args)
 
         solved = False
@@ -100,10 +107,21 @@ class Puzzle:
         return (solved, feedback)
 
     def __getstate__(self):
-        # Can't pickle lambdas, but we don't need it host side.
+        # We have to use dill to pickle lambdas. We won't unpickle it on the host, since we don't need to call it and there may
+        # be modules in the container that aren't on the host causing unpickle to fail. We do need to be able to send the pickled
+        # lambda back to the container after an undo
         data = self.__dict__.copy()
-        data["_checker"] = None
+        if not isinstance(self._checker, bytes):
+            data["_checker"] = dill.dumps(self._checker)
         return data
+
+    def extract(self): # TODO I need to find a cleaner way of doing this
+        """
+        We don't want to unpickle the checker on the host, but we need to be able to send it back to the container after a undo.
+        Calling extract() will unpickle the checker after we have received a puzzle from the host.
+        """
+        if isinstance(self._checker, bytes):
+            self._checker = dill.loads(self._checker)
 
 PuzzleGenerator = Callable[..., Puzzle]
 AutoGrader = Callable[..., Union[str,bool]]

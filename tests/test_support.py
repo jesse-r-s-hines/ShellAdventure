@@ -1,5 +1,6 @@
+from typing import Callable
 import pytest
-from shell_adventure.support import Puzzle, call_with_args
+from shell_adventure.support import AutoGrader, Puzzle, call_with_args
 import pickle
 
 class TestSupport:
@@ -31,20 +32,40 @@ class TestSupport:
         with pytest.raises(Exception, match="bool or str expected"):
             puzzle.solve({})
 
-    def test_pickle_puzzle(self, tmp_path):
-        puzzle = Puzzle("Solve this puzzle.", checker = lambda flag: False, score = 1)
-        puzzle.solved = True
+    def test_pickle_puzzle(self):
+        old_puzzle = Puzzle("Solve this puzzle.", checker = lambda flag: False, score = 2)
+        old_puzzle.solved = True
 
-        data = pickle.dumps(puzzle)
+        data = pickle.dumps(old_puzzle)
         new_puzzle: Puzzle = pickle.loads(data)
 
-        assert puzzle.question == new_puzzle.question
-        assert puzzle.score == new_puzzle.score
-        assert puzzle.solved == new_puzzle.solved
-        assert puzzle.id == new_puzzle.id
-        assert puzzle.checker_args == {"flag"}
-        assert new_puzzle._checker == None # Can't pickle lambdas
-        assert puzzle._checker != None # Doesn't affect original
+        assert old_puzzle.question == new_puzzle.question
+        assert old_puzzle.score == new_puzzle.score
+        assert old_puzzle.solved == new_puzzle.solved
+        assert old_puzzle.id == new_puzzle.id
+        assert old_puzzle.checker_args == {"flag"}
+
+        assert isinstance(old_puzzle._checker, Callable) # Doesn't affect original
+
+        # Leaves the lambda as bytes for now, will load it if we use the puzzle
+        assert isinstance(new_puzzle._checker, bytes)
+        new_puzzle.extract()
+        assert isinstance(new_puzzle._checker, Callable)
+
+        assert new_puzzle.solve({"flag": "a"}) == (False, "Incorrect!")
+
+    def test_pickle_puzzle_already_pickled(self):
+        old_puzzle = Puzzle("Solve this puzzle.", checker = lambda flag: False)
+
+        new_puzzle: Puzzle = pickle.loads(pickle.dumps(old_puzzle))
+        new_puzzle2: Puzzle = pickle.loads(pickle.dumps(new_puzzle))
+        # Pickling twice does not double pickle the lambda
+        new_puzzle2.extract()
+        assert isinstance(new_puzzle2._checker, Callable)
+
+        # Calling extract twice does nothing
+        new_puzzle2.extract()
+        assert isinstance(new_puzzle2._checker, Callable)
 
     def test_call_with_args(self):
         args = {"a": 1, "b": 2, "c": 3}
