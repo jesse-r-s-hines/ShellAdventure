@@ -332,6 +332,11 @@ class Tutorial:
         self._conn_to_container.send( (Message.SOLVE, puzzle.id, flag) )
         (solved, feedback) = self._conn_to_container.recv()
         puzzle.solved = solved
+
+        # Update latest snapshot
+        if len(self.undo_list) > 0:
+            self.undo_list[-1].puzzles_solved[puzzle.id] = solved
+
         return (solved, feedback)
 
     def connect_to_shell(self, name: str) -> int:
