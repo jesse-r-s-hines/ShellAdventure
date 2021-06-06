@@ -312,6 +312,11 @@ class Tutorial:
         if self.can_undo(): # The top image is current state
             self._load_snapshot(-2) # Top of stack is current state
 
+    def restart(self):
+        """ Restart the tutorial to its initial state. Does not regenerate the puzzles. """
+        if self.can_undo():
+            self._load_snapshot(0)
+
     def can_undo(self):
         """ Returns true if can undo at least once, false otherwise. """
         return len(self.undo_list) > 1

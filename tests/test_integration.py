@@ -461,3 +461,34 @@ class TestIntegration:
             assert tutorial.solve_puzzle(puz) == (True, "Correct!")
             tutorial.undo()
             assert tutorial.solve_puzzle(puz) == (True, "Correct!") # Still has _tutorial set
+
+
+    def test_redo(self, tmp_path):
+        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
+            "config.yaml": """
+                modules:
+                    - puzzles.py
+                puzzles:
+                    - puzzles.move:
+                    - puzzles.move2
+            """,
+            "puzzles.py": PUZZLES,
+        })
+
+        with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
+            tutorial.commit() # Bash PROMPT_COMMAND would normally run a commit before first command
+
+            puz1 = tutorial.get_all_puzzles()[0]
+            puz2 = tutorial.get_all_puzzles()[1]
+
+            run_command(tutorial, "mv A.txt B.txt\n")
+            assert tutorial.solve_puzzle(puz1) == (True, "Correct!")
+
+            run_command(tutorial, "mv C.txt D.txt\n")
+            assert tutorial.solve_puzzle(puz2) == (True, "Correct!")
+
+            tutorial.restart()
+            assert len(tutorial.undo_list) == 1
+            assert (puz1.solved, puz2.solved) == (False, False)
+            assert file_exists(tutorial, "A.txt")
+            assert file_exists(tutorial, "C.txt")
