@@ -57,10 +57,10 @@ class VerticalScrolledFrame(ttk.Frame):
         # This seems to make the canvas shrink to fit if the content is smaller than requested hight.
         # But you still have to back the VerticalScroll with expand = False. I'm not sure how to fix it
         # so that it will expand.
-        if self.interior.winfo_reqheight() < self.canvas.winfo_height():
-            self.canvas.config(height = self.interior.winfo_reqheight())
-        elif self.canvas.winfo_height() != self.winfo_height():
-            self.canvas.config(height = self.winfo_height())
+        # if self.interior.winfo_reqheight() < self.canvas.winfo_height():
+        #     self.canvas.config(height = self.interior.winfo_reqheight())
+        # elif self.canvas.winfo_height() != self.winfo_height():
+        #     self.canvas.config(height = self.winfo_height())
 
 
     def _configure_canvas(self, event):
@@ -69,6 +69,12 @@ class VerticalScrolledFrame(ttk.Frame):
             # Jesse: Changing this to from `self.winfo_width` to `event.width` seems to fix a minor
             #   spacing issue where the scrollbar was covering part of the buttons.
             self.canvas.itemconfigure(self.interior_id, width=event.width)
+
+        if self.interior.winfo_reqheight() < event.height:
+            self.canvas.itemconfigure(self.interior_id, height=event.width)
+        else:
+            self.canvas.itemconfigure(self.interior_id, height = None)
+
         self._configure_interior()
 
     # This can now handle either windows or linux platforms
