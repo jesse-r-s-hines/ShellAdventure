@@ -59,8 +59,4 @@ COPY docker_files/.bashrc /home/student/.bashrc
 ENV PYTHONPATH=/usr/local
 ENV PROMPT_COMMAND="python3 -m shell_adventure_docker.commit_container"
 
-COPY shell_adventure_docker /usr/local/shell_adventure_docker/
-# There doesn't seem to be a way to conditionally copy this only when testing..
-COPY tests/docker_tests /usr/local/shell_adventure_docker_tests/
-
 CMD ["bash"]
