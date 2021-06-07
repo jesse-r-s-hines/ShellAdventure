@@ -6,7 +6,7 @@ as part of the shell_adventure package.
 
 from __future__ import annotations
 from typing import Union, Callable, List, Dict, Any, Set, ClassVar, cast
-import os, uuid, inspect, dill
+import os, time, uuid, inspect, dill
 from pathlib import Path
 from enum import Enum
 
@@ -189,3 +189,16 @@ def call_with_args(func: Callable[..., Any], args: Dict[str, Any]):
     # Only pass the args that the checker function has
     args_to_pass = {param: args[param] for param in func_params}
     return func(**args_to_pass)
+
+def retry(func: Callable[[], Any], tries = 16, delay = 0.25):
+    """
+    Retries the given function until it succeeds without an error.
+    tries is the maximum number of tries. If <= 0, infinite tries.
+    delay is delay betwen tries
+    """
+    for attempt in range(tries - 1):
+        try:
+            return func()
+        except:
+            time.sleep(delay)
+    return func() # Last time just let the errors get raised.

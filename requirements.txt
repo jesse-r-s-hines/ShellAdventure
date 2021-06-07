@@ -1,7 +1,6 @@
 docker
 six # TODO Required for "docker" module. We can remove this after the next release. See https://github.com/docker/docker-py/issues/2842
 pyaml
-retry
 ttkthemes
 Pillow
 dill

@@ -7,11 +7,10 @@ from threading import Thread
 from docker.models.images import Image
 from docker.models.containers import Container
 from pathlib import Path, PurePosixPath;
-from retry.api import retry_call
 from datetime import datetime, timedelta
 from . import PKG_PATH
 from shell_adventure_docker import support
-from shell_adventure_docker.support import Puzzle, PathLike, Message, ScriptType
+from shell_adventure_docker.support import Puzzle, PathLike, Message, ScriptType, retry
 from . import launch_container
 
 class PuzzleTree:
@@ -176,7 +175,7 @@ class Tutorial:
 
         try:
             # retry the connection a few times since the container may take a bit to get started.
-            self._conn_to_container = retry_call(lambda: Client(support.conn_addr_to_container, authkey = support.conn_key), tries = 20, delay = 0.2)
+            self._conn_to_container = retry(lambda: Client(support.conn_addr_to_container, authkey = support.conn_key), tries = 20, delay = 0.2)
 
             # Move resources into container
             for src, dst in self.resources.items():
@@ -277,7 +276,7 @@ class Tutorial:
         # Restart the tutorial. This will loose any running processes, and state in the tutorial. However, the only state we actually need
         # is the puzzle list.
         self.container = launch_container.launch(snapshot.image)
-        self._conn_to_container = retry_call(lambda: Client(support.conn_addr_to_container, authkey = support.conn_key), tries = 20, delay = 0.2)
+        self._conn_to_container = retry(lambda: Client(support.conn_addr_to_container, authkey = support.conn_key), tries = 20, delay = 0.2)
 
         tmp_tree = PuzzleTree("", dependents=self.puzzles) # Put puzzles under a dummy node so we can iterate  it.
         self._conn_to_container.send((Message.RESTORE, {

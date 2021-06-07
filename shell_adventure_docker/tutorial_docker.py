@@ -4,9 +4,8 @@ from pathlib import Path, PurePosixPath;
 import subprocess, os
 from multiprocessing.connection import Listener
 import inspect
-from retry.api import retry_call
 from . import support
-from .support import Puzzle, PathLike, Message, PuzzleGenerator, ScriptType
+from .support import Puzzle, PathLike, Message, PuzzleGenerator, ScriptType, retry
 from .file import File
 from .permissions import change_user
 from .random_helper import RandomHelper
@@ -137,7 +136,7 @@ class TutorialDocker:
         """ Finds a running shell session with the given name and stores it's pid. Returns the pid. """
         try:
             # retry a few times since exec'ing into the container can take a bit, or something else may have spun up its own temporary bash session
-            self.shell_pid = retry_call(lambda: int(subprocess.check_output(["pidof", name])), tries=40, delay=0.2) # type: ignore
+            self.shell_pid = retry(lambda: int(subprocess.check_output(["pidof", name])), tries=40, delay=0.2) # type: ignore
         except subprocess.CalledProcessError:
             raise ProcessLookupError(f'No process named "{name}" found.')
         except ValueError: # int parse fails because more than one pid was returned

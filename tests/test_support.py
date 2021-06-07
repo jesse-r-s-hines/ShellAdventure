@@ -1,5 +1,6 @@
 from typing import Callable
 import pytest
+from shell_adventure_docker import support
 from shell_adventure_docker.support import AutoGrader, Puzzle, call_with_args
 import pickle
 
@@ -88,3 +89,15 @@ class TestSupport:
         func = lambda c: True
         with pytest.raises(Exception, match = r'Unrecognized parameters \(c\), expected some combination of \([ab], [ab]\)\.'): # TODO this should be a custom error
             call_with_args(func, args)
+
+    def test_retry(self):
+        count = 0
+        def func():
+            nonlocal count
+            count += 1
+            raise Exception
+
+        with pytest.raises(Exception):
+            support.retry(func, tries = 5, delay = 0)
+
+        assert count == 5

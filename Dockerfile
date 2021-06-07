@@ -35,7 +35,7 @@ RUN apt-get update && \
     && \
     # Install Python
     apt-get install -y python3 python-is-python3 python3-pip && \
-    python -m pip install retry python-lorem dill && \
+    python -m pip install python-lorem dill && \
     # Remove the cache made by apt update and other files to save space
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
