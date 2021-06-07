@@ -512,3 +512,34 @@ class TestIntegration:
             assert (puz1.solved, puz2.solved) == (False, False)
             assert file_exists(tutorial, "A.txt")
             assert file_exists(tutorial, "C.txt")
+
+    def test_undo_pickle_failure(self, tmp_path):
+        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
+            "config.yaml": """
+                modules:
+                    - puzzles.py
+                puzzles:
+                    - puzzles.unpicklable
+                undo: true
+            """,
+            "puzzles.py": dedent("""
+                from shell_adventure_docker import *
+
+                def unpicklable():
+                    gen = (i for i in range(1, 10))
+                    return Puzzle(
+                        question = f"Can't pickle generators",
+                        checker = lambda: gen == None,
+                    )
+            """)  
+        })
+
+        with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
+            puz = tutorial.get_all_puzzles()[0]
+            assert puz.checker == None
+
+            assert tutorial.undo_enabled == False
+            assert len(tutorial.undo_list) == 0
+
+            tutorial.commit()
+            assert len(tutorial.undo_list) == 0 # Commit does nothing

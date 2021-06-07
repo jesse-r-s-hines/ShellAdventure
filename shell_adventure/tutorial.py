@@ -209,6 +209,9 @@ class Tutorial:
             for pt, puzzle in zip(tmp_tree, generated_puzzles):
                 pt.puzzle = puzzle
 
+            if any(map(lambda p: p.checker == None, generated_puzzles)): # Check if any puzzle checker failed to pickle
+                self.undo_enabled = False # TODO raise warning if undo is disabled because of pickling error
+
         except BaseException as e: # BaseException includes KeyboardInterrupt
             logs = self.stop() # If an error occurs in __enter__, __exit__ isn't called.
             raise TutorialError(f"{type(e).__name__}: {e}", container_logs = logs) from e

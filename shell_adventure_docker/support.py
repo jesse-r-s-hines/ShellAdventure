@@ -81,12 +81,17 @@ class Puzzle:
                             f'checker functions can only have some combination of parameters ({", ".join(Puzzle.allowed_checker_args)}).')
 
     def __getstate__(self):
-        # We have to use dill to pickle lambdas. We won't unpickle it on the host, since we don't need to call it and there may
-        # be modules in the container that aren't on the host causing unpickle to fail. We do need to be able to send the pickled
-        # lambda back to the container after an undo
+        """
+        We have to use dill to pickle lambdas. We won't unpickle it on the host, since we don't need to call it and there may
+        be modules in the container that aren't on the host causing unpickle to fail. We do need to be able to send the pickled
+        lambda back to the container after an undo. If the checker fails to pickle, it will be left as None
+        """
         data = self.__dict__.copy()
         if not isinstance(self.checker, bytes):
-            data["checker"] = dill.dumps(self.checker)
+            try:
+                data["checker"] = dill.dumps(self.checker, recurse = True)
+            except: # If pickling fails, checker is None
+                data["checker"] = None
         return data
 
     def extract(self): # TODO I need to find a cleaner way of doing this
