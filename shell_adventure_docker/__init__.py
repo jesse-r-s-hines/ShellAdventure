@@ -4,6 +4,9 @@ from .file import File
 from .permissions import Permissions, change_user
 from .random_helper import RandomHelper as _RandomHelper # private import
 from .tutorial_docker import TutorialDocker as _TutorialDocker # private import
+from pathlib import Path as _Path # private import
+
+PKG_PATH = _Path(__path__[0]) # type: ignore  # mypy issue #1422
 
 rand: _RandomHelper = None # TODO rename rand?
 """
