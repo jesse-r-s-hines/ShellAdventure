@@ -5,3 +5,4 @@ retry
 ttkthemes
 Pillow
 dill
+deepmerge

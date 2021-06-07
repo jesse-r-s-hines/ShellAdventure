@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 from . import PKG_PATH
 from shell_adventure_docker import support
 from shell_adventure_docker.support import Puzzle, PathLike, Message, ScriptType
+from . import launch_container
 
 class PuzzleTree:
     """ A tree node so that puzzles can be unlocked after other puzzles are solved. """
@@ -118,7 +119,7 @@ class Tutorial:
         self.content_sources = [Path(self.data_dir, f) for f in config.get("content_sources", [])] # relative to config file
 
         self.docker_client = docker.from_env()
-        self.container = None
+        self.container: Container = None
         self._conn_to_container: Connection = None # Connection to send messages to docker container.
         self._listener_thread: Thread = None # Thread running a Listener that will trigger the docker commits.
                                              # The Docker container should send a signal after every bash command the student enters.
@@ -150,22 +151,6 @@ class Tutorial:
 
         return puzzle_trees
 
-    def _launch_container(self, image: Union[str, Image], command: Union[List[str], str]) -> Container:
-        """ Launches the given container with the given command. Returns the container. """
-        container = self.docker_client.containers.run(image,
-            user = "root",
-            network_mode = "host",
-            command = command,
-            cap_add = [
-                "CAP_SYS_PTRACE", # Allows us to call `pwdx` to get working directory of student
-            ],
-            tty = True,
-            stdin_open = True,
-            # remove = True, # Auto remove makes getting output logs difficult. We'll have to remove the container ourselves.
-            detach = True,
-        )
-        return container
-    
     def _listen(self):
         """
         Listen for the docker container to tell us when a command has been entered.
@@ -187,10 +172,7 @@ class Tutorial:
         In general you should use a tutorial as a context manager instead to start/stop the tutorial, which will
         guarantee that the container gets cleaned up.
         """
-
-        # We can't use "with" since the caller needs to be able to use the tutorial object before it is closed.
-
-        self.container = self._launch_container('shell-adventure', ["python3", "-m", "shell_adventure_docker.start"])
+        self.container = launch_container.launch('shell-adventure')
 
         try:
             # retry the connection a few times since the container may take a bit to get started.
@@ -294,7 +276,7 @@ class Tutorial:
 
         # Restart the tutorial. This will loose any running processes, and state in the tutorial. However, the only state we actually need
         # is the puzzle list.
-        self.container = self._launch_container(snapshot.image, ["python3", "-m", "shell_adventure_docker.start"])
+        self.container = launch_container.launch(snapshot.image)
         self._conn_to_container = retry_call(lambda: Client(support.conn_addr_to_container, authkey = support.conn_key), tries = 20, delay = 0.2)
 
         tmp_tree = PuzzleTree("", dependents=self.puzzles) # Put puzzles under a dummy node so we can iterate  it.

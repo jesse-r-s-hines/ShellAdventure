@@ -1,0 +1,46 @@
+"""
+This module contains methods for launching the shell-adventure container.
+"""
+from typing import Union, List, Tuple
+import docker, shutil, deepmerge
+from docker.models.images import Image
+from docker.models.containers import Container
+from tempfile import TemporaryDirectory
+from pathlib import Path
+import shell_adventure_docker
+
+def launch(image: Union[str, Image], **container_options) -> Container:
+    """
+    Launches the given container and sets it up for a ShellAdventure tutorial. Puts all the shell-adventure files in
+    a volume and sets all the other settings as needed.
+    You can specify extra options which will be merged in with the default options to Container.run()
+    Returns (container, volume). Make sure to clean up the container and volume whe you are done with them. """
+    container_options = deepmerge.always_merger.merge(dict(
+        volumes = {shell_adventure_docker.PKG_PATH: {'bind': '/usr/local/shell_adventure_docker', 'mode': 'ro'}},
+        user = "root",
+        network_mode = "host",
+        command = "python3 -m shell_adventure_docker.start", # str so merge doesn't merge lists when we override command
+        cap_add = [
+            "CAP_SYS_PTRACE", # Allows us to call `pwdx` to get working directory of student
+        ],
+        tty = True,
+        stdin_open = True,
+        # remove = True, # Auto remove makes getting output logs difficult. We'll have to remove the container ourselves.
+        detach = True,
+    ), container_options)
+
+    container = docker.from_env().containers.run(image, **container_options)
+    return container
+
+# def _make_volume() -> TemporaryDirectory:
+#     """
+#     Moves files needed into a tmp directory that we can use as a Docker volume. Returns the volume.
+#     """
+#     volume = TemporaryDirectory(prefix = "shell-adventure-")
+#     vol_path = Path(volume.name)
+
+#     # Copy files into the volume (we don't want to give the container access to the real files)
+#     shutil.copytree(PKG.parent / "shell_adventure_docker", vol_path / "shell_adventure_docker",
+#                     ignore = shutil.ignore_patterns("__pycache__"))
+
+#     return volume

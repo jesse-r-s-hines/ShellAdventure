@@ -10,9 +10,8 @@ mypy shell_adventure shell_adventure_docker tests
 # See https://docs.pytest.org/en/documentation-restructure/how-to/usage.html#possible-exit-codes for meaning of pytest exit codes
 echo -e "\n\n"
 echo "Main tests"
-.venv/bin/python3.7 -m pytest --cov --cov-report term
+.venv/bin/python3.7 -m pytest
 
-TEST_DIR=/usr/local/shell_adventure_docker_tests
 echo -e "\n\n"
 echo "Tests in Docker container"
-docker run -t --rm --user="root" --workdir="$TEST_DIR" shell-adventure:test pytest --cov=shell_adventure_docker --cov-report term "$TEST_DIR"
+.venv/bin/python3.7 -m tests.run_docker_tests
