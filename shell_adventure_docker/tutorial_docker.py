@@ -5,8 +5,8 @@ import subprocess, os
 from multiprocessing.connection import Listener
 import inspect
 from retry.api import retry_call
-from shell_adventure import support
-from shell_adventure.support import Puzzle, PathLike, Message, PuzzleGenerator, ScriptType
+from . import support
+from .support import Puzzle, PathLike, Message, PuzzleGenerator, ScriptType
 from .file import File
 from .permissions import change_user
 from .random_helper import RandomHelper

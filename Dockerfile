@@ -60,8 +60,6 @@ ENV PYTHONPATH=/usr/local
 ENV PROMPT_COMMAND="python3 -m shell_adventure_docker.commit_container"
 
 COPY shell_adventure_docker /usr/local/shell_adventure_docker/
-# support code is shared between container and host.
-COPY shell_adventure/support.py /usr/local/shell_adventure/support.py
 # There doesn't seem to be a way to conditionally copy this only when testing..
 COPY tests/docker_tests /usr/local/shell_adventure_docker_tests/
 

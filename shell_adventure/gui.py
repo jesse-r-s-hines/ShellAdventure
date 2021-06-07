@@ -8,8 +8,8 @@ from ttkthemes import ThemedTk
 import traceback
 from PIL import ImageTk, Image
 from .scrolled_frame import VerticalScrolledFrame
-from . import tutorial
-from .support import Puzzle, PKG
+from . import tutorial, PKG_PATH
+from shell_adventure_docker.support import Puzzle
 
 class WrappingLabel(ttk.Label):
     """Label that automatically adjusts the wrap to the size"""
@@ -81,7 +81,7 @@ class GUI(ThemedTk):
         # fetch icons files. We have to save to a field or tkinter will lose the images somehow.
         icons = {}
         for key, file in icon_files.items():
-            img = Image.open(PKG / "icons" / file).resize((16, 16), Image.ANTIALIAS)
+            img = Image.open(PKG_PATH / "icons" / file).resize((16, 16), Image.ANTIALIAS)
             icons[key] = ImageTk.PhotoImage(img)
         return icons
 
@@ -96,7 +96,7 @@ class GUI(ThemedTk):
         # fetch icons files. We have to save to a field or tkinter will lose the images somehow.
         file_icons = {}
         for key, file in icon_files.items():
-            img = Image.open(PKG / "icons" / file).resize((16, 16), Image.ANTIALIAS)
+            img = Image.open(PKG_PATH / "icons" / file).resize((16, 16), Image.ANTIALIAS)
             file_icons[key] = ImageTk.PhotoImage(img)
         return file_icons
 

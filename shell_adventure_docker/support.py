@@ -20,9 +20,6 @@ conn_addr_from_container = ('localhost', 6001)
 conn_key = b'shell_adventure'
 """The authkey that will be used in communication between the Docker code and the host app. """
 
-PKG = Path(__file__).parent.resolve()
-"""Absolute Path to the shell_adventure package."""
-
 class Puzzle:
     """ Represents a single puzzle in the tutorial. """
 

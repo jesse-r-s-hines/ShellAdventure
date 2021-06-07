@@ -1,5 +1,5 @@
 # imports will be part of the package namespace, so you can use shell_adventure_docker.File, etc
-from shell_adventure.support import Puzzle
+from .support import Puzzle
 from .file import File
 from .permissions import Permissions, change_user
 from .random_helper import RandomHelper as _RandomHelper # private import

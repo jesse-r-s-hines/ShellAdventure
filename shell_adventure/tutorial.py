@@ -9,8 +9,9 @@ from docker.models.containers import Container
 from pathlib import Path, PurePosixPath;
 from retry.api import retry_call
 from datetime import datetime, timedelta
-from . import support
-from .support import Puzzle, PathLike, Message, ScriptType, PKG
+from . import PKG_PATH
+from shell_adventure_docker import support
+from shell_adventure_docker.support import Puzzle, PathLike, Message, ScriptType
 
 class PuzzleTree:
     """ A tree node so that puzzles can be unlocked after other puzzles are solved. """
@@ -111,7 +112,7 @@ class Tutorial:
         resources = config.get("resources", {})
         self.resources = {Path(self.data_dir, src): PurePosixPath("/home/student", dst) for src, dst in resources.items()}
 
-        name_dictionary = config.get("name_dictionary", PKG / "resources/name_dictionary.txt")
+        name_dictionary = config.get("name_dictionary", PKG_PATH / "resources/name_dictionary.txt")
         self.name_dictionary = Path(self.data_dir, name_dictionary) # relative to config file
 
         self.content_sources = [Path(self.data_dir, f) for f in config.get("content_sources", [])] # relative to config file

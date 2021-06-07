@@ -3,7 +3,7 @@ import pytest
 import shell_adventure_docker
 from shell_adventure_docker.tutorial_docker import TutorialDocker
 from shell_adventure_docker.file import File
-from shell_adventure.support import ScriptType, Puzzle
+from shell_adventure_docker.support import ScriptType, Puzzle
 import os, subprocess, pickle
 from textwrap import dedent;
 
