@@ -153,6 +153,7 @@ class TestTutorialDocker:
 
         with pytest.raises(Exception, match="bool or str expected"):
             tutorial.solve_puzzle(puzzle.id)
+    # TODO test other puzzle errors
 
     def test_solve_puzzle_flag(self, working_dir):
         puzzle = dedent("""
@@ -174,7 +175,26 @@ class TestTutorialDocker:
         assert tutorial.solve_puzzle(puzzle.id, "not ok") == (False, "Incorrect!")
         assert tutorial.solve_puzzle(puzzle.id, "OK") == (True, "Correct!")
 
-    # TODO test other puzzle errors
+    def test_solve_puzzle_twice(self, working_dir):
+        module = dedent("""
+            from shell_adventure_docker import *
+            def puz():
+                return Puzzle(question = f"Say OK", checker = lambda flag: flag == "OK")
+        """)
+        tutorial = TestTutorialDocker._create_tutorial(working_dir,
+            modules = {"mypuzzles": module},
+            puzzles = ["mypuzzles.puz"]
+        )
+        [puzzle] = list(tutorial.puzzles.values())
+
+        assert tutorial.solve_puzzle(puzzle.id, "OK") == (True, "Correct!")
+        assert puzzle.solved == True
+
+        # Solving a puzzle twice resets the solved state.
+        assert tutorial.solve_puzzle(puzzle.id, "NOT OK") == (False, "Incorrect!")
+        assert puzzle.solved == False
+        
+        assert puzzle.solved == False
 
     def test_puzzle_func_args(self, working_dir):
         puzzles = dedent(f"""

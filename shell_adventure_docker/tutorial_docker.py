@@ -1,4 +1,4 @@
-from typing import List, Tuple, Dict, Any
+from typing import Callable, List, Tuple, Dict, Any, cast
 from types import ModuleType
 from pathlib import Path, PurePosixPath;
 import subprocess, os
@@ -130,7 +130,21 @@ class TutorialDocker:
             "flag": flag,
             "cwd": self.student_cwd(),
         }
-        return puzzle.solve(args)
+        checker_result = support.call_with_args(cast(Callable, puzzle.checker), args)
+
+        solved = False
+        if checker_result == True:
+            solved = True
+            feedback = "Correct!"
+        elif checker_result == False:
+            feedback = "Incorrect!"
+        elif isinstance(checker_result, str):
+            feedback = checker_result
+        else:
+            raise Exception(f'Checker function for puzzle "{puzzle.question}" returned {type(checker_result).__name__}, bool or str expected.')
+
+        puzzle.solved = solved
+        return (solved, feedback)
 
     def connect_to_shell(self, name: str) -> int:
         """ Finds a running shell session with the given name and stores it's pid. Returns the pid. """

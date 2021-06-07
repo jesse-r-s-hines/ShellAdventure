@@ -27,10 +27,10 @@ class Puzzle:
 
     score: int
 
-    _checker: Union[AutoGrader, bytes]
+    checker: Union[AutoGrader, bytes]
     """
     The function that will be used to autograde the puzzle.
-    When a Puzzle is sent to the host, _checker will be left as pickled version of the checker.
+    When a Puzzle is sent to the host, checker will be left as pickled version of the checker.
     We don't want to unpickle the checker on the host since there may be modules on the client that aren't on the host.
     """
 
@@ -72,44 +72,21 @@ class Puzzle:
 
         self.question = question
         self.score = score
-        self._checker = checker # type: ignore # MyPy fusses about "Cannot assign to a method"
+        self.checker = checker # type: ignore # MyPy fusses about "Cannot assign to a method"
         self.solved = False
         self.id = str(uuid.uuid4())
-        self.checker_args = set(inspect.getfullargspec(self._checker).args)
+        self.checker_args = set(inspect.getfullargspec(self.checker).args)
         if not self.checker_args.issubset(Puzzle.allowed_checker_args): # TODO use custom exception
             raise Exception(f'Unrecognized parameters ({", ".join(self.checker_args - Puzzle.allowed_checker_args)}), ' +
                             f'checker functions can only have some combination of parameters ({", ".join(Puzzle.allowed_checker_args)}).')
-
-    def solve(self, args: Dict[str, Any]):
-        """
-        Tries to solve the puzzle, passes the given args to the checker lambda.
-        Returns (success, feedback) and sets the Puzzle as solved if the checker succeeded.
-        """
-        if isinstance(self._checker, bytes):
-            raise Exception("You need to extract() the Puzzle before you can call the checker.")
-        checker_result = call_with_args(self._checker, args)
-
-        solved = False
-        if checker_result == True:
-            solved = True
-            feedback = "Correct!"
-        elif checker_result == False:
-            feedback = "Incorrect!"
-        elif isinstance(checker_result, str):
-            feedback = checker_result
-        else:
-            raise Exception(f'Checker function for puzzle "{self.question}" returned {type(checker_result).__name__}, bool or str expected.')
-
-        self.solved = solved
-        return (solved, feedback)
 
     def __getstate__(self):
         # We have to use dill to pickle lambdas. We won't unpickle it on the host, since we don't need to call it and there may
         # be modules in the container that aren't on the host causing unpickle to fail. We do need to be able to send the pickled
         # lambda back to the container after an undo
         data = self.__dict__.copy()
-        if not isinstance(self._checker, bytes):
-            data["_checker"] = dill.dumps(self._checker)
+        if not isinstance(self.checker, bytes):
+            data["checker"] = dill.dumps(self.checker)
         return data
 
     def extract(self): # TODO I need to find a cleaner way of doing this
@@ -117,8 +94,8 @@ class Puzzle:
         We don't want to unpickle the checker on the host, but we need to be able to send it back to the container after a undo.
         Calling extract() will unpickle the checker after we have received a puzzle from the host.
         """
-        if isinstance(self._checker, bytes):
-            self._checker = dill.loads(self._checker)
+        if isinstance(self.checker, bytes):
+            self.checker = dill.loads(self.checker)
 
 PuzzleGenerator = Callable[..., Puzzle]
 AutoGrader = Callable[..., Union[str,bool]]
