@@ -265,6 +265,26 @@ class TestIntegration:
             exit_code, output = tutorial.container.exec_run(["cat", "file2.txt"])
             assert output.decode() == "2"
 
+    def test_misc_config(self, tmp_path):
+        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
+            "config.yaml": """
+                modules:
+                    - puzzles.py
+                puzzles:
+                    - puzzles.move:
+                undo: no
+            """,
+            "puzzles.py": PUZZLES,
+        })
+
+        with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
+            assert tutorial.undo_enabled == False
+            tutorial.commit()
+            assert len(tutorial.undo_list) == 0 # commit is ignored if undo_enabled is false
+            tutorial.undo(); tutorial.restart() # Undo, restart should just do nothing
+            assert tutorial.can_undo() == False
+
+
     def test_bash_script_exception(self, tmp_path):
         tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
             "config.yaml": """

@@ -80,6 +80,9 @@ class Tutorial:
     end_time: datetime
     """ Time the tutorial ended. """
 
+    undo_enabled: bool
+    """ Whether undo is enabled or not. """
+
     undo_list: List[Snapshot]
     """ A list of Snapshots that store the state after each command the student enters. """
 
@@ -122,6 +125,8 @@ class Tutorial:
         self._conn_to_container: Connection = None # Connection to send messages to docker container.
         self._listener_thread: Thread = None # Thread running a Listener that will trigger the docker commits.
                                              # The Docker container should send a signal after every bash command the student enters.
+        
+        self.undo_enabled = config.get("undo", True) # PyYaml automatically converts to bool
         self.undo_list = []
 
         self.start_time = None
@@ -203,6 +208,7 @@ class Tutorial:
             # store the puzzles in the PuzzleTree (unflatten from preorder list)
             for pt, puzzle in zip(tmp_tree, generated_puzzles):
                 pt.puzzle = puzzle
+
         except BaseException as e: # BaseException includes KeyboardInterrupt
             logs = self.stop() # If an error occurs in __enter__, __exit__ isn't called.
             raise TutorialError(f"{type(e).__name__}: {e}", container_logs = logs) from e
@@ -253,9 +259,10 @@ class Tutorial:
 
     def commit(self):
         """ Take a snapshot of the current state so we can use UNDO to get back to it. """
-        image = self.container.commit("shell-adventure", f"undo-snapshot-{len(self.undo_list)}")
-        puzzles = {p.id: p.solved for p in self.get_all_puzzles()}
-        self.undo_list.append( Snapshot(image, puzzles) )
+        if self.undo_enabled:
+            image = self.container.commit("shell-adventure", f"undo-snapshot-{len(self.undo_list)}")
+            puzzles = {p.id: p.solved for p in self.get_all_puzzles()}
+            self.undo_list.append( Snapshot(image, puzzles) )
 
     def _load_snapshot(self, index):
         """ Loads a snapshot by its index in undo_list. Deletes all images ahead of the snapshot. """
@@ -301,7 +308,7 @@ class Tutorial:
 
     def can_undo(self):
         """ Returns true if can undo at least once, false otherwise. """
-        return len(self.undo_list) > 1
+        return len(self.undo_list) > 1 and self.undo_enabled
 
     def get_current_puzzles(self) -> List[Puzzle]:
         """ Returns a list of the currently unlocked puzzles. """
