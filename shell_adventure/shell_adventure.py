@@ -10,7 +10,7 @@ def start_bash(tutorial):
     # docker exec the unix exec bash built-in which lets us change the name of the process
     os.system('cls' if os.name == 'nt' else 'clear') # clear the terminal
     name = "shell_adventure_bash"
-    bash = subprocess.Popen(["docker", "exec", "-it", "--user", "student", tutorial.container.id, "bash", "-c", f"exec -a {name} bash"])
+    bash = subprocess.Popen(["docker", "exec", "-it", "--user", "student", "--workdir", tutorial.home, tutorial.container.id, "bash", "-c", f"exec -a {name} bash"])
     tutorial.connect_to_shell(name)
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@ from typing import Union, List
 import pytest
 from shell_adventure.tutorial import Tutorial, TutorialError
 from textwrap import dedent
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import subprocess, datetime, time
 import docker, docker.errors
 
@@ -268,16 +268,36 @@ class TestIntegration:
     def test_misc_config(self, tmp_path):
         tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
             "config.yaml": """
+                home: /
                 modules:
                     - puzzles.py
                 puzzles:
                     - puzzles.move:
                 undo: no
             """,
-            "puzzles.py": PUZZLES,
+            "puzzles.py": dedent("""
+                from shell_adventure_docker import *
+
+                def move(home):
+                    src = home / "A.txt"
+                    with change_user("root"):
+                        src.write_text("A")
+                    dst = home / "B.txt"
+
+                    def checker():
+                        return not src.exists() and dst.exists()
+
+                    return Puzzle(
+                        question = f"{src} -> {dst}",
+                        checker = checker
+                    )
+        """),
         })
+        assert tutorial.home == PurePosixPath("/")
 
         with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
+            assert file_exists(tutorial, "/A.txt") # Generate the puzzles in root
+
             assert tutorial.undo_enabled == False
             tutorial.commit()
             assert len(tutorial.undo_list) == 0 # commit is ignored if undo_enabled is false

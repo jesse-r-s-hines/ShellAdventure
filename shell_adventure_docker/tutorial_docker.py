@@ -15,7 +15,7 @@ class TutorialDocker:
     """ Contains the information for a running tutorial docker side. """
 
     home: Path
-    """ This is the folder that puzzle generators and checkers will be run in. Defaults to /home/student but can be changed for testing purposes. """
+    """ This is the folder that puzzle generators and checkers will be run in. """
 
     puzzles: Dict[str, Puzzle]
     """ Puzzles in this tutorial, mapped to their id. """

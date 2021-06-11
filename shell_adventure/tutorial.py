@@ -44,6 +44,9 @@ class Tutorial:
 
     # Config fields
 
+    home: PurePosixPath
+    """ This is the folder in the container that puzzle generators and checkers will be run in. Defaults to /home/student """
+
     resources: Dict[Path, PurePosixPath]
     """
     Paths to resources that will be put into the container.
@@ -100,6 +103,8 @@ class Tutorial:
             if not isinstance(config, dict): raise Exception("Invalid config file.")
 
         # TODO validation
+        self.home = PurePosixPath(config.get("home", '/home/student'))
+
         self.module_paths = []
         for module in config.get("modules"):
             # Files are relative to the config file (if module is absolute, Path will use that, if relative it will join with first)
@@ -113,7 +118,7 @@ class Tutorial:
         self.setup_scripts =  [Path(self.data_dir, f) for f in config.get("setup_scripts", [])] # relative to config file
 
         resources = config.get("resources", {})
-        self.resources = {Path(self.data_dir, src): PurePosixPath("/home/student", dst) for src, dst in resources.items()}
+        self.resources = {Path(self.data_dir, src): PurePosixPath(self.home, dst) for src, dst in resources.items()}
 
         name_dictionary = config.get("name_dictionary", PKG_PATH / "resources/name_dictionary.txt")
         self.name_dictionary = Path(self.data_dir, name_dictionary) # relative to config file
@@ -196,7 +201,7 @@ class Tutorial:
                     setup_scripts.append( (ScriptType.BASH, file.read_text()) )
 
             self._conn_to_container.send((Message.SETUP, {
-                "home": "/home/student",
+                "home": self.home,
                 "setup_scripts": setup_scripts,
                 "modules": {file.stem: file.read_text() for file in self.module_paths},
                 "puzzles": [pt.generator for pt in tmp_tree],
@@ -290,7 +295,7 @@ class Tutorial:
 
         tmp_tree = PuzzleTree("", dependents=self.puzzles) # Put puzzles under a dummy node so we can iterate  it.
         self._conn_to_container.send((Message.RESTORE, {
-            "home": "/home/student",
+            "home": self.home,
             "puzzles": [pt.puzzle for pt in tmp_tree],
         }))
         self._conn_to_container.recv() # Wait until complete
