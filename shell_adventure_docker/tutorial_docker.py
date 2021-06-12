@@ -56,8 +56,9 @@ class TutorialDocker:
         }
 
         os.chdir(self.home) # Make sure generators are called with home as the cwd
-        puzzle: Puzzle = support.call_with_args(generator, args)
-        # TODO error checking
+        with change_user("student"):
+            puzzle: Puzzle = support.call_with_args(generator, args)
+            # TODO error checking
 
         return puzzle
 
@@ -79,9 +80,10 @@ class TutorialDocker:
         for script_type, script in setup_scripts:
             if script_type == ScriptType.PYTHON:
                 # This will execute the module. We don't need to keep it since we aren't going to use its functions
-                TutorialDocker._create_module("<string>", script) 
+                with change_user("student"):
+                    TutorialDocker._create_module("<string>", script) 
             else: # ScriptType.BASH
-                subprocess.run(["bash", "-c", script], check = True) # throw error if fail
+                subprocess.run(["bash", "-c", script], check = True) # throw error if fail # Run bash scripts as root.
 
         # Load modules
         modules_list = [TutorialDocker._create_module(name, code) for name, code in modules.items()]
@@ -130,7 +132,8 @@ class TutorialDocker:
             "flag": flag,
             "cwd": self.student_cwd(),
         }
-        checker_result = support.call_with_args(cast(Callable, puzzle.checker), args)
+        with change_user("student"):
+            checker_result = support.call_with_args(cast(Callable, puzzle.checker), args)
 
         solved = False
         if checker_result == True:
@@ -166,19 +169,18 @@ class TutorialDocker:
         real_folder = Path(folder) # convert to real PosixPath
         assert real_folder.is_absolute()
         # Convert to PurePosixPath since we are going to send it over to a system that may be Windows. And the file doesn't exist on host.
-        with change_user("root"): # Access all files
-            try:
-                files = []
-                for file in real_folder.iterdir():
-                    try:
-                        # I was getting `PermissionError: Operation not permitted: '/proc/1/map_files/400000-423000'`. The file is a symlink, but the
-                        # proc directory is special and stat gets confused. Resolving the link first fixes it.
-                        files.append( (file.resolve().is_dir(), file.is_symlink(), PurePosixPath(file)) )
-                    except:
-                        pass # If something goes wrong (file doesn't exist anymore, special files in /proc, etc) just ignore it
-                return files
-            except: # if folder doesn't exist just return [] for now.
-                return [] # TODO should we return None or something instead?
+        try:
+            files = []
+            for file in real_folder.iterdir():
+                try:
+                    # I was getting `PermissionError: Operation not permitted: '/proc/1/map_files/400000-423000'`. The file is a symlink, but the
+                    # proc directory is special and stat gets confused. Resolving the link first fixes it.
+                    files.append( (file.resolve().is_dir(), file.is_symlink(), PurePosixPath(file)) )
+                except:
+                    pass # If something goes wrong (file doesn't exist anymore, special files in /proc, etc) just ignore it
+            return files
+        except: # if folder doesn't exist just return [] for now.
+            return [] # TODO should we return None or something instead?
 
     # The method is used both as a response to a message and in the puzzle code
     def student_cwd(self) -> File:
@@ -189,8 +191,7 @@ class TutorialDocker:
         """
         if self.shell_pid == None:
             return None
-        with change_user("root"):
-            result = subprocess.check_output(["pwdx", f"{self.shell_pid}"]) # returns "pid: /path/to/folder"
+        result = subprocess.check_output(["pwdx", f"{self.shell_pid}"]) # returns "pid: /path/to/folder"
         cwd = result.decode().split(": ", 1)[1][:-1] # Split and remove trailing newline.
         return File(cwd).resolve()
 

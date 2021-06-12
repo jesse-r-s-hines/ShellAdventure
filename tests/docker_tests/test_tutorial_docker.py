@@ -334,7 +334,7 @@ class TestTutorialDocker:
             puzzles = ["mypuzzles.puzzle"],
             setup_scripts = [
                 (ScriptType.BASH, dedent(r"""
-                    echo \"$SHELL\" > output.txt
+                    su student -c 'echo $SHELL > output.txt'
                 """)),
                 (ScriptType.PYTHON, dedent(r"""
                     from shell_adventure_docker import *
@@ -347,8 +347,8 @@ class TestTutorialDocker:
         )
 
         output = working_dir / "output.txt"
-        assert output.read_text().splitlines() == ['"/bin/bash"', 'python', 'generator']
-        assert (output.owner(), output.group()) == ("root", "root")
+        assert output.read_text().splitlines() == ['/bin/bash', 'python', 'generator']
+        assert (output.owner(), output.group()) == ("student", "student")
 
     def test_restore(self, working_dir):
         tutorial = TestTutorialDocker._create_tutorial(working_dir,
