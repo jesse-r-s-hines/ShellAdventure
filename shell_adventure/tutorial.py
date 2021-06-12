@@ -45,10 +45,10 @@ class Tutorial:
     # Config fields
 
     home: PurePosixPath
-    """ This is the folder in the container that puzzle generators and checkers will be run in. Defaults to /home/student """
+    """ This is the folder in the container that puzzle generators and checkers will be run in. Defaults to the WORKDIR of the container. """
 
     user: str
-    """ This is the name of the user that the student is logged in as. Defaults to "student". """
+    """ This is the name of the user that the student is logged in as. Defaults to the USER of the container. """
 
     resources: Dict[Path, PurePosixPath]
     """
@@ -99,6 +99,7 @@ class Tutorial:
         """
         self.config_file = Path(config_file).resolve()
         self.data_dir = self.config_file.parent
+        self.docker_client = docker.from_env()
 
         with open(config_file) as temp:
             config = yaml.safe_load(temp)
@@ -106,8 +107,14 @@ class Tutorial:
             if not isinstance(config, dict): raise Exception("Invalid config file.")
 
         # TODO validation
-        self.home = PurePosixPath(config.get("home", '/home/student'))
-        self.user = config.get("user", "student")
+        home = (config.get("home") or # Use config home if it exists else image WorkingDir if it exists else "/"
+                self.docker_client.api.inspect_image("shell-adventure")["Config"]["WorkingDir"] or
+                "/")
+        self.home = PurePosixPath(home)
+
+        self.user = (config.get("user") or # use config user if it exists else image User if it exists else root
+                     self.docker_client.api.inspect_image("shell-adventure")["Config"]["User"] or
+                     "root")
 
         self.module_paths = []
         for module in config.get("modules"):
@@ -129,7 +136,6 @@ class Tutorial:
 
         self.content_sources = [Path(self.data_dir, f) for f in config.get("content_sources", [])] # relative to config file
 
-        self.docker_client = docker.from_env()
         self.container: Container = None
         self._conn_to_container: Connection = None # Connection to send messages to docker container.
         self._listener_thread: Thread = None # Thread running a Listener that will trigger the docker commits.
