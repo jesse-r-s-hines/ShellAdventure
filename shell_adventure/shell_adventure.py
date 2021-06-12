@@ -2,7 +2,7 @@ import sys, os, subprocess, textwrap, traceback
 from shell_adventure.gui import GUI
 from shell_adventure.tutorial import Tutorial, TutorialError
 
-def start_bash(tutorial):
+def start_bash(tutorial: Tutorial):
     """
     Starts a bash session in the docker container in a detached process. The process in the container will have the given name.
     Returns the exec process.
@@ -10,7 +10,7 @@ def start_bash(tutorial):
     # docker exec the unix exec bash built-in which lets us change the name of the process
     os.system('cls' if os.name == 'nt' else 'clear') # clear the terminal
     name = "shell_adventure_bash"
-    bash = subprocess.Popen(["docker", "exec", "-it", "--user", "student", "--workdir", tutorial.home, tutorial.container.id, "bash", "-c", f"exec -a {name} bash"])
+    bash = subprocess.Popen(["docker", "exec", "-it", "--user", tutorial.user, "--workdir", tutorial.home, tutorial.container.id, "bash", "-c", f"exec -a {name} bash"])
     tutorial.connect_to_shell(name)
 
 if __name__ == "__main__":

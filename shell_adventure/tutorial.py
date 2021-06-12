@@ -47,6 +47,9 @@ class Tutorial:
     home: PurePosixPath
     """ This is the folder in the container that puzzle generators and checkers will be run in. Defaults to /home/student """
 
+    user: str
+    """ This is the name of the user that the student is logged in as. Defaults to "student". """
+
     resources: Dict[Path, PurePosixPath]
     """
     Paths to resources that will be put into the container.
@@ -104,6 +107,7 @@ class Tutorial:
 
         # TODO validation
         self.home = PurePosixPath(config.get("home", '/home/student'))
+        self.user = config.get("user", "student")
 
         self.module_paths = []
         for module in config.get("modules"):
@@ -202,6 +206,7 @@ class Tutorial:
 
             self._conn_to_container.send((Message.SETUP, {
                 "home": self.home,
+                "user": self.user,
                 "setup_scripts": setup_scripts,
                 "modules": {file.stem: file.read_text() for file in self.module_paths},
                 "puzzles": [pt.generator for pt in tmp_tree],
@@ -296,6 +301,7 @@ class Tutorial:
         tmp_tree = PuzzleTree("", dependents=self.puzzles) # Put puzzles under a dummy node so we can iterate  it.
         self._conn_to_container.send((Message.RESTORE, {
             "home": self.home,
+            "user": self.user,
             "puzzles": [pt.puzzle for pt in tmp_tree],
         }))
         self._conn_to_container.recv() # Wait until complete

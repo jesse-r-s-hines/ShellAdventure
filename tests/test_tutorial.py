@@ -38,6 +38,7 @@ class TestTutorial:
         tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
             "config.yaml": f"""
                 home: /home/user
+                user: user
                 resources:
                     my_resource.txt: file1.txt
                 setup_scripts:
@@ -63,6 +64,7 @@ class TestTutorial:
         })
         assert tutorial.data_dir == tmp_path
         assert tutorial.home == PurePosixPath("/home/user")
+        assert tutorial.user == "user"
         assert tutorial.name_dictionary == tmp_path / "my_dictionary.txt"
         assert tutorial.content_sources == [tmp_path / "content.txt"]
 

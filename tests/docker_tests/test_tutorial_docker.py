@@ -34,6 +34,7 @@ class TestTutorialDocker:
         """
         default_setup = {
             "home": working_dir,
+            "user": "student",
             "setup_scripts": [],
             "modules": {"puzzles": SIMPLE_PUZZLES},
             "puzzles": ["puzzles.move"],
@@ -360,8 +361,24 @@ class TestTutorialDocker:
         puz = puzzles[0].id
 
         tutorial = TutorialDocker()
-        tutorial.restore(home = working_dir, puzzles = puzzles)
+        tutorial.restore(home = working_dir, user = "student", puzzles = puzzles)
 
         assert tutorial.solve_puzzle(puz) == (False, "Incorrect!")
         os.system("mv A.txt B.txt")
         assert tutorial.solve_puzzle(puz) == (True, "Correct!")
+
+    def test_normal_user(self, working_dir): 
+        tutorial = TestTutorialDocker._create_tutorial(working_dir,
+            user = "student",
+            modules = {"mypuzzles": SIMPLE_PUZZLES},
+            puzzles = ["mypuzzles.move"]
+        )
+        assert (working_dir / "A.txt").owner() == "student"
+
+    def test_root_user(self, working_dir): 
+        tutorial = TestTutorialDocker._create_tutorial(working_dir,
+            user = "root",
+            modules = {"mypuzzles": SIMPLE_PUZZLES},
+            puzzles = ["mypuzzles.move"]
+        )
+        assert (working_dir / "A.txt").owner() == "root"

@@ -63,6 +63,10 @@ PUZZLES = dedent("""
         )
 
     def user_puzzle():
+        file = File("A")
+        file.write_text("")
+        assert file.owner() == "student"
+
         return Puzzle(
             question = "Who are you?",
             checker = lambda: getpass.getuser() == "root" # checker functions run as root
@@ -269,19 +273,20 @@ class TestIntegration:
         tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
             "config.yaml": """
                 home: /
+                user: root
                 modules:
                     - puzzles.py
                 puzzles:
-                    - puzzles.move:
+                    - puzzles.puz:
                 undo: no
             """,
             "puzzles.py": dedent("""
                 from shell_adventure_docker import *
 
-                def move(home):
+                def puz(home):
                     src = home / "A.txt"
-                    with change_user("root"):
-                        src.write_text("A")
+                    src.write_text("A")
+                    assert src.owner() == "root"
                     dst = home / "B.txt"
 
                     def checker():
@@ -294,9 +299,13 @@ class TestIntegration:
         """),
         })
         assert tutorial.home == PurePosixPath("/")
+        assert tutorial.user == "root"
 
+        # If user isn't root, trying to add file to root will fail
         with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
-            assert file_exists(tutorial, "/A.txt") # Generate the puzzles in root
+            assert file_exists(tutorial, "/A.txt") # Generate the puzzles in root 
+            code, owner = tutorial.container.exec_run("stat -c '%U' A.txt", workdir="/")
+            assert owner.decode().strip() == "root"
 
             assert tutorial.undo_enabled == False
             tutorial.commit()

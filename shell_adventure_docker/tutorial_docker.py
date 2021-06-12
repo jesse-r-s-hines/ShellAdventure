@@ -17,6 +17,9 @@ class TutorialDocker:
     home: Path
     """ This is the folder that puzzle generators and checkers will be run in. """
 
+    user: str
+    """ This is the name of the user that the student is logged in as. """
+
     puzzles: Dict[str, Puzzle]
     """ Puzzles in this tutorial, mapped to their id. """
 
@@ -27,6 +30,7 @@ class TutorialDocker:
         """ Create a tutorial. You need to call setup() afterwards to actually set and generate the puzzles etc. """
         # We don't really do anything in here, the tutorial is initialized in the "setup" method when we are actually sent the settings.
         self.home = None
+        self.user = None
         self.puzzles = {}
         self.shell_pid: int = None
 
@@ -56,7 +60,7 @@ class TutorialDocker:
         }
 
         os.chdir(self.home) # Make sure generators are called with home as the cwd
-        with change_user("student"):
+        with change_user(self.user):
             puzzle: Puzzle = support.call_with_args(generator, args)
             # TODO error checking
 
@@ -64,7 +68,7 @@ class TutorialDocker:
 
     ### Message actions, these functions can be called by sending a message over the connection
     
-    def setup(self, home: PathLike, setup_scripts: List[Tuple[ScriptType, str]], modules: Dict[str, str], puzzles: List[str],
+    def setup(self, home: PathLike, user: str, setup_scripts: List[Tuple[ScriptType, str]], modules: Dict[str, str], puzzles: List[str],
               name_dictionary: str, content_sources: List[str]) -> List[Puzzle]:
         """
         Initializes the tutorial with the given settings. Generates the puzzles in the modules.
@@ -72,6 +76,8 @@ class TutorialDocker:
         Returns the generated puzzles as a list.
         """
         self.home = Path(home).resolve()
+        self.user = user
+
         # Unfortunately we have to have some package level variables allow File methods to access the RandomHelper and TutorialDocker
         shell_adventure_docker._tutorial = self
         shell_adventure_docker.rand = RandomHelper(name_dictionary, content_sources)
@@ -80,7 +86,7 @@ class TutorialDocker:
         for script_type, script in setup_scripts:
             if script_type == ScriptType.PYTHON:
                 # This will execute the module. We don't need to keep it since we aren't going to use its functions
-                with change_user("student"):
+                with change_user(self.user):
                     TutorialDocker._create_module("<string>", script) 
             else: # ScriptType.BASH
                 subprocess.run(["bash", "-c", script], check = True) # throw error if fail # Run bash scripts as root.
@@ -106,7 +112,7 @@ class TutorialDocker:
 
         return puzzle_list
 
-    def restore(self, home: PathLike, puzzles: List[Puzzle]):
+    def restore(self, home: PathLike, user: str, puzzles: List[Puzzle]):
         """
         Restore the tutorial after we've loading a snapshot. This is for usage after an undo. Docker commit keeps all filesystem state, but
         we have to restart the container and processes. We don't need to regenerate the puzzles, but we do need to resend the puzzle objects so
@@ -114,6 +120,8 @@ class TutorialDocker:
         """
         # TODO Refactor this to not be so duplicated
         self.home = Path(home).resolve()
+        self.user = user
+
         shell_adventure_docker._tutorial = self
         self.puzzles = {p.id: p for p in puzzles}
         for puz in self.puzzles.values(): puz.extract() # Convert the pickled checker back into a function
@@ -132,7 +140,7 @@ class TutorialDocker:
             "flag": flag,
             "cwd": self.student_cwd(),
         }
-        with change_user("student"):
+        with change_user(self.user):
             checker_result = support.call_with_args(cast(Callable, puzzle.checker), args)
 
         solved = False
