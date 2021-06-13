@@ -1,5 +1,6 @@
 from typing import List
 import pytest
+from pathlib import PurePosixPath
 import shell_adventure_docker
 from shell_adventure_docker.tutorial_docker import TutorialDocker
 from shell_adventure_docker.file import File
@@ -35,6 +36,7 @@ class TestTutorialDocker:
         default_setup = {
             "home": working_dir,
             "user": "student",
+            "resources": {},
             "setup_scripts": [],
             "modules": {"puzzles": SIMPLE_PUZZLES},
             "puzzles": ["puzzles.move"],
@@ -372,3 +374,34 @@ class TestTutorialDocker:
             puzzles = ["mypuzzles.move"]
         )
         assert (working_dir / "A.txt").owner() == "root"
+
+    def test_resources(self, working_dir):
+        tutorial = TestTutorialDocker._create_tutorial(working_dir,
+            modules = {"mypuzzles": SIMPLE_PUZZLES},
+            puzzles = ["mypuzzles.move"],
+            resources = {
+                PurePosixPath("resource1.txt"): b"RESOURCE1",
+                PurePosixPath(f"{working_dir}/resource2.txt"): b"RESOURCE2",
+            }
+        )
+
+        assert (working_dir / "resource1.txt").owner() == "student"
+        assert (working_dir / "resource1.txt").read_text() == "RESOURCE1"
+        assert (working_dir / "resource2.txt").owner() == "student"
+        assert (working_dir / "resource2.txt").read_text() == "RESOURCE2"
+
+    def test_resources_different_user(self, working_dir):
+        tutorial = TestTutorialDocker._create_tutorial(working_dir,
+            user = "root",
+            modules = {"mypuzzles": SIMPLE_PUZZLES},
+            puzzles = ["mypuzzles.move"],
+            resources = {
+                PurePosixPath("resource1.txt"): b"RESOURCE1", # Relative to home
+                PurePosixPath(working_dir, "resource2.txt"): b"RESOURCE2",
+            }
+        )
+
+        assert (working_dir / "resource1.txt").owner() == "root"
+        assert (working_dir / "resource1.txt").read_text() == "RESOURCE1"
+        assert (working_dir / "resource2.txt").owner() == "root"
+        assert (working_dir / "resource2.txt").read_text() == "RESOURCE2"

@@ -289,6 +289,8 @@ class TestIntegration:
                     - puzzles.py
                 puzzles:
                     - puzzles.puz:
+                resources:
+                    resource.txt: resource.txt
                 undo: no
             """,
             "puzzles.py": dedent("""
@@ -307,7 +309,8 @@ class TestIntegration:
                         question = f"{src} -> {dst}",
                         checker = checker
                     )
-        """),
+            """),
+            "resource.txt": "resource!",
         })
         assert tutorial.home == PurePosixPath("/")
         assert tutorial.user == "root"
@@ -321,6 +324,9 @@ class TestIntegration:
 
             assert file_exists(tutorial, "/A.txt") # Generate the puzzles in root 
             code, owner = tutorial.container.exec_run("stat -c '%U' A.txt", workdir="/")
+            assert owner.decode().strip() == "root"
+
+            code, owner = tutorial.container.exec_run("stat -c '%U' resource.txt", workdir="/")
             assert owner.decode().strip() == "root"
 
             assert tutorial.undo_enabled == False

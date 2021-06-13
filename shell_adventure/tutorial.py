@@ -199,15 +199,13 @@ class Tutorial:
         try:
             # retry the connection a few times since the container may take a bit to get started.
             self._conn_to_container = retry(lambda: Client(support.conn_addr_to_container, authkey = support.conn_key), tries = 20, delay = 0.2)
-            # Move resources into container
-            for src, dst in self.resources.items():
-                subprocess.run(["docker", "cp", src, f"{self.container.id}:{dst}"])
             
             tmp_tree = PuzzleTree("", dependents=self.puzzles) # Put puzzles under a dummy node so we can iterate  it.
 
             self._conn_to_container.send((Message.SETUP, {
                 "home": self.home,
                 "user": self.user,
+                "resources": {dst: src.read_bytes() for src, dst in self.resources.items()},
                 "setup_scripts": [(file.name, file.read_text()) for file in self.setup_scripts],
                 "modules": {file.stem: file.read_text() for file in self.module_paths},
                 "puzzles": [pt.generator for pt in tmp_tree],

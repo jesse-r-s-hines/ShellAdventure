@@ -69,7 +69,7 @@ class TutorialDocker:
 
     ### Message actions, these functions can be called by sending a message over the connection
     
-    def setup(self, home: PathLike, user: str, setup_scripts: List[Tuple[str, str]], modules: Dict[str, str], puzzles: List[str],
+    def setup(self, home: PathLike, user: str, resources: Dict[PurePosixPath, bytes], setup_scripts: List[Tuple[str, str]], modules: Dict[str, str], puzzles: List[str],
               name_dictionary: str, content_sources: List[str]) -> List[Puzzle]:
         """
         Initializes the tutorial with the given settings. Generates the puzzles in the modules.
@@ -82,6 +82,11 @@ class TutorialDocker:
         # Unfortunately we have to have some package level variables allow File methods to access the RandomHelper and TutorialDocker
         shell_adventure_docker._tutorial = self
         shell_adventure_docker.rand = RandomHelper(name_dictionary, content_sources)
+
+        # Copy resources
+        with change_user(self.user):
+            for dest, content in resources.items():
+                Path(dest).write_bytes(content)
 
         # Run setup scripts
         with TemporaryDirectory("-shell-adventure-scripts") as dir:
