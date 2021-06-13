@@ -187,6 +187,30 @@ class Tutorial:
                     elif data == Message.MAKE_COMMIT:
                         self.commit()
 
+    def _start_container(self, image: str):
+        """ Starts the container and connects to it. """
+        self.container = docker_helper.launch(image,
+            user = self.user,
+            working_dir = str(self.home)
+        )
+        _, self._container_logs = self.container.exec_run(["python3", "/usr/local/shell_adventure_docker/start.py"],
+                                                            user = "root", stream = True)
+        # retry the connection a few times since the container may take a bit to get started.
+        self._conn_to_container = retry(lambda: Client(support.conn_addr_to_container, authkey = support.conn_key), tries = 20, delay = 0.2)
+
+    def _stop_container(self) -> str:
+        """ Stops the container and remove it and the connection to it. Returns the logs. """
+        if self._conn_to_container != None:
+            self._conn_to_container.send( (Message.STOP,) )
+            self._conn_to_container.close()
+
+        # The container should stop after the STOP message, but we'll make sure here as well.
+        self.container.stop(timeout = 4)
+        logs = "\n".join((l.decode() for l in self._container_logs))
+        self.container.remove()
+
+        return logs
+
     def start(self):
         """
         Starts the tutorial.
@@ -194,13 +218,8 @@ class Tutorial:
         In general you should use a tutorial as a context manager instead to start/stop the tutorial, which will
         guarantee that the container gets cleaned up.
         """
-        self.container = docker_helper.launch(self.image, user = self.user, working_dir = str(self.home))
-        _, self._container_logs = self.container.exec_run(["python3", "/usr/local/shell_adventure_docker/start.py"],
-                                                            user = "root", stream = True)
-
         try:
-            # retry the connection a few times since the container may take a bit to get started.
-            self._conn_to_container = retry(lambda: Client(support.conn_addr_to_container, authkey = support.conn_key), tries = 20, delay = 0.2)
+            self._start_container(self.image)
             
             tmp_tree = PuzzleTree("", dependents=self.puzzles) # Put puzzles under a dummy node so we can iterate  it.
 
@@ -241,19 +260,12 @@ class Tutorial:
         if not self.end_time: # Check that we haven't already stopped the container
             self.end_time = datetime.now()
 
-            if self._conn_to_container:
-                self._conn_to_container.send( (Message.STOP,) )
-                self._conn_to_container.close()
-
             if self._listener_thread:
                 with Client(support.conn_addr_from_container, authkey = support.conn_key) as conn:
                     conn.send(Message.STOP)
                     self._listener_thread.join()
 
-            # The container should stop itself, but we'll make sure here as well.
-            self.container.stop(timeout = 4)
-            logs = "\n".join((l.decode() for l in self._container_logs))
-            self.container.remove()
+            logs = self._stop_container()
 
             for snapshot in reversed(self.undo_list): # We can't delete an image that has images based on it so go backwards
                 docker_helper.client.images.remove(image = snapshot.image.id)
@@ -283,23 +295,15 @@ class Tutorial:
         if index == -1: return # Top of stack is current state
         snapshot = self.undo_list[index]
 
-        # TODO Refactor to remove duplication here
-        self._conn_to_container.send( (Message.STOP,) )
-        self._conn_to_container.close()
-        # The container should stop itself, but wait until it does
-        self.container.stop(timeout = 4)
-        self.container.remove()
+        self._stop_container()
 
-        for snap_to_del in reversed(self.undo_list[index + 1:]):
+        for snap_to_del in reversed(self.undo_list[index + 1:]): # Remove snapshots ahead of this one
             docker_helper.client.images.remove(image = snap_to_del.image.id)
         self.undo_list = self.undo_list[:index + 1]
 
         # Restart the tutorial. This will loose any running processes, and state in the tutorial. However, the only state we actually need
         # is the puzzle list.
-        self.container = docker_helper.launch(snapshot.image, user = self.user, working_dir = str(self.home))
-        _, self._container_logs = self.container.exec_run(["python3", "/usr/local/shell_adventure_docker/start.py"],
-                                                            user = "root", stream = True)
-        self._conn_to_container = retry(lambda: Client(support.conn_addr_to_container, authkey = support.conn_key), tries = 20, delay = 0.2)
+        self._start_container(snapshot.image)
 
         tmp_tree = PuzzleTree("", dependents=self.puzzles) # Put puzzles under a dummy node so we can iterate  it.
         self._conn_to_container.send((Message.RESTORE, {

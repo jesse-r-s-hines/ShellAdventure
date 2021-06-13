@@ -458,7 +458,7 @@ class TestIntegration:
             assert (puz1.solved, puz2.solved) == (True, False)
 
             tutorial.undo()
-            assert not file_exists(tutorial, "B.txt")
+            assert file_exists(tutorial, "A.txt") and not file_exists(tutorial, "B.txt")
             assert (puz1.solved, puz2.solved) == (False, False) # Puzzle is no longer solved
 
             run_command(tutorial, "mv A.txt B.txt\n")
