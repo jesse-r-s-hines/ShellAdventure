@@ -367,13 +367,34 @@ class TestTutorialDocker:
         os.system("mv A.txt B.txt")
         assert tutorial.solve_puzzle(puz) == (True, "Correct!")
 
-    def test_normal_user(self, working_dir): 
+    def test_user(self, working_dir): 
         tutorial = TestTutorialDocker._create_tutorial(working_dir,
             user = "student",
-            modules = {"mypuzzles": SIMPLE_PUZZLES},
-            puzzles = ["mypuzzles.move"]
+            modules = {"mypuzzles": dedent("""
+                from shell_adventure_docker import *
+                import getpass
+
+                def user_puzzle():
+                    File("studentFile").create()
+                    assert getpass.getuser() == "root" # But we are actually running as root
+
+                    with change_user("root"):
+                        File("rootFile").create()
+
+                    return Puzzle(
+                        question = "Who are you?",
+                        checker = lambda: getpass.getuser() == "root" # checker functions also run as root
+                    )
+            """)},
+            puzzles = ["mypuzzles.user_puzzle"]
         )
-        assert (working_dir / "A.txt").owner() == "student"
+
+        assert File("studentFile").owner() == "student" # euid is student so files get created as student
+        assert File("rootFile").owner() == "root"
+
+        [puzzle] = list(tutorial.puzzles.values())
+        assert tutorial.solve_puzzle(puzzle.id) == (True, "Correct!")
+
 
     def test_root_user(self, working_dir): 
         tutorial = TestTutorialDocker._create_tutorial(working_dir,

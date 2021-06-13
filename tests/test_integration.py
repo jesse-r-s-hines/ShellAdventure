@@ -63,13 +63,17 @@ PUZZLES = dedent("""
         )
 
     def user_puzzle():
-        file = File("A")
-        file.write_text("")
-        assert file.owner() == "student"
+        fileA = File("A").create()
+        assert fileA.owner() == "student" # euid is student so files get created as student
+        assert getpass.getuser() == "root" # But we are actually running as root
 
+        with change_user("root"):
+            fileB = File("B").create()
+            assert fileB.owner() == "root"
+    
         return Puzzle(
             question = "Who are you?",
-            checker = lambda: getpass.getuser() == "root" # checker functions run as root
+            checker = lambda: getpass.getuser() == "root" # checker functions are also run as root
         )
 """)
 
