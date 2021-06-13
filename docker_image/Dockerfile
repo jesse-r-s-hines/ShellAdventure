@@ -57,7 +57,7 @@ RUN useradd -ms /bin/bash student && \
 USER student
 WORKDIR /home/student
 
-COPY docker_files/.bashrc /home/student/.bashrc
+COPY .bashrc /home/student/.bashrc
 
 ENV PROMPT_COMMAND="python3 /usr/local/shell_adventure_docker/commit_container.py"
 
