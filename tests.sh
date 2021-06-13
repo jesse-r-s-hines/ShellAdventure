@@ -1,6 +1,6 @@
 #!/bin/bash
 docker build -t shell-adventure . 1> /dev/null # Only print errors
-docker build -t shell-adventure:test --build-arg TESTING=1 . 1> /dev/null # Only print errors
+docker build -t shell-adventure:tests --build-arg TESTING=1 . 1> /dev/null # Only print errors
 
 source .venv/bin/activate
 
