@@ -1,6 +1,7 @@
 from typing import Union, List
 import pytest
 from shell_adventure.tutorial import Tutorial, TutorialError
+from shell_adventure import docker_helper
 from textwrap import dedent
 from pathlib import Path, PurePosixPath
 import subprocess, datetime, time
@@ -101,7 +102,7 @@ class TestIntegration:
         })
 
         with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
-            assert docker.from_env().containers.get(tutorial.container.id) != None
+            assert docker_helper.client.containers.get(tutorial.container.id) != None
 
             # Puzzles were generated
             for pt in tutorial.puzzles:
@@ -146,7 +147,7 @@ class TestIntegration:
 
         # Make sure the container was removed.
         with pytest.raises(docker.errors.NotFound):
-            docker.from_env().containers.get(tutorial.container.id)
+            docker_helper.client.containers.get(tutorial.container.id)
 
     def test_cwd(self, tmp_path):
         tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
@@ -392,7 +393,7 @@ class TestIntegration:
             
     def test_undo_basic(self, tmp_path):
         # Get the number of images before we made the tutorial
-        docker_client = docker.from_env()
+        docker_client = docker_helper.client
         images_before = docker_client.images.list(all = True)
         containers_before = docker_client.containers.list(all = True)
 

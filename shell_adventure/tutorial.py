@@ -79,8 +79,6 @@ class Tutorial:
     """ The tree of puzzles in this tutorial. """
 
     # Other fields
-    docker_client: docker.DockerClient
-    """ The DockerClient """
     container: Container
     """ The docker container that the student is in. """
     
@@ -102,7 +100,6 @@ class Tutorial:
         """
         self.config_file = Path(config_file).resolve()
         self.data_dir = self.config_file.parent
-        self.docker_client = docker.from_env()
 
         with open(config_file) as temp:
             config = yaml.safe_load(temp)
@@ -113,12 +110,12 @@ class Tutorial:
         self.image = config.get("image", "shell-adventure:latest")
 
         home = (config.get("home") or # Use config home if it exists else image WorkingDir if it exists else "/"
-                self.docker_client.api.inspect_image(self.image)["Config"]["WorkingDir"] or
+                docker_helper.client.api.inspect_image(self.image)["Config"]["WorkingDir"] or
                 "/")
         self.home = PurePosixPath(home)
 
         self.user = (config.get("user") or # use config user if it exists else image User if it exists else root
-                     self.docker_client.api.inspect_image(self.image)["Config"]["User"] or
+                     docker_helper.client.api.inspect_image(self.image)["Config"]["User"] or
                      "root")
 
         self.module_paths = []
@@ -259,7 +256,7 @@ class Tutorial:
             self.container.remove()
 
             for snapshot in reversed(self.undo_list): # We can't delete an image that has images based on it so go backwards
-                self.docker_client.images.remove(image = snapshot.image.id)
+                docker_helper.client.images.remove(image = snapshot.image.id)
             
             return logs
         else:
@@ -294,7 +291,7 @@ class Tutorial:
         self.container.remove()
 
         for snap_to_del in reversed(self.undo_list[index + 1:]):
-            self.docker_client.images.remove(image = snap_to_del.image.id)
+            docker_helper.client.images.remove(image = snap_to_del.image.id)
         self.undo_list = self.undo_list[:index + 1]
 
         # Restart the tutorial. This will loose any running processes, and state in the tutorial. However, the only state we actually need

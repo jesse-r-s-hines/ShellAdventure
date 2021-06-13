@@ -9,6 +9,8 @@ from tempfile import TemporaryDirectory
 from pathlib import Path
 import shell_adventure_docker
 
+client = docker.from_env()
+
 def launch(image: Union[str, Image], **container_options) -> Container:
     """
     Launches the given container and sets it up for a Shell Adventure tutorial.
@@ -31,7 +33,7 @@ def launch(image: Union[str, Image], **container_options) -> Container:
         detach = True,
     ), container_options)
 
-    container = docker.from_env().containers.run(image, **container_options)
+    container = client.containers.run(image, **container_options)
     return container
 
 # def _make_volume() -> TemporaryDirectory:
