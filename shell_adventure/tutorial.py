@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from . import PKG_PATH
 from shell_adventure_docker import support
 from shell_adventure_docker.support import Puzzle, PathLike, Message, retry
-from . import launch_container
+from . import docker_helper
 
 class PuzzleTree:
     """ A tree node so that puzzles can be unlocked after other puzzles are solved. """
@@ -197,7 +197,7 @@ class Tutorial:
         In general you should use a tutorial as a context manager instead to start/stop the tutorial, which will
         guarantee that the container gets cleaned up.
         """
-        self.container = launch_container.launch(self.image, user = self.user, working_dir = str(self.home))
+        self.container = docker_helper.launch(self.image, user = self.user, working_dir = str(self.home))
         _, self._container_logs = self.container.exec_run(["python3", "/usr/local/shell_adventure_docker/start.py"],
                                                             user = "root", stream = True)
 
@@ -299,7 +299,7 @@ class Tutorial:
 
         # Restart the tutorial. This will loose any running processes, and state in the tutorial. However, the only state we actually need
         # is the puzzle list.
-        self.container = launch_container.launch(snapshot.image, user = self.user, working_dir = str(self.home))
+        self.container = docker_helper.launch(snapshot.image, user = self.user, working_dir = str(self.home))
         _, self._container_logs = self.container.exec_run(["python3", "/usr/local/shell_adventure_docker/start.py"],
                                                             user = "root", stream = True)
         self._conn_to_container = retry(lambda: Client(support.conn_addr_to_container, authkey = support.conn_key), tries = 20, delay = 0.2)
