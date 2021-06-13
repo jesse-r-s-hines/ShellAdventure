@@ -1,13 +1,12 @@
 # The student will be user "student" and their password will be "student"
 FROM ubuntu:20.04
 
-# Install stuff
+# Man pages are removed in minimized ubuntu. See
+# https://stackoverflow.com/questions/54152906/how-to-install-man-pages-on-an-ubuntu-docker-image
+# https://github.com/tianon/docker-brew-ubuntu-core/issues/126
+# https://github.com/tianon/docker-brew-ubuntu-core/issues/122
+# To add them, remove man pages from dpkg excludes
 RUN apt-get update && \
-    # Man pages are removed in minimized ubuntu. See
-    # https://stackoverflow.com/questions/54152906/how-to-install-man-pages-on-an-ubuntu-docker-image
-    # https://github.com/tianon/docker-brew-ubuntu-core/issues/126
-    # https://github.com/tianon/docker-brew-ubuntu-core/issues/122
-    # To add them, remove man pages from dpkg excludes
     sed -i '/^path-exclude=\/usr\/share\/man\/\*/d' /etc/dpkg/dpkg.cfg.d/excludes && \
     # install man pages
     apt-get install -y man-db && \
@@ -17,6 +16,10 @@ RUN apt-get update && \
     # Reinstalling "libc6" throws "Could not configure libc6:amd64", so we reinstall all packages except libc6
     # See https://manpages.ubuntu.com/manpages/focal/man7/apt-patterns.7.html for apt patterns
     apt-get reinstall -y '?and(?installed, !?name(libc6))' && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# # Install stuff new stuff
+RUN apt-get update && \
     # Now we can install new packages
     apt-get install -y \
         binutils \
@@ -35,7 +38,7 @@ RUN apt-get update && \
     && \
     # Install Python
     apt-get install -y python3 python-is-python3 python3-pip && \
-    python -m pip install python-lorem dill && \
+    python -m pip install --no-cache-dir python-lorem dill && \
     # Remove the cache made by apt update and other files to save space
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
