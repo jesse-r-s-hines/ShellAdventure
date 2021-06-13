@@ -133,21 +133,21 @@ class Message(Enum):
     They will be sent as tuples (enum, *args), in case the message type has parameters.
     """
     
-    STOP = 0
+    STOP = 'STOP'
     """ Stop the tutorial. Usage: (STOP,) """
-    SETUP = 1
+    SETUP = 'SETUP'
     """ Send settings and puzzle modules. Generate puzzles. Usage: (GENERATE, kwargs) """
-    CONNECT_TO_SHELL = 2
+    CONNECT_TO_SHELL = 'CONNECT_TO_SHELL'
     """ Tells the container that a shell session with the given name has started and to connect to it. Usage: (CONNECT_TO_SHELL, name) """
-    SOLVE = 3
+    SOLVE = 'SOLVE'
     """ Solve a puzzle. Usage: (SOLVE, puzzle_id, [flag]) """
-    GET_STUDENT_CWD = 4
+    GET_STUDENT_CWD = 'GET_STUDENT_CWD'
     """ Get the path to the students current directory. Usage (GET_CWD,) """
-    GET_FILES = 5
+    GET_FILES = 'GET_FILES'
     """ Get files under a folder. Usage (GET_FILES, folder) """
-    RESTORE = 6
+    RESTORE = 'RESTORE'
     """ Restore from a snapshot after an UNDO. Like SETUP, but we don't regenerate the puzzles. Usage: (RESTORE, kwargs) """
-    MAKE_COMMIT = 7
+    MAKE_COMMIT = 'MAKE_COMMIT'
     """ Make a Docker commit of the container so we can undo a command. """
 
 class ScriptType(Enum):
