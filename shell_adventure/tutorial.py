@@ -42,6 +42,9 @@ class Tutorial:
     data_dir: Path
     """ This is the path where tutorial files such as puzzles have been placed. """
 
+    image: str
+    """ The name or id of the Docker image to run the container in. Defaults to "shell-adventure:latest" """
+
     # Config fields
 
     home: PurePosixPath
@@ -107,13 +110,15 @@ class Tutorial:
             if not isinstance(config, dict): raise Exception("Invalid config file.")
 
         # TODO validation
+        self.image = config.get("image", "shell-adventure:latest")
+
         home = (config.get("home") or # Use config home if it exists else image WorkingDir if it exists else "/"
-                self.docker_client.api.inspect_image("shell-adventure")["Config"]["WorkingDir"] or
+                self.docker_client.api.inspect_image(self.image)["Config"]["WorkingDir"] or
                 "/")
         self.home = PurePosixPath(home)
 
         self.user = (config.get("user") or # use config user if it exists else image User if it exists else root
-                     self.docker_client.api.inspect_image("shell-adventure")["Config"]["User"] or
+                     self.docker_client.api.inspect_image(self.image)["Config"]["User"] or
                      "root")
 
         self.module_paths = []
@@ -192,7 +197,7 @@ class Tutorial:
         In general you should use a tutorial as a context manager instead to start/stop the tutorial, which will
         guarantee that the container gets cleaned up.
         """
-        self.container = launch_container.launch('shell-adventure', user = self.user, working_dir = str(self.home))
+        self.container = launch_container.launch(self.image, user = self.user, working_dir = str(self.home))
         _, self._container_logs = self.container.exec_run(["python3", "/usr/local/shell_adventure_docker/start.py"],
                                                             user = "root", stream = True)
 

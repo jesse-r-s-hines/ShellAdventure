@@ -594,3 +594,55 @@ class TestIntegration:
 
             tutorial.commit()
             assert len(tutorial.undo_list) == 0 # Commit does nothing
+
+    def test_different_image(self, tmp_path):
+        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
+            "config.yaml": """
+                image: shell-adventure:tests-alpine
+                resources:
+                    resource.txt: resource.txt
+                modules:
+                    - puzzles.py
+                puzzles:
+                    - puzzles.user_puzzle:
+            """,
+            "puzzles.py": dedent("""
+                from shell_adventure_docker import *
+                import getpass
+
+                def user_puzzle():
+                    fileA = File("A").create()
+                    assert fileA.owner() == "bob"
+                    assert getpass.getuser() == "root" # But we are actually running as root
+
+                    with change_user("root"):
+                        fileB = File("B").create()
+                        assert fileB.owner() == "root"
+                
+                    return Puzzle(
+                        question = "Who are you?",
+                        checker = lambda: getpass.getuser() == "root"
+                    )
+            """),
+            "resource.txt": "resource\n",
+        })
+
+        with tutorial:
+            tutorial.commit()
+
+            assert tutorial.home == Path("/home/bob") # take defaults from container
+            assert tutorial.user == "bob"
+            exit_code, output = tutorial.container.exec_run("ps -o user=", user = "root")
+             # alpine's ps can't filter by pid, it just gives a list of all processes. We want the first (PID 1)
+            assert output.decode().splitlines()[0] == "bob"
+            assert tutorial.get_student_cwd() == Path("/home/bob")
+
+            code, owner = tutorial.container.exec_run("stat -c '%U' /home/bob/resource.txt")
+            assert owner.decode().strip() == "bob"
+
+            run_command(tutorial, "touch A.txt")
+            puzzle = tutorial.get_all_puzzles()[0]
+            assert tutorial.solve_puzzle(puzzle) == (True, "Correct!")
+
+            tutorial.restart()
+            assert not file_exists(tutorial, "A.txt")

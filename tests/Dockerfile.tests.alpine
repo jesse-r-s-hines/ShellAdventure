@@ -1,0 +1,13 @@
+# The student will be user "student" and their password will be "student"
+FROM alpine:3
+
+# Install stuff
+RUN apk add --no-cache python3 py3-pip
+RUN python3 -m pip install python-lorem dill 
+
+# Make new user and allow them to use sudo
+RUN adduser -D bob
+USER bob
+WORKDIR /home/bob
+
+CMD ["sh"]
