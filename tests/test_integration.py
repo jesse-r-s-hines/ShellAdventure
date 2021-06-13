@@ -253,13 +253,18 @@ class TestIntegration:
                     )
             """),
             "setup.sh": r"""
-                echo \"$SHELL\" >> output.txt
-            """,
+                #!/bin/bash
+                OUTPUT="$SHELL:$(pwd):$(whoami)"
+                echo $OUTPUT >> output.txt
+            """.strip(),
             "setup.py": dedent(r"""
                 from shell_adventure_docker import *
+                import os, getpass, pwd
 
+                rand.paragraphs(3) # check that this is not null
                 output = File("output.txt")
-                output.write_text(output.read_text() + "python\n")
+                effective_user = pwd.getpwuid(os.geteuid()).pw_name
+                output.write_text(output.read_text() + f"python:{os.getcwd()}:{effective_user}:{getpass.getuser()}\n")
             """),
             "resource1.txt": "resource\n",
             "resource2.txt": "2",
@@ -267,10 +272,13 @@ class TestIntegration:
 
         with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
             exit_code, output = tutorial.container.exec_run(["cat", "output.txt"])
-            assert output.decode().splitlines() == ['resource', '"/bin/bash"', 'python', 'generator']
+            assert output.decode().splitlines() == ['resource', '/bin/bash:/home/student:root', 'python:/home/student:student:root', 'generator']
 
             exit_code, output = tutorial.container.exec_run(["cat", "file2.txt"])
             assert output.decode() == "2"
+
+            code, owner = tutorial.container.exec_run("stat -c '%U' file2.txt")
+            assert owner.decode().strip() == "student"
 
     def test_misc_config(self, tmp_path):
         tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
@@ -336,7 +344,7 @@ class TestIntegration:
             "setup.sh": "echo hello; not-a-command"
         })
 
-        with pytest.raises(TutorialError, match="command not found"):
+        with pytest.raises(TutorialError, match="not-a-command: not found"):
             with tutorial: 
                 pass # Just launch
 

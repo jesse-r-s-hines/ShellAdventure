@@ -3,7 +3,7 @@ import pytest
 import shell_adventure_docker
 from shell_adventure_docker.tutorial_docker import TutorialDocker
 from shell_adventure_docker.file import File
-from shell_adventure_docker.support import ScriptType, Puzzle
+from shell_adventure_docker.support import Puzzle
 import os, subprocess, pickle
 from textwrap import dedent;
 
@@ -299,21 +299,25 @@ class TestTutorialDocker:
             """)},
             puzzles = ["mypuzzles.puzzle"],
             setup_scripts = [
-                (ScriptType.BASH, dedent(r"""
-                    su student -c 'echo $SHELL > output.txt'
-                """)),
-                (ScriptType.PYTHON, dedent(r"""
+                ("script.sh", r"""
+                    #!/bin/bash
+                    OUTPUT="$SHELL:$(pwd):$(whoami)"
+                    su student -c "echo '$OUTPUT' > output.txt"
+                """.strip()),
+                ("script.py", dedent(r"""
                     from shell_adventure_docker import *
+                    import os, getpass, pwd
 
                     rand.paragraphs(3) # check that this is not null
                     output = File("output.txt")
-                    output.write_text(output.read_text() + "python\n")
+                    effective_user = pwd.getpwuid(os.geteuid()).pw_name
+                    output.write_text(output.read_text() + f"python:{os.getcwd()}:{effective_user}:{getpass.getuser()}\n")
                 """)),
             ]
         )
 
         output = working_dir / "output.txt"
-        assert output.read_text().splitlines() == ['/bin/bash', 'python', 'generator']
+        assert output.read_text().splitlines() == [f'/bin/bash:{working_dir}:root', f'python:{working_dir}:student:root', 'generator']
         assert (output.owner(), output.group()) == ("student", "student")
 
     def test_restore(self, working_dir):

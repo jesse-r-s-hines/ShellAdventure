@@ -10,7 +10,7 @@ from pathlib import Path, PurePosixPath;
 from datetime import datetime, timedelta
 from . import PKG_PATH
 from shell_adventure_docker import support
-from shell_adventure_docker.support import Puzzle, PathLike, Message, ScriptType, retry
+from shell_adventure_docker.support import Puzzle, PathLike, Message, retry
 from . import launch_container
 
 class PuzzleTree:
@@ -205,17 +205,10 @@ class Tutorial:
             
             tmp_tree = PuzzleTree("", dependents=self.puzzles) # Put puzzles under a dummy node so we can iterate  it.
 
-            setup_scripts = [] 
-            for file in self.setup_scripts:
-                if file.suffix == ".py":
-                    setup_scripts.append( (ScriptType.PYTHON, file.read_text()) )
-                else:
-                    setup_scripts.append( (ScriptType.BASH, file.read_text()) )
-
             self._conn_to_container.send((Message.SETUP, {
                 "home": self.home,
                 "user": self.user,
-                "setup_scripts": setup_scripts,
+                "setup_scripts": [(file.name, file.read_text()) for file in self.setup_scripts],
                 "modules": {file.stem: file.read_text() for file in self.module_paths},
                 "puzzles": [pt.generator for pt in tmp_tree],
                 "name_dictionary": self.name_dictionary.read_text(),

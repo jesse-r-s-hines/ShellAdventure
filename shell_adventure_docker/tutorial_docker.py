@@ -1,3 +1,4 @@
+from tempfile import TemporaryDirectory
 from typing import Callable, List, Tuple, Dict, Any, cast
 from types import ModuleType
 from pathlib import Path, PurePosixPath;
@@ -5,7 +6,7 @@ import subprocess, os
 from multiprocessing.connection import Listener
 import inspect
 from . import support
-from .support import Puzzle, PathLike, Message, PuzzleGenerator, ScriptType, retry
+from .support import Puzzle, PathLike, Message, PuzzleGenerator, retry
 from .file import File
 from .permissions import change_user
 from .random_helper import RandomHelper
@@ -68,7 +69,7 @@ class TutorialDocker:
 
     ### Message actions, these functions can be called by sending a message over the connection
     
-    def setup(self, home: PathLike, user: str, setup_scripts: List[Tuple[ScriptType, str]], modules: Dict[str, str], puzzles: List[str],
+    def setup(self, home: PathLike, user: str, setup_scripts: List[Tuple[str, str]], modules: Dict[str, str], puzzles: List[str],
               name_dictionary: str, content_sources: List[str]) -> List[Puzzle]:
         """
         Initializes the tutorial with the given settings. Generates the puzzles in the modules.
@@ -83,13 +84,16 @@ class TutorialDocker:
         shell_adventure_docker.rand = RandomHelper(name_dictionary, content_sources)
 
         # Run setup scripts
-        for script_type, script in setup_scripts:
-            if script_type == ScriptType.PYTHON:
-                # This will execute the module. We don't need to keep it since we aren't going to use its functions
-                with change_user(self.user):
-                    TutorialDocker._create_module("<string>", script) 
-            else: # ScriptType.BASH
-                subprocess.run(["bash", "-c", script], check = True) # throw error if fail # Run bash scripts as root.
+        with TemporaryDirectory("-shell-adventure-scripts") as dir:
+            for name, script in setup_scripts:
+                os.chdir(self.home) # Run scripts from home
+                if name.endswith(".py"): # This will execute the module. We don't need to keep it since we aren't going to use its functions
+                    with change_user(self.user):
+                        TutorialDocker._create_module("<string>", script) 
+                else:
+                    file = File(dir, name)
+                    file.create(mode = 0o700, content = script) # Make script executable
+                    subprocess.run([file], shell = True, check = True) # throw error if fail # Run bash scripts as root.
 
         # Load modules
         modules_list = [TutorialDocker._create_module(name, code) for name, code in modules.items()]
