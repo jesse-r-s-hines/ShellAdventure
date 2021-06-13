@@ -37,11 +37,8 @@ PUZZLES = dedent("""
         )
 
     def cd_puzzle():
-        dir = File("dir")
-        dir.mkdir()
-
         def checker(cwd):
-            return cwd == dir.resolve()
+            return cwd == File("/home/student")
 
         return Puzzle(
             question = f"cd into dir",
@@ -164,10 +161,7 @@ class TestIntegration:
 
         with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
             # Connect to bash
-            bash = subprocess.Popen(["docker", "exec", "-i", "-w", "/home/student/dir", tutorial.container.id, "bash"],
-                stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-            assert tutorial.connect_to_shell("bash") > 1
-
+            # TODO find way to change cwd of the bash session
             cwd_puzzle = tutorial.get_all_puzzles()[0]
             solved, feedback = tutorial.solve_puzzle(cwd_puzzle)
             assert solved == True
@@ -177,7 +171,7 @@ class TestIntegration:
             assert tutorial.current_score() == 1
             assert tutorial.is_finished() == True
 
-            assert tutorial.get_student_cwd() == Path("/home/student/dir")
+            assert tutorial.get_student_cwd() == Path("/home/student")
 
     def test_random(self, tmp_path):
         tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
@@ -223,6 +217,11 @@ class TestIntegration:
         })
 
         with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
+            # Check that the bash session is running as student in /home/student
+            exit_code, output = tutorial.container.exec_run("ps -o uname= 1", user = "root")
+            assert output.decode().strip() == "student"
+            assert tutorial.get_student_cwd() == Path("/home/student")
+
             puzzle = tutorial.get_all_puzzles()[0]
             solved, feedback = tutorial.solve_puzzle(puzzle)
             assert solved == True
@@ -307,6 +306,11 @@ class TestIntegration:
 
         # If user isn't root, trying to add file to root will fail
         with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
+            # Check that the bash session is running as root in /
+            exit_code, output = tutorial.container.exec_run("ps -o uname= 1", user = "root")
+            assert output.decode().strip() == "root"
+            assert tutorial.get_student_cwd() == Path("/")
+
             assert file_exists(tutorial, "/A.txt") # Generate the puzzles in root 
             code, owner = tutorial.container.exec_run("stat -c '%U' A.txt", workdir="/")
             assert owner.decode().strip() == "root"

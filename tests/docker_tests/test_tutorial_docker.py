@@ -254,42 +254,7 @@ class TestTutorialDocker:
 
     def test_student_cwd(self, working_dir):
         tutorial = TestTutorialDocker._create_tutorial(working_dir)
-        cwd = (working_dir / "folder")
-        cwd.mkdir()
-        bash = subprocess.Popen("bash", stdin = subprocess.PIPE, cwd = cwd)
-
-        try:
-            tutorial.connect_to_shell("bash")
-            assert tutorial.shell_pid == bash.pid
-            assert tutorial.student_cwd() == cwd
-        finally:
-            bash.kill()
-
-    def test_student_cwd_spaces(self, working_dir):
-        cwd = (working_dir / " ")
-        cwd.mkdir()
-        tutorial = TestTutorialDocker._create_tutorial(working_dir)
-        bash = subprocess.Popen("bash", stdin = subprocess.PIPE, cwd = cwd)
-
-        try:
-            tutorial.connect_to_shell("bash")
-            assert tutorial.shell_pid == bash.pid
-            assert tutorial.student_cwd() == cwd
-        finally:
-            bash.kill()
-
-    # def test_connect_to_shell_not_found(self, working_dir):
-    #     tutorial = TestTutorialDocker._create_tutorial(working_dir)
-    #     with pytest.raises(ProcessLookupError, match = "No process"):
-    #         tutorial.connect_to_shell("bash")
-
-    # def test_connect_to_shell_multiple_found(self, working_dir):
-    #     tutorial = TestTutorialDocker._create_tutorial(working_dir)
-    #     bash1 = subprocess.Popen("bash", stdin = subprocess.PIPE)
-    #     bash2 = subprocess.Popen("bash", stdin = subprocess.PIPE)
-
-    #     with pytest.raises(ProcessLookupError, match = "Multiple processes"):
-    #         tutorial.connect_to_shell("bash")
+        assert tutorial.student_cwd() == File("/home/student")
 
     def test_get_files(self, working_dir):
         tutorial = TestTutorialDocker._create_tutorial(working_dir, puzzles = [])

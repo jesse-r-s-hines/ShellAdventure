@@ -140,7 +140,8 @@ class Tutorial:
         self._conn_to_container: Connection = None # Connection to send messages to docker container.
         self._listener_thread: Thread = None # Thread running a Listener that will trigger the docker commits.
                                              # The Docker container should send a signal after every bash command the student enters.
-        
+        self._container_logs: Generator[bytes, None, None] = None # The stream that contains the docker side tutorial output.
+
         self.undo_enabled = config.get("undo", True) # PyYaml automatically converts to bool
         self.undo_list = []
 
@@ -191,12 +192,13 @@ class Tutorial:
         In general you should use a tutorial as a context manager instead to start/stop the tutorial, which will
         guarantee that the container gets cleaned up.
         """
-        self.container = launch_container.launch('shell-adventure')
+        self.container = launch_container.launch('shell-adventure', user = self.user, working_dir = str(self.home))
+        _, self._container_logs = self.container.exec_run(["python3", "/usr/local/shell_adventure_docker/start.py"],
+                                                            user = "root", stream = True)
 
         try:
             # retry the connection a few times since the container may take a bit to get started.
             self._conn_to_container = retry(lambda: Client(support.conn_addr_to_container, authkey = support.conn_key), tries = 20, delay = 0.2)
-
             # Move resources into container
             for src, dst in self.resources.items():
                 subprocess.run(["docker", "cp", src, f"{self.container.id}:{dst}"])
@@ -257,13 +259,13 @@ class Tutorial:
 
             # The container should stop itself, but we'll make sure here as well.
             self.container.stop(timeout = 4)
-            logs = self.container.logs()
+            logs = "\n".join((l.decode() for l in self._container_logs))
             self.container.remove()
 
             for snapshot in reversed(self.undo_list): # We can't delete an image that has images based on it so go backwards
                 self.docker_client.images.remove(image = snapshot.image.id)
             
-            return logs.decode()
+            return logs
         else:
             return None
 
@@ -301,7 +303,9 @@ class Tutorial:
 
         # Restart the tutorial. This will loose any running processes, and state in the tutorial. However, the only state we actually need
         # is the puzzle list.
-        self.container = launch_container.launch(snapshot.image)
+        self.container = launch_container.launch(snapshot.image, user = self.user, working_dir = str(self.home))
+        _, self._container_logs = self.container.exec_run(["python3", "/usr/local/shell_adventure_docker/start.py"],
+                                                            user = "root", stream = True)
         self._conn_to_container = retry(lambda: Client(support.conn_addr_to_container, authkey = support.conn_key), tries = 20, delay = 0.2)
 
         tmp_tree = PuzzleTree("", dependents=self.puzzles) # Put puzzles under a dummy node so we can iterate  it.
@@ -358,14 +362,6 @@ class Tutorial:
             self.undo_list[-1].puzzles_solved[puzzle.id] = solved
 
         return (solved, feedback)
-
-    def connect_to_shell(self, name: str) -> int:
-        """
-        Connects the tutorial to a running shell session with the given name. The shell session should have a unique name.
-        Returns the PID (in docker) of the shell session.
-        """
-        self._conn_to_container.send( (Message.CONNECT_TO_SHELL, name) )
-        return self._conn_to_container.recv() # wait for response
 
     def get_student_cwd(self) -> PurePosixPath:
         """ Get the path to the students current directory/ """

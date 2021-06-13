@@ -32,7 +32,7 @@ class TutorialDocker:
         self.home = None
         self.user = None
         self.puzzles = {}
-        self.shell_pid: int = None
+        self.shell_pid: int = 1 # The shell is the main process of the container which is always 1
 
     @staticmethod
     def _create_module(name: str, code: str) -> ModuleType:
@@ -157,18 +157,6 @@ class TutorialDocker:
         puzzle.solved = solved
         return (solved, feedback)
 
-    def connect_to_shell(self, name: str) -> int:
-        """ Finds a running shell session with the given name and stores it's pid. Returns the pid. """
-        try:
-            # retry a few times since exec'ing into the container can take a bit, or something else may have spun up its own temporary bash session
-            self.shell_pid = retry(lambda: int(subprocess.check_output(["pidof", name])), tries=40, delay=0.2) # type: ignore
-        except subprocess.CalledProcessError:
-            raise ProcessLookupError(f'No process named "{name}" found.')
-        except ValueError: # int parse fails because more than one pid was returned
-            raise ProcessLookupError(f'Multiple processes named "{name}" found.')
-
-        return self.shell_pid
-
     def get_files(self, folder: PathLike) -> List[Tuple[bool, bool, PurePosixPath]]:
         """
         Returns a list of files under the given folder as a list of (is_dir, is_symlink, path) tuples.
@@ -195,10 +183,7 @@ class TutorialDocker:
         """
         Return the student's current working directory. Note that in generation functions, this is different from `File.cwd()`
         File.cwd() returns the current working directory of the generation function, not the student.
-        Returns None if shell_pid is not set.
         """
-        if self.shell_pid == None:
-            return None
         result = subprocess.check_output(["pwdx", f"{self.shell_pid}"]) # returns "pid: /path/to/folder"
         cwd = result.decode().split(": ", 1)[1][:-1] # Split and remove trailing newline.
         return File(cwd).resolve()
@@ -225,7 +210,6 @@ class TutorialDocker:
 
                 actions = {
                     # Map message type to a function that will be called. The return of the lambda will be sent back to host.
-                    Message.CONNECT_TO_SHELL: self.connect_to_shell,
                     Message.SOLVE: self.solve_puzzle,
                     Message.GET_STUDENT_CWD: lambda: PurePosixPath(self.student_cwd()),
                     Message.GET_FILES: self.get_files,

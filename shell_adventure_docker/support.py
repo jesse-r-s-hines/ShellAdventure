@@ -137,8 +137,6 @@ class Message(Enum):
     """ Stop the tutorial. Usage: (STOP,) """
     SETUP = 'SETUP'
     """ Send settings and puzzle modules. Generate puzzles. Usage: (GENERATE, kwargs) """
-    CONNECT_TO_SHELL = 'CONNECT_TO_SHELL'
-    """ Tells the container that a shell session with the given name has started and to connect to it. Usage: (CONNECT_TO_SHELL, name) """
     SOLVE = 'SOLVE'
     """ Solve a puzzle. Usage: (SOLVE, puzzle_id, [flag]) """
     GET_STUDENT_CWD = 'GET_STUDENT_CWD'

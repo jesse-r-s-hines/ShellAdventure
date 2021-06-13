@@ -13,7 +13,6 @@ container = launch_container.launch("shell-adventure:test",
         test_dir: {'bind': docker_test_dir, 'mode': 'ro'},
     },
     working_dir = "/home/student",
-    command = f"sleep infinity",
 )
 
 # Disable pytest cache, since writing in a volume while root causes problems
