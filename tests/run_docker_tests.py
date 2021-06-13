@@ -1,10 +1,11 @@
 """ Run the docker_tests inside the docker container and display the output. """
 import pytest
-import os
+import os, sys, shlex
 from tempfile import TemporaryDirectory
 import shell_adventure, shell_adventure_docker
 from shell_adventure import launch_container
 
+args = sys.argv[1:]
 test_dir = shell_adventure.PKG_PATH.parent / "tests/docker_tests/"
 docker_test_dir = "/usr/local/shell_adventure_docker_tests"
 
@@ -16,6 +17,7 @@ container = launch_container.launch("shell-adventure:tests",
 )
 
 # Disable pytest cache, since writing in a volume while root causes problems
-os.system(f"docker exec -it --user=root --workdir={docker_test_dir} {container.id} pytest -p no:cacheprovider")
+command = ["docker", "exec", "-it", "--user", "root",  "--workdir", docker_test_dir,  container.id, "pytest", "-p", "no:cacheprovider", *args]
+os.system(" ".join(map(shlex.quote, command)))
 container.stop(timeout = 0)
 container.remove()
