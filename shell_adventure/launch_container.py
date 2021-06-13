@@ -11,8 +11,8 @@ import shell_adventure_docker
 
 def launch(image: Union[str, Image], **container_options) -> Container:
     """
-    Launches the given container and sets it up for a ShellAdventure tutorial.
-    Puts all the shell-adventure files in a volume and sets all the other settings as needed.
+    Launches the given container and sets it up for a Shell Adventure tutorial.
+    Puts all the Shell Adventure files in a volume and sets all the other settings as needed.
     You can specify extra options which will be merged in with the default options to Container.run()
     Returns (container, volume). You can attach to the container to interact with the shell session inside.
     Make sure to clean up the container and volume when you are done with them.

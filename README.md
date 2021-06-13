@@ -1,5 +1,5 @@
 # About
-*ShellAdventure* is a tool for making tutorials to teach the Linux command line. *ShellAdventure* sets up a containerized Linux environment using Docker that stundents can experiment in without danger of damaging their system. You can set up randomized and autograded puzzles for students to solve, and give custom feedback if the student did the puzzle incorrectly. *ShellAdventure* also shows a GUI which shows the puzzles the student needs to solve, and a visual directory tree of the environment to help students navigate the filesystem through the command line.
+*Shell Adventure* is a tool for making tutorials to teach the Linux command line. *Shell Adventure* sets up a containerized Linux environment using Docker that stundents can experiment in without danger of damaging their system. You can set up randomized and autograded puzzles for students to solve, and give custom feedback if the student did the puzzle incorrectly. *Shell Adventure* also shows a GUI which shows the puzzles the student needs to solve, and a visual directory tree of the environment to help students navigate the filesystem through the command line.
 
 # Installing
 
@@ -51,10 +51,10 @@ python3 -m shell_adventure.shell_adventure <config_file>
 This will launch the tutorial with the given configuration. It will generate any puzzles you specified and then place the student
 at `/home/student` in the docker container. The student will be shown the list of puzzles, and can try to solve them.
 
-(Launching it as a module, `python3 -m ...`, is important, *ShellAdventure* won't be able to run otherwise)
+(Launching it as a module, `python3 -m ...`, is important, *Shell Adventure* won't be able to run otherwise)
 
 ## Configuration
-The configuration file passed to *ShellAdventure* can contain the following options:
+The configuration file passed to *Shell Adventure* can contain the following options:
 ```yaml
 # Paths are interpreted as relative to the config file unless they are absolute
 
@@ -306,7 +306,7 @@ with change_user("root"):
 Note that `os.system()` and the like will run as root regardles of `change_user` since it starts a new process.
 
 ## Randomization
-*ShellAdventure* offers some tools to help in randomization. You can use the `rand` object from `shell_adventure_docker`
+*Shell Adventure* offers some tools to help in randomization. You can use the `rand` object from `shell_adventure_docker`
 to generate random names and file content.
 
 ### `rand.name()`
