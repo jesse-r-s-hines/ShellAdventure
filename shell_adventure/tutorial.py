@@ -121,13 +121,15 @@ class Tutorial:
 
         self.content_sources = [Path(self.data_dir, f) for f in config.get("content_sources", [])] # relative to config file
 
+        self.undo_enabled = config.get("undo", True) # PyYAML automatically converts to bool
+
+
         self.container: Container = None
         self._conn_to_container: Connection = None # Connection to send messages to docker container.
         self._listener_thread: Thread = None # Thread running a Listener that will trigger the docker commits.
                                              # The Docker container should send a signal after every bash command the student enters.
         self._container_logs: Generator[bytes, None, None] = None # The stream that contains the docker side tutorial output.
 
-        self.undo_enabled = config.get("undo", True) # PyYaml automatically converts to bool
         self.undo_list = []
 
         self.start_time = None
@@ -159,7 +161,7 @@ class Tutorial:
     def _listen(self):
         """
         Listen for the docker container to tell us when a command has been entered.
-        Launch in a seperate thread.
+        Launch in a separate thread.
         """
         with Listener(support.conn_addr_from_container, authkey = support.conn_key) as listener:
             while True:
@@ -201,33 +203,28 @@ class Tutorial:
         In general you should use a tutorial as a context manager instead to start/stop the tutorial, which will
         guarantee that the container gets cleaned up.
         """
-        try:
-            self._start_container(self.image)
-            
-            tmp_tree = PuzzleTree("", dependents=self.puzzles) # Put puzzles under a dummy node so we can iterate  it.
+        self._start_container(self.image)
+        
+        tmp_tree = PuzzleTree("", dependents=self.puzzles) # Put puzzles under a dummy node so we can iterate  it.
 
-            self._conn_to_container.send((Message.SETUP, {
-                "home": self.home,
-                "user": self.user,
-                "resources": {dst: src.read_bytes() for src, dst in self.resources.items()},
-                "setup_scripts": [(file.name, file.read_text()) for file in self.setup_scripts],
-                "modules": {file.stem: file.read_text() for file in self.module_paths},
-                "puzzles": [pt.generator for pt in tmp_tree],
-                "name_dictionary": self.name_dictionary.read_text(),
-                "content_sources": [file.read_text() for file in self.content_sources],
-            }))
-            generated_puzzles = self._conn_to_container.recv()
+        self._conn_to_container.send((Message.SETUP, {
+            "home": self.home,
+            "user": self.user,
+            "resources": {dst: src.read_bytes() for src, dst in self.resources.items()},
+            "setup_scripts": [(file.name, file.read_text()) for file in self.setup_scripts],
+            "modules": {file.stem: file.read_text() for file in self.module_paths},
+            "puzzles": [pt.generator for pt in tmp_tree],
+            "name_dictionary": self.name_dictionary.read_text(),
+            "content_sources": [file.read_text() for file in self.content_sources],
+        }))
+        generated_puzzles = self._conn_to_container.recv()
 
-            # store the puzzles in the PuzzleTree (unflatten from preorder list)
-            for pt, puzzle in zip(tmp_tree, generated_puzzles):
-                pt.puzzle = puzzle
+        # store the puzzles in the PuzzleTree (unflatten from preorder list)
+        for pt, puzzle in zip(tmp_tree, generated_puzzles):
+            pt.puzzle = puzzle
 
-            if any(map(lambda p: p.checker == None, generated_puzzles)): # Check if any puzzle checker failed to pickle
-                self.undo_enabled = False # TODO raise warning if undo is disabled because of pickling error
-
-        except BaseException as e: # BaseException includes KeyboardInterrupt
-            logs = self.stop() # If an error occurs in __enter__, __exit__ isn't called.
-            raise TutorialError(f"{type(e).__name__}: {e}", container_logs = logs) from e
+        if any(map(lambda p: p.checker == None, generated_puzzles)): # Check if any puzzle checker failed to pickle
+            self.undo_enabled = False # TODO raise warning if undo is disabled because of pickling error
 
         self._listener_thread = Thread(target=self._listen)
         self._listener_thread.start()
@@ -258,13 +255,24 @@ class Tutorial:
             return None
 
     def __enter__(self):
-        self.start()
-        return self
+        try:
+            self.start()
+            return self
+        except BaseException as e: # BaseException includes KeyboardInterrupt
+            logs = self.stop() # If an error occurs in __enter__, __exit__ isn't called.
+            raise TutorialError(f"{type(e).__name__}: {e}", container_logs = logs) from e
 
     def __exit__(self, exc_type, exc_value, traceback):
         logs = self.stop()
         if exc_type and issubclass(exc_type, BaseException):
             raise TutorialError(f"{type(exc_value).__name__}: {exc_value}", container_logs = logs) from exc_value
+
+    def attach_to_shell(self) -> subprocess.Popen:
+        """ Attaches to the shell session in the container, making it show in the terminal. Returns the process. """
+        # docker exec the unix exec bash built-in which lets us change the name of the process
+        os.system('cls' if os.name == 'nt' else 'clear') # clear the terminal
+        return subprocess.Popen(["docker", "attach", self.container.id])
+
 
     def commit(self):
         """ Take a snapshot of the current state so we can use UNDO to get back to it. """
@@ -300,6 +308,10 @@ class Tutorial:
         for puzzle, solved in zip(self.get_all_puzzles(), snapshot.puzzles_solved.values()): # The lists are in the same order
             puzzle.solved = solved
 
+    def can_undo(self):
+        """ Returns true if can undo at least once, false otherwise. """
+        return len(self.undo_list) > 1 and self.undo_enabled
+
     def undo(self):
         """ Undo the last step the student entered. Does nothing if there is nothing to undo. """
         if self.can_undo(): # The top image is current state
@@ -310,9 +322,6 @@ class Tutorial:
         if self.can_undo():
             self._load_snapshot(0)
 
-    def can_undo(self):
-        """ Returns true if can undo at least once, false otherwise. """
-        return len(self.undo_list) > 1 and self.undo_enabled
 
     def get_current_puzzles(self) -> List[Puzzle]:
         """ Returns a list of the currently unlocked puzzles. """
@@ -375,11 +384,6 @@ class Tutorial:
         """ Return true if all the puzzles in the tutorial all solved. """
         return all((puz.solved for puz in self.get_all_puzzles()))
 
-    def attach_to_shell(self) -> subprocess.Popen:
-        """ Attaches to the shell session in the container, making it show in the terminal. Returns the process. """
-        # docker exec the unix exec bash built-in which lets us change the name of the process
-        os.system('cls' if os.name == 'nt' else 'clear') # clear the terminal
-        return subprocess.Popen(["docker", "attach", self.container.id])
 
 class PuzzleTree:
     """ A tree node so that puzzles can be unlocked after other puzzles are solved. """
@@ -394,6 +398,7 @@ class PuzzleTree:
             yield pt
             for pt2 in pt:
                 yield pt2
+
 
 class Snapshot:
     """ Represents a snapshot of the state of the tutorial, so we can restore it during undo. """
