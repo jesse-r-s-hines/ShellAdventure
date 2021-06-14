@@ -599,7 +599,7 @@ class TestIntegration:
     def test_different_image(self, tmp_path):
         tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
             "config.yaml": """
-                image: shell-adventure:tests-alpine
+                image: shell-adventure/tests:alpine
                 resources:
                     resource.txt: resource.txt
                 modules:

@@ -9,7 +9,7 @@ args = sys.argv[1:]
 test_dir = shell_adventure.PKG_PATH.parent / "tests/docker_tests/"
 docker_test_dir = "/usr/local/shell_adventure_docker_tests"
 
-container = docker_helper.launch("shell-adventure:tests",
+container = docker_helper.launch("shell-adventure/tests:main",
     volumes = {
         test_dir: {'bind': docker_test_dir, 'mode': 'ro'},
     },
