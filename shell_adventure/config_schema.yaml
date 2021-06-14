@@ -1,0 +1,15 @@
+# This is the schema for the Shell Adventure config file. It is used by [Yamale](https://pypi.org/project/yamale) to validate the config file.
+image: str(required = False)
+home: str(required = False)
+user: str(required = False)
+modules: list(str())
+puzzles: list(include('puzzle'))
+setup_scripts: list(str(), required = False)
+resources: map(str(), key = str(), required = False)
+name_dictionary: str(required = False)
+content_sources: list(str(), required = False)
+undo: bool(required = False)
+
+--- # Includes
+# To make a pretty tree structure, puzzle is a str or single element dict containing a list of puzzles
+puzzle: any(str(), map(list(include('puzzle'), required = False), key = str()))

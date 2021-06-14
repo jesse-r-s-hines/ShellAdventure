@@ -3,6 +3,8 @@ import pytest
 from shell_adventure.tutorial import Tutorial
 from textwrap import dedent;
 from pathlib import PurePosixPath
+from yamale.yamale_error import YamaleError
+import re
 
 SIMPLE_PUZZLES = dedent("""
     from shell_adventure_docker import *
@@ -75,10 +77,6 @@ class TestTutorial:
         assert [m for m in tutorial.module_paths] == [tmp_path / "puzzle1.py", tmp_path / "puzzle2.py"]
         assert [pt.generator for pt in tutorial.puzzles] == ["puzzle1.move", "puzzle2.move"]
 
-    def test_empty(self, tmp_path):
-        with pytest.raises(Exception, match="Invalid config"):
-            tutorial = pytest.helpers.create_tutorial(tmp_path, {"config.yaml": "", "mypuzzles.py": SIMPLE_PUZZLES})
-
     def test_nested_puzzles(self, tmp_path):
         tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
             "config.yaml": f"""
@@ -121,7 +119,30 @@ class TestTutorial:
                         - puzzle1.py
                         - puzzle1.py
                     puzzles:
-                        puzzle1.move
+                        - puzzle1.move
                 """,
                 "puzzle1.py": SIMPLE_PUZZLES,
             }) 
+
+    def test_validation_error(self, tmp_path):
+        try:
+            tutorial = pytest.helpers.create_tutorial(tmp_path, {
+                "config.yaml": """
+                    undo: 20
+                    puzzles:
+                        puzzles.move:
+                    resources:
+                        1: resource
+                """,
+                "puzzles.py": SIMPLE_PUZZLES,
+            })
+            assert False, "Didn't fail validation"
+        except YamaleError as error:
+            assert re.search("undo: .* is not a bool.", error.message)
+            assert re.search("modules: Required field missing", error.message)
+            assert re.search("puzzles: .* is not a list.", error.message)
+            assert re.search("resources: Key error", error.message)
+
+    def test_config(self, tmp_path):
+        with pytest.raises(YamaleError):
+            tutorial = pytest.helpers.create_tutorial(tmp_path, {"config.yaml": "", "mypuzzles.py": SIMPLE_PUZZLES})

@@ -5,3 +5,4 @@ ttkthemes
 Pillow
 dill
 deepmerge
+yamale
