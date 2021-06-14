@@ -13,26 +13,6 @@ from shell_adventure_docker import support
 from shell_adventure_docker.support import Puzzle, PathLike, Message, retry
 from . import docker_helper
 
-class PuzzleTree:
-    """ A tree node so that puzzles can be unlocked after other puzzles are solved. """
-    def __init__(self, generator: str, puzzle: Puzzle = None, dependents: List[PuzzleTree] = None):
-        self.generator = generator
-        self.puzzle = puzzle
-        self.dependents = dependents if dependents else []
-
-    def __iter__(self) -> Generator[PuzzleTree, None, None]:
-        """ Iterates over the puzzle tree (preorder) """
-        for pt in self.dependents:
-            yield pt
-            for pt2 in pt:
-                yield pt2
-
-class Snapshot:
-    """ Represents a snapshot of the state of the tutorial, so we can restore it during undo. """
-    def __init__(self, image: Image, puzzles_solved: Dict[str, bool]):
-        self.image = image # Docker image
-        self.puzzles_solved = puzzles_solved # {puzzle_id: solved} # We need to undo solving a puzzle
-
 class Tutorial:
     """ Contains the information for a running tutorial. """
 
@@ -397,6 +377,27 @@ class Tutorial:
         # docker exec the unix exec bash built-in which lets us change the name of the process
         os.system('cls' if os.name == 'nt' else 'clear') # clear the terminal
         return subprocess.Popen(["docker", "attach", self.container.id])
+
+class PuzzleTree:
+    """ A tree node so that puzzles can be unlocked after other puzzles are solved. """
+    def __init__(self, generator: str, puzzle: Puzzle = None, dependents: List[PuzzleTree] = None):
+        self.generator = generator
+        self.puzzle = puzzle
+        self.dependents = dependents if dependents else []
+
+    def __iter__(self) -> Generator[PuzzleTree, None, None]:
+        """ Iterates over the puzzle tree (preorder) """
+        for pt in self.dependents:
+            yield pt
+            for pt2 in pt:
+                yield pt2
+
+class Snapshot:
+    """ Represents a snapshot of the state of the tutorial, so we can restore it during undo. """
+    def __init__(self, image: Image, puzzles_solved: Dict[str, bool]):
+        self.image = image # Docker image
+        self.puzzles_solved = puzzles_solved # {puzzle_id: solved} # We need to undo solving a puzzle
+
 
 class TutorialError(Exception):
     """
