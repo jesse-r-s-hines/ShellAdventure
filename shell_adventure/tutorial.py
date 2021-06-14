@@ -2,7 +2,7 @@ from __future__ import annotations, generators
 from typing import Generator, List, Tuple, Dict, Any, Callable, ClassVar, Union
 import yaml, textwrap
 from multiprocessing.connection import Listener, Client, Connection
-import docker, docker.errors, subprocess
+import docker, docker.errors, subprocess, os
 from threading import Thread
 from docker.models.images import Image
 from docker.models.containers import Container
@@ -391,6 +391,12 @@ class Tutorial:
     def is_finished(self) -> bool:
         """ Return true if all the puzzles in the tutorial all solved. """
         return all((puz.solved for puz in self.get_all_puzzles()))
+
+    def attach_to_shell(self) -> subprocess.Popen:
+        """ Attaches to the shell session in the container, making it show in the terminal. Returns the process. """
+        # docker exec the unix exec bash built-in which lets us change the name of the process
+        os.system('cls' if os.name == 'nt' else 'clear') # clear the terminal
+        return subprocess.Popen(["docker", "attach", self.container.id])
 
 class TutorialError(Exception):
     """
