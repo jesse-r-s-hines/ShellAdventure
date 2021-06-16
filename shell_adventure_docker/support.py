@@ -103,7 +103,6 @@ class Puzzle:
 PuzzleGenerator = Callable[..., Puzzle]
 AutoGrader = Callable[..., Union[str,bool]]
 
-
 # We aren't using this class currently
 # class CommandOutput: # TODO
 #     """ Represents the output of a command. """
@@ -127,29 +126,29 @@ AutoGrader = Callable[..., Union[str,bool]]
 
 class Message(Enum):
     """
-    Enum for various messages that can be send between host and docker.
-    They will be sent as tuples (enum, *args), in case the message type has parameters.
+    Enum for various messages that can be sent between host and docker.
+    They will be sent as tuples (enum, *args), so that the message can have parameters.
     """
     
     STOP = 'STOP'
     """ Stop the tutorial. Usage: (STOP,) """
     SETUP = 'SETUP'
-    """ Send settings and puzzle modules. Generate puzzles. Usage: (GENERATE, kwargs) """
+    """ Send settings and puzzle modules. Generate puzzles. Usage: (SETUP, **kwargs) """
     SOLVE = 'SOLVE'
     """ Solve a puzzle. Usage: (SOLVE, puzzle_id, [flag]) """
     GET_STUDENT_CWD = 'GET_STUDENT_CWD'
-    """ Get the path to the students current directory. Usage (GET_CWD,) """
+    """ Get the path to the students current directory. Usage (GET_STUDENT_CWD,) """
     GET_FILES = 'GET_FILES'
     """ Get files under a folder. Usage (GET_FILES, folder) """
     RESTORE = 'RESTORE'
-    """ Restore from a snapshot after an UNDO. Like SETUP, but we don't regenerate the puzzles. Usage: (RESTORE, kwargs) """
+    """ Restore from a snapshot after an UNDO. Like SETUP, but we don't regenerate the puzzles. Usage: (RESTORE, **kwargs) """
     MAKE_COMMIT = 'MAKE_COMMIT'
     """ Make a Docker commit of the container so we can undo a command. """
 
-def call_with_args(func: Callable[..., Any], args: Dict[str, Any]):
+def call_with_args(func: Callable[..., Any], args: Dict[str, Any]) -> Any:
     """
     Takes a function and a map of args to their names. Any values in args that have the same name as a parameter of func
-    will be passed to func. Ignores missing args, and will throw an error func has parameters that aren't in args.
+    will be passed to func. Ignores missing args, and will throw an error if func has parameters that aren't in args.
     Returns the return result of func.
     """
     func_params = set(inspect.getfullargspec(func).args)
@@ -163,11 +162,10 @@ def call_with_args(func: Callable[..., Any], args: Dict[str, Any]):
     args_to_pass = {param: args[param] for param in func_params}
     return func(**args_to_pass)
 
-def retry(func: Callable[[], Any], tries = 16, delay = 0.25):
+def retry(func: Callable[[], Any], tries = 16, delay = 0.25) -> Any:
     """
     Retries the given function until it succeeds without an error.
-    tries is the maximum number of tries. If <= 0, infinite tries.
-    delay is delay betwen tries
+    tries is the maximum number of tries, delay is delay betwen tries
     """
     for attempt in range(tries - 1):
         try:
