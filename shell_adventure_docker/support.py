@@ -40,9 +40,6 @@ class Puzzle:
     id: str
     """ A unique identifier for the puzzle. """
 
-    checker_args: Set[str]
-    """ A set of the args of this puzzles checker function. """
-
     allowed_checker_args: ClassVar[Set[str]] = {"cwd", "flag"}
     """ A set of the checker args that are recognized. """
 
@@ -75,9 +72,10 @@ class Puzzle:
         self.checker = checker # type: ignore # MyPy fusses about "Cannot assign to a method"
         self.solved = False
         self.id = str(uuid.uuid4())
-        self.checker_args = set(inspect.getfullargspec(self.checker).args)
-        if not self.checker_args.issubset(Puzzle.allowed_checker_args): # TODO use custom exception
-            raise Exception(f'Unrecognized parameters ({", ".join(self.checker_args - Puzzle.allowed_checker_args)}), ' +
+
+        self._checker_args = set(inspect.getfullargspec(self.checker).args) # args of the checker function.
+        if not self._checker_args.issubset(Puzzle.allowed_checker_args): # TODO use custom exception
+            raise Exception(f'Unrecognized parameters ({", ".join(self._checker_args - Puzzle.allowed_checker_args)}), ' +
                             f'checker functions can only have some combination of parameters ({", ".join(Puzzle.allowed_checker_args)}).')
 
     def __getstate__(self):

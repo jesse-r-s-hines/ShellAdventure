@@ -9,7 +9,7 @@ class TestSupport:
         puzzle = Puzzle("Solve this puzzle.", checker = lambda cwd, flag: False)
 
         assert puzzle.solved == False
-        assert puzzle.checker_args == {"cwd", "flag"}
+        assert puzzle._checker_args == {"cwd", "flag"}
 
     def test_create_puzzle_invalid_args(self):
         with pytest.raises(Exception, match=r"Unrecognized parameters \(blah\)"):
@@ -26,7 +26,7 @@ class TestSupport:
         assert old_puzzle.score == new_puzzle.score
         assert old_puzzle.solved == new_puzzle.solved
         assert old_puzzle.id == new_puzzle.id
-        assert old_puzzle.checker_args == {"flag"}
+        assert old_puzzle._checker_args == {"flag"}
 
         assert isinstance(old_puzzle.checker, Callable) # Doesn't affect original
 

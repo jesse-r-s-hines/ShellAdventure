@@ -252,7 +252,7 @@ class GUI(ThemedTk):
     def solve_puzzle(self, puzzle: Puzzle):
         do_check = True
         flag = None
-        if "flag" in puzzle.checker_args:
+        if "flag" in puzzle._checker_args:
             flag = simpledialog.askstring("Input", puzzle.question, parent = self)
             if flag == None: do_check = False # If you "cancel" don't run autograder
 
