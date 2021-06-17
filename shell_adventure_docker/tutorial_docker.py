@@ -53,19 +53,21 @@ class TutorialDocker:
 
         return generators
 
-    def _generate_puzzle(self, generator: PuzzleGenerator) -> Puzzle:
-        """ Takes a puzzle generators and generates a puzzle from it. """
-        args = { # TODO add documentation for args you can take in generator function
-            "home": File(self.home), # can't use home() since the user is actually root. #TODO add docs that File.home() doesn't work as expected. 
-            "root": File("/"),
-        }
-
+    def _call_user_func(self, func, args) -> Any:
+        """ For calling puzzle generators and checkers. Calls func with args, and sets the user, cwd, and umask. """
         os.chdir(self.home) # Make sure generators are called with home as the cwd
+        os.umask(0o000) # By default, python won't make any files writable by "other". This turns that off.
         with change_user(self.user):
-            puzzle: Puzzle = support.call_with_args(generator, args)
+            return support.call_with_args(func, args)
             # TODO error checking
 
-        return puzzle
+    def _generate_puzzle(self, generator: PuzzleGenerator) -> Puzzle:
+        """ Takes a puzzle generators and generates a puzzle from it. """
+        return self._call_user_func(generator, { # TODO add documentation for args you can take in generator function
+            "home": File(self.home), # can't use home() since the user is actually root. #TODO add docs that File.home() doesn't work as expected. 
+            "root": File("/"),
+        })
+
 
     ### Message actions, these functions can be called by sending a message over the connection
     
@@ -111,7 +113,7 @@ class TutorialDocker:
         puzzle_list: List[Puzzle] = []
         for gen_name in puzzles:
             if gen_name not in generators:
-                raise Exception(f"Unknown puzzle generator {gen_name}.") # TODO custom exception 
+                raise Exception(f"Unknown puzzle generator {gen_name}.") # TODO custom exception
             puzzle_list.append(self._generate_puzzle(generators[gen_name]))
 
         self.puzzles = {p.id: p for p in puzzle_list}
@@ -143,14 +145,12 @@ class TutorialDocker:
         """
         puzzle = self.puzzles[puzzle_id]
 
-        os.chdir(self.home) # Make sure each puzzle is called with home as its current directory
         args: Dict[str, Any] = {
             # "output": output,
             "flag": flag,
             "cwd": self.student_cwd(),
         }
-        with change_user(self.user):
-            checker_result = support.call_with_args(cast(Callable, puzzle.checker), args)
+        checker_result = self._call_user_func(cast(Callable, puzzle.checker), args)
 
         solved = False
         if checker_result == True:
