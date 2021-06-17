@@ -11,6 +11,63 @@ class File(PosixPath):
     Refer to pathlib documentation at https://docs.python.org/3/library/pathlib.html
     """
 
+    @classmethod
+    def home(cls):
+        """ Return the home directory of the student. """
+        if shell_adventure_docker._tutorial: # Get home directory from tutorial
+            return shell_adventure_docker._tutorial.home
+        else: # Default to PosixPath
+            return PosixPath.home()
+
+
+    # === Convenience Methods ===
+
+    @property
+    def children(self) -> List[File]:
+        """
+        Return list of directory's contents. Raises `NotADirectoryError` if not a directory.
+        Basically an alias of `Path.iterdir()` but returns a list instead of a generator.
+        """
+        return list(self.iterdir()) # type: ignore
+    
+    @property
+    def path(self) -> str:
+        """ Returns the absolute path to this file as a string. """
+        return str(self.resolve())
+
+    def create(self, *, mode = 0o666, exist_ok = True, recursive = True, content: str = None):
+        """
+        An combined version of `Path.mkdir()`, `Path.touch()`, and `Path.write_text()`. It will `mkdir`
+        missing dirs in the path if recursive is True (the default). New directories will use the default
+        mode regardless of the `mode` parameter to match POSIX `mkdir -p` behavior. You can also specify
+        a content string which will be written to the file.
+
+        Returns the file.
+        """
+        if recursive:
+            self.parent.mkdir(parents = True, exist_ok = True) # mkdir is already recursive
+        self.touch(mode, exist_ok)
+        if content != None:
+            self.write_text(content)
+
+        return self
+
+    def same_as(self, other: File) -> bool:
+        """
+        Checks if two files exist and have the same contents and permissions.
+        Does not compare file names or paths.
+        """
+        if self.is_dir() or other.is_dir(): # is_dir won't throw if not exists
+            raise IsADirectoryError("File.same_as only works on files.")
+        return (
+            self.exists() and other.exists() and
+            self.permissions == other.permissions and
+            self.read_text() == other.read_text()
+        )
+
+
+    # === Permissions ===
+
     def chown(self, owner: Union[str, int] = None, group: Union[str, int] = None):
         """
         Change owner and/or group of the given path. Automatically runs as root, you do not have to `change_user`
@@ -35,38 +92,6 @@ class File(PosixPath):
             else:
                 super().chmod(mode)
 
-    def _get_children(self) -> List[File]:
-        return list(self.iterdir()) # type: ignore
-
-    children = property(_get_children)
-    """
-    Return list of directory's contents. Raises `NotADirectoryError` if not a directory.
-    Basically an alias of `Path.iterdir()` but returns a list instead of a generator.
-    """
-    
-    def _get_path(self) -> str:
-        return str(self.resolve())
-
-    path = property(_get_path)
-    """ Returns the absolute path to this file as a string. """
-    
-    def create(self, *, mode=0o666, exist_ok=True, recursive = True, content: str = None):
-        """
-        An combined version of `Path.mkdir()`, `Path.touch()`, and `Path.write_text()`. It will `mkdir`
-        missing dirs in the path if recursive is True (the default). New directories will use the default
-        mode regardless of the `mode` parameter to match POSIX `mkdir -p` behavior. You can also specify
-        a content string which will be written to the file.
-
-        Returns the file.
-        """
-        if recursive:
-            self.parent.mkdir(parents = True, exist_ok=True) # mkdir is already recursive
-        self.touch(mode, exist_ok)
-        if content != None:
-            self.write_text(content)
-
-        return self
-
     @property
     def permissions(self) -> Permissions:
         """ Return a Permissions object representing the permissions of this file. """
@@ -79,26 +104,8 @@ class File(PosixPath):
             val = int(val)
         self.chmod(val)
 
-    def same_as(self, other: File) -> bool:
-        """
-        Checks if two files exist and have the same contents and permissions.
-        Does not compare file names or paths.
-        """
-        if self.is_dir() or other.is_dir(): # is_dir won't throw if not exists
-            raise IsADirectoryError("File.same_as only works on files.")
-        return (
-            self.exists() and other.exists() and
-            self.permissions == other.permissions and
-            self.read_text() == other.read_text()
-        )
 
-    @classmethod
-    def home(cls):
-        """ Return the home directory of the student. """
-        if shell_adventure_docker._tutorial: # Get home directory from tutorial
-            return shell_adventure_docker._tutorial.home
-        else: # Default to PosixPath
-            return PosixPath.home()
+    # === Randomization ===
 
     def random_file(self, ext = None) -> File:
         """
@@ -107,7 +114,7 @@ class File(PosixPath):
         extension which will be added to the random name. Will not create a file with a name that already exists.
         """
         if (shell_adventure_docker.rand == None):
-            raise Exception("Can't make random files until _random has been initialized.")
+            raise Exception("Can't make random files until rand has been initialized.")
         return shell_adventure_docker.rand.file(self, ext = ext)
 
     def random_folder(self, depth: Union[int, Tuple[int, int]] = (1, 3), create_new_chance: float = 0.5) -> File:
@@ -137,11 +144,11 @@ class File(PosixPath):
         >>> folder.mkdir(parents = True) 
         """
         if (shell_adventure_docker.rand == None):
-            raise Exception("Can't make random files until _random has been initialized.")
+            raise Exception("Can't make random files until rand has been initialized.")
         return shell_adventure_docker.rand.folder(self, depth, create_new_chance)
 
     def mark_shared(self):
         """ Marks the a File as shared. File should be a directory, though it does not have to exist yet. """
         if (shell_adventure_docker.rand == None):
-            raise Exception("Can't mark shared files until _random has been initialized.")
+            raise Exception("Can't mark shared files until rand has been initialized.")
         shell_adventure_docker.rand.mark_shared(self)
