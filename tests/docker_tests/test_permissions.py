@@ -64,6 +64,13 @@ class TestFile:
 
         assert perms == Permissions(0o777)
 
+    def test_permissions_group_equality(self):
+        p = PermissionsGroup(True, True, False)
+        assert p == PermissionsGroup(True, True, False)
+        assert p != PermissionsGroup(True, True, True)
+        assert p == 6
+        assert p != 1
+
     def test_permission_equality(self, umask000, working_dir):
         p1 = Permissions(0o744)
         p2 = Permissions(user = "rwx", group = "r", others = "r")
