@@ -12,9 +12,9 @@ from enum import Enum
 PathLike = Union[str, os.PathLike]
 """Type for a string representing a path or a PathLike object."""
 
-conn_addr_to_container = ('localhost', 6000)
+conn_addr_to_container = ('localhost', 6550)
 """The address that will be used to communicate from the host to the container. """
-conn_addr_from_container = ('localhost', 6001)
+conn_addr_from_container = ('localhost', 6551)
 """The address that will be used to communicate from the container to the host. """
 conn_key = b'shell_adventure'
 """The authkey that will be used in communication between the Docker code and the host app. """
