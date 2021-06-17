@@ -405,3 +405,13 @@ class TestTutorialDocker:
         assert (working_dir / "resource1.txt").read_text() == "RESOURCE1"
         assert (working_dir / "resource2.txt").owner() == "root"
         assert (working_dir / "resource2.txt").read_text() == "RESOURCE2"
+
+    def test_resources_create_dirs(self, working_dir):
+        tutorial = TestTutorialDocker._create_tutorial(working_dir,
+            modules = {"mypuzzles": SIMPLE_PUZZLES},
+            puzzles = ["mypuzzles.move"],
+            resources = {
+                PurePosixPath(f"{working_dir}/dir/resource.txt"): b"RESOURCE",
+            }
+        )
+        assert (working_dir / "dir/resource.txt").exists()

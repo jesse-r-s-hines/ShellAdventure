@@ -37,8 +37,8 @@ class Tutorial:
     resources: Dict[Path, PurePosixPath]
     """
     Paths to resources that will be put into the container.
-    Maps host path to container path. You can copy whole directories.
-    However, it will not create parent directories.
+    Maps host path to container path. Container path is relative to home.
+    You can copy whole directories and it will create parent directories.
     """ 
 
     setup_scripts: List[Path]
@@ -113,7 +113,7 @@ class Tutorial:
         self.setup_scripts =  [Path(self.data_dir, f) for f in config.get("setup_scripts", [])] # relative to config file
 
         resources = config.get("resources", {})
-        self.resources = {Path(self.data_dir, src): PurePosixPath(self.home, dst) for src, dst in resources.items()}
+        self.resources = {Path(self.data_dir, src): PurePosixPath(dst) for src, dst in resources.items()} # dst will be interpreted as relative to home in the container.
 
         name_dictionary = config.get("name_dictionary", PKG_PATH / "resources/name_dictionary.txt")
         self.name_dictionary = Path(self.data_dir, name_dictionary) # relative to config file

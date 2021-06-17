@@ -88,7 +88,9 @@ class TutorialDocker:
         # Copy resources
         with change_user(self.user):
             for dest, content in resources.items():
-                Path(dest).write_bytes(content)
+                destPath = Path(self.home, dest) # resource paths are relative to home.
+                destPath.parent.mkdir(parents = True, exist_ok = True)
+                destPath.write_bytes(content) 
 
         # Run setup scripts
         with TemporaryDirectory("-shell-adventure-scripts") as dir:

@@ -72,7 +72,7 @@ class TestTutorial:
         assert tutorial.name_dictionary == tmp_path / "my_dictionary.txt"
         assert tutorial.content_sources == [tmp_path / "content.txt"]
 
-        assert tutorial.resources == {tmp_path / "my_resource.txt": PurePosixPath("/home/user/file1.txt")}
+        assert tutorial.resources == {tmp_path / "my_resource.txt": PurePosixPath("file1.txt")}
         assert [s for s in tutorial.setup_scripts] == [tmp_path / "setup.py", tmp_path / "setup.sh"]
         assert [m for m in tutorial.module_paths] == [tmp_path / "puzzle1.py", tmp_path / "puzzle2.py"]
         assert [pt.generator for pt in tutorial.puzzles] == ["puzzle1.move", "puzzle2.move"]
