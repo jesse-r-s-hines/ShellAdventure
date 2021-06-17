@@ -43,7 +43,7 @@ class TutorialDocker:
         return module
 
     @staticmethod
-    def _get_generators(module: ModuleType) -> Dict[str, PuzzleGenerator]:
+    def _get_generators_from_module(module: ModuleType) -> Dict[str, PuzzleGenerator]:
         """ Extracts puzzle generator functions from a module as a map of {name: func} """
         generators = {}
         for func_name, func in inspect.getmembers(module, inspect.isfunction):
@@ -62,7 +62,7 @@ class TutorialDocker:
             # TODO error checking
 
     def _generate_puzzle(self, generator: PuzzleGenerator) -> Puzzle:
-        """ Takes a puzzle generators and generates a puzzle from it. """
+        """ Takes a puzzle generator and generates a puzzle from it. """
         return self._call_user_func(generator, { # TODO add documentation for args you can take in generator function
             "home": File(self.home), # can't use home() since the user is actually root. #TODO add docs that File.home() doesn't work as expected. 
             "root": File("/"),
@@ -108,13 +108,11 @@ class TutorialDocker:
         # Get puzzle generators from the modules
         generators: Dict[str, PuzzleGenerator] = {}
         for module in modules_list: 
-            generators.update( TutorialDocker._get_generators(module) )
+            generators.update( TutorialDocker._get_generators_from_module(module) )
 
-        puzzle_list: List[Puzzle] = []
-        for gen_name in puzzles:
-            if gen_name not in generators:
-                raise Exception(f"Unknown puzzle generator {gen_name}.") # TODO custom exception
-            puzzle_list.append(self._generate_puzzle(generators[gen_name]))
+        unknown_puzzles = set(puzzles) - set(generators.keys())
+        if unknown_puzzles: raise Exception(f"Unknown puzzle generators: {', '.join(unknown_puzzles)}") # TODO custom exception
+        puzzle_list: List[Puzzle] = [self._generate_puzzle(generators[gen]) for gen in puzzles]
 
         self.puzzles = {p.id: p for p in puzzle_list}
 

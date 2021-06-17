@@ -88,7 +88,7 @@ class TestTutorialDocker:
     #         })
 
     def test_generate_error(self, working_dir):
-        with pytest.raises(Exception, match="Unknown puzzle generator mypuzzles.not_a_puzzle"):
+        with pytest.raises(Exception, match="Unknown puzzle generators: mypuzzles.not_a_puzzle"):
             tutorial = TestTutorialDocker._create_tutorial(working_dir,
                 modules = {"mypuzzles": SIMPLE_PUZZLES},
                 puzzles = ["mypuzzles.not_a_puzzle"]
@@ -97,7 +97,7 @@ class TestTutorialDocker:
 
     def test_get_generators(self):
         module = TutorialDocker._create_module("mypuzzles", SIMPLE_PUZZLES)
-        generators = TutorialDocker._get_generators(module)
+        generators = TutorialDocker._get_generators_from_module(module)
         assert list(generators.keys()) == ["mypuzzles.move"]
 
     def test_private_methods_arent_puzzles(self):
@@ -118,7 +118,7 @@ class TestTutorialDocker:
         """)
 
         module = TutorialDocker._create_module("mypuzzles", puzzles)
-        generators = TutorialDocker._get_generators(module)
+        generators = TutorialDocker._get_generators_from_module(module)
         assert list(generators.keys()) == ["mypuzzles.move"]
 
     def test_solve_puzzle(self, working_dir):
