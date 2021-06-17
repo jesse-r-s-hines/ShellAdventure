@@ -9,7 +9,6 @@ import docker, docker.errors
 
 PUZZLES = dedent("""
     from shell_adventure_docker import *
-    import getpass
 
     def move():
         file = File("A.txt")
@@ -35,43 +34,6 @@ PUZZLES = dedent("""
             question = f"Rename C.txt to D.txt",
             checker = checker,
             score = 3,
-        )
-
-    def cd_puzzle():
-        def checker(cwd):
-            return cwd == File("/home/student")
-
-        return Puzzle(
-            question = f"cd into dir",
-            checker = checker
-        )
-
-    def random_puzzle(home):
-        src = home.random_file("txt")
-        src.write_text(rand.paragraphs(3))
-        
-        dst = home.random_folder().random_file("txt") # Don't create yet
-
-        def checker():
-            return not src.exists() and dst.exists()
-
-        return Puzzle(
-            question = f"{src} -> {dst}",
-            checker = checker
-        )
-
-    def user_puzzle():
-        fileA = File("A").create()
-        assert fileA.owner() == "student" # euid is student so files get created as student
-        assert getpass.getuser() == "root" # But we are actually running as root
-
-        with change_user("root"):
-            fileB = File("B").create()
-            assert fileB.owner() == "root"
-    
-        return Puzzle(
-            question = "Who are you?",
-            checker = lambda: getpass.getuser() == "root" # checker functions are also run as root
         )
 """)
 
@@ -157,7 +119,17 @@ class TestIntegration:
                 puzzles:
                     - puzzles.cd_puzzle
             """,
-            "puzzles.py": PUZZLES,
+            "puzzles.py": dedent("""
+                from shell_adventure_docker import *
+                def cd_puzzle():
+                    def checker(cwd):
+                        return cwd == File("/home/student")
+
+                    return Puzzle(
+                        question = f"cd into dir",
+                        checker = checker
+                    )
+            """),
         })
 
         with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
@@ -185,8 +157,23 @@ class TestIntegration:
                     - content.txt
             """,
             # Use default name generation.
-            "puzzles.py": PUZZLES,
             "content.txt": "STUFF1\n\nSTUFF2\n\nSTUFF3\n",
+            "puzzles.py": dedent("""
+                from shell_adventure_docker import *
+                def random_puzzle(home):
+                    src = home.random_file("txt")
+                    src.write_text(rand.paragraphs(3))
+                    
+                    dst = home.random_folder().random_file("txt") # Don't create yet
+
+                    def checker():
+                        return not src.exists() and dst.exists()
+
+                    return Puzzle(
+                        question = f"{src} -> {dst}",
+                        checker = checker
+                    )
+            """),
         })
 
         with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
@@ -214,7 +201,24 @@ class TestIntegration:
                 puzzles:
                     - puzzles.user_puzzle
             """,
-            "puzzles.py": PUZZLES,
+            "puzzles.py": dedent("""
+                from shell_adventure_docker import *
+                import getpass
+
+                def user_puzzle():
+                    fileA = File("A").create()
+                    assert fileA.owner() == "student" # euid is student so files get created as student
+                    assert getpass.getuser() == "root" # But we are actually running as root
+
+                    with change_user("root"):
+                        fileB = File("B").create()
+                        assert fileB.owner() == "root"
+                
+                    return Puzzle(
+                        question = "Who are you?",
+                        checker = lambda: getpass.getuser() == "root" # checker functions are also run as root
+                    )
+            """),
         })
 
         with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
