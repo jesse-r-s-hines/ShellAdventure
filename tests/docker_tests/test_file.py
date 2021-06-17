@@ -1,5 +1,5 @@
 import pytest
-import os, stat
+import stat
 import shell_adventure_docker
 from shell_adventure_docker.file import File
 from shell_adventure_docker.permissions import Permissions, change_user

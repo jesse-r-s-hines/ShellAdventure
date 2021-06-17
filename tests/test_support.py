@@ -1,7 +1,7 @@
 from typing import Callable
 import pytest
 from shell_adventure_docker import support
-from shell_adventure_docker.support import AutoGrader, Puzzle, call_with_args
+from shell_adventure_docker.support import Puzzle, call_with_args
 import pickle
 
 class TestSupport:

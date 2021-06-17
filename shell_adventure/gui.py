@@ -1,11 +1,9 @@
-from typing import Callable, List, Tuple, Dict, ClassVar
+from typing import Callable, Tuple, Dict
 from pathlib import PurePosixPath
 import tkinter as tk
 from tkinter import StringVar, ttk, font, messagebox
 import tkinter.simpledialog as simpledialog
-from tkinter.scrolledtext import ScrolledText
 from ttkthemes import ThemedTk
-import traceback
 from PIL import ImageTk, Image
 from .scrolled_frame import VerticalScrolledFrame
 from . import tutorial, PKG_PATH

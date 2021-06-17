@@ -1,12 +1,10 @@
 """
 This module contains methods for launching the shell-adventure container.
 """
-from typing import Union, List, Tuple
-import docker, shutil, deepmerge
+from typing import Union
+import docker, deepmerge
 from docker.models.images import Image
 from docker.models.containers import Container
-from tempfile import TemporaryDirectory
-from pathlib import Path
 import shell_adventure_docker
 
 client = docker.from_env()

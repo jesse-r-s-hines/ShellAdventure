@@ -1,4 +1,4 @@
-import sys, os, subprocess, textwrap, traceback
+import sys, textwrap
 from shell_adventure.gui import GUI
 from shell_adventure.tutorial import Tutorial, TutorialError
 

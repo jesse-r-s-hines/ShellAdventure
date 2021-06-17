@@ -1,8 +1,6 @@
 """ Run the docker_tests inside the docker container and display the output. """
-import pytest
 import os, sys, shlex
-from tempfile import TemporaryDirectory
-import shell_adventure, shell_adventure_docker
+import shell_adventure
 from shell_adventure import docker_helper
 
 args = sys.argv[1:]

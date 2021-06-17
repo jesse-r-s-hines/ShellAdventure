@@ -5,9 +5,8 @@ as part of the shell_adventure package.
 """
 
 from __future__ import annotations
-from typing import Union, Callable, List, Dict, Any, Set, ClassVar, cast
+from typing import Union, Callable,  Dict, Any, Set, ClassVar
 import os, time, uuid, inspect, dill
-from pathlib import Path
 from enum import Enum
 
 PathLike = Union[str, os.PathLike]

@@ -4,7 +4,7 @@ from shell_adventure.tutorial import Tutorial, TutorialError
 from shell_adventure import docker_helper
 from textwrap import dedent
 from pathlib import Path, PurePosixPath
-import subprocess, datetime, time
+import datetime, time
 import docker, docker.errors
 
 PUZZLES = dedent("""
