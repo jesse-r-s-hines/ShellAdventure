@@ -8,7 +8,7 @@ import inspect
 from . import support
 from .support import Puzzle, PathLike, Message, PuzzleGenerator, retry
 from .file import File
-from .permissions import change_user
+from .permissions import change_user, user_exists
 from .random_helper import RandomHelper
 import shell_adventure_docker # For access to globals
 from .exceptions import * # Order matters here, we need to register exceptions as picklable after they are defined.
@@ -79,12 +79,15 @@ class TutorialDocker:
         The initialization is done separate from the constructor so that it can be done after the connection with the host is setup.
         Returns the generated puzzles as a list.
         """
-        self.home = Path(home).resolve()
-        self.user = user
-
         # Unfortunately we have to have some package level variables allow File methods to access the RandomHelper and TutorialDocker
         shell_adventure_docker._tutorial = self
         shell_adventure_docker.rand = RandomHelper(name_dictionary, content_sources)
+
+        self.home = Path(home).resolve()
+        self.user = user
+        if not self.home.exists() or not self.home.is_dir():
+            raise TutorialConfigException(f'"{self.home}" doesn\'t exist or isn\'t a directory')
+        if not user_exists(self.user): raise TutorialConfigException(f'"{self.user}" doesn\'t exist')
 
         # Copy resources
         for dest, content in resources.items():

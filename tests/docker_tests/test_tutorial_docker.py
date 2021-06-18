@@ -7,6 +7,7 @@ from shell_adventure_docker.file import File
 from shell_adventure_docker.support import Puzzle
 import os, subprocess, pickle
 from textwrap import dedent;
+from shell_adventure_docker.exceptions import *
 
 SIMPLE_PUZZLES = dedent("""
     from shell_adventure_docker import *
@@ -421,3 +422,14 @@ class TestTutorialDocker:
             }
         )
         assert (working_dir / "dir/resource.txt").exists()
+
+    def test_config_error(self, working_dir):
+        with pytest.raises(TutorialConfigException, match="doesn't exist"):
+            tutorial = TestTutorialDocker._create_tutorial(working_dir,
+                home = "/not/a/dir",
+            )
+
+        with pytest.raises(TutorialConfigException, match="doesn't exist"):
+            tutorial = TestTutorialDocker._create_tutorial(working_dir,
+                user = "henry",
+            )
