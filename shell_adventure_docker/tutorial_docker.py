@@ -11,6 +11,7 @@ from .file import File
 from .permissions import change_user
 from .random_helper import RandomHelper
 import shell_adventure_docker # For access to globals
+from .exceptions import * # Order matters here, we need to register exceptions as picklable after they are defined.
 
 class TutorialDocker:
     """ Contains the information for a running tutorial docker side. """
@@ -204,32 +205,32 @@ class TutorialDocker:
         Sets up a connection between the tutorial inside the docker container and the driving application outside and
         listen for requests from the host.
         """ 
-
         with Listener(support.conn_addr_to_container, authkey = support.conn_key) as listener:
             with listener.accept() as conn:
-                # Receive the initial setup message.
-                actions = { # Map message type to a function that will be called. The return of the lambda will be sent back to host.
-                    Message.SETUP: self.setup,
-                    Message.RESTORE: self.restore,
-                }
-                message, *args = conn.recv()
-                if message not in actions: raise Exception(f"Expected initial SETUP or RESTORE message, got {message}.")
-                conn.send(actions[message](**args[0]))
-
-
-                actions = {
-                    # Map message type to a function that will be called. The return of the lambda will be sent back to host.
-                    Message.SOLVE: self.solve_puzzle,
-                    Message.GET_STUDENT_CWD: lambda: PurePosixPath(self.student_cwd()),
-                    Message.GET_FILES: self.get_files,
-                }
-
-                while True: # Loop until connection ends.
-                    # Messages are send as (MessageEnum, *args) tuples.
+                try:
+                    # Receive the initial setup message.
+                    actions = { # Map message type to a function that will be called. The return of the lambda will be sent back to host.
+                        Message.SETUP: self.setup,
+                        Message.RESTORE: self.restore,
+                    }
                     message, *args = conn.recv()
+                    if message not in actions: raise Exception(f"Expected initial SETUP or RESTORE message, got {message}.")
+                    conn.send(actions[message](**args[0]))
 
-                    if message == Message.STOP:
-                        return
-                    else: # call the lambda with *args, send the return value.
-                        if message not in actions: raise Exception(f"Unrecognized message {message}.")
-                        conn.send(actions[message](*args)) 
+                    actions = {
+                        # Map message type to a function that will be called. The return of the lambda will be sent back to host.
+                        Message.SOLVE: self.solve_puzzle,
+                        Message.GET_STUDENT_CWD: lambda: PurePosixPath(self.student_cwd()),
+                        Message.GET_FILES: self.get_files,
+                    }
+
+                    while True: # Loop until connection ends.
+                        message, *args = conn.recv() # Messages are sent as (MessageEnum, *args) tuples.
+
+                        if message == Message.STOP:
+                            return
+                        else: # call the lambda with *args, send the return value.
+                            if message not in actions: raise Exception(f"Unrecognized message {message}.")
+                            conn.send(actions[message](*args)) 
+                except BaseException as e: # BaseException includes KeyboardInterrupt
+                    conn.send(e)

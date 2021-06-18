@@ -1,6 +1,5 @@
 from __future__ import annotations
-from typing import Generator, List, Tuple, Dict, ClassVar
-import textwrap
+from typing import Any, Generator, List, Tuple, Dict, ClassVar
 from multiprocessing.connection import Listener, Client, Connection
 import docker, docker.errors, subprocess, os
 from threading import Thread
@@ -13,6 +12,7 @@ from shell_adventure_docker import support
 from shell_adventure_docker.support import Puzzle, PathLike, Message, retry
 import yamale
 from yamale.schema import Schema
+from shell_adventure_docker.exceptions import * # Order matters here, we need to register exceptions as picklable after they are defined.
 
 class Tutorial:
     """ Contains the information for a running tutorial. """
@@ -171,28 +171,36 @@ class Tutorial:
                     elif data == Message.MAKE_COMMIT:
                         self.commit()
 
+    def _recv(self) -> Any:
+        """ Receives a value from the connection to the container. If the container sent an exception, raise it. """
+        data = self._conn_to_container.recv()
+        if isinstance(data, BaseException): raise data
+        return data
+
     def _start_container(self, image: str):
         """ Starts the container and connects to it. """
-        self.container = docker_helper.launch(image,
-            user = self.user,
-            working_dir = str(self.home)
-        )
-        _, self._container_logs = self.container.exec_run(["python3", "/usr/local/shell_adventure_docker/start.py"],
-                                                            user = "root", stream = True)
-        # retry the connection a few times since the container may take a bit to get started.
-        self._conn_to_container = retry(lambda: Client(support.conn_addr_to_container, authkey = support.conn_key), tries = 20, delay = 0.2)
+        try:
+            self.container = docker_helper.launch(image,
+                user = self.user,
+                working_dir = str(self.home)
+            )
+            _, self._container_logs = self.container.exec_run(["python3", "/usr/local/shell_adventure_docker/start.py"],
+                                                                user = "root", stream = True)
+            # retry the connection a few times since the container may take a bit to get started.
+            self._conn_to_container = retry(lambda: Client(support.conn_addr_to_container, authkey = support.conn_key), tries = 20, delay = 0.2)
+        except Exception as e:
+            logs = "\n".join((l.decode() for l in self._container_logs))
+            raise TutorialContainerStartupError("Tutorial container failed to start.", container_logs = logs) from e
 
-    def _stop_container(self) -> str:
-        """ Stops the container and remove it and the connection to it. Returns the logs. """
+    def _stop_container(self):
+        """ Stops the container and remove it and the connection to it. """
         if self._conn_to_container != None:
             self._conn_to_container.send( (Message.STOP,) )
             self._conn_to_container.close()
 
-        self.container.stop(timeout = 4) # Force the container to stop
-        logs = "\n".join((l.decode() for l in self._container_logs))
-        self.container.remove()
-
-        return logs
+        if self.container:
+            self.container.stop(timeout = 4) # Force the container to stop
+            self.container.remove()
 
     def start(self):
         """
@@ -215,7 +223,7 @@ class Tutorial:
             "name_dictionary": self.name_dictionary.read_text(),
             "content_sources": [file.read_text() for file in self.content_sources],
         }))
-        generated_puzzles = self._conn_to_container.recv()
+        generated_puzzles = self._recv()
 
         # store the puzzles in the PuzzleTree (unflatten from preorder list)
         for pt, puzzle in zip(tmp_tree, generated_puzzles):
@@ -229,9 +237,9 @@ class Tutorial:
 
         self.start_time = datetime.now()
 
-    def stop(self) -> str:
+    def stop(self):
         """
-        Stop the tutorial, clean up all resources. Returns container logs.
+        Stop the tutorial, clean up all resources
         In general you should use a tutorial as a context manager instead to start/stop the tutorial, which will
         guarantee that the container gets cleaned up.
         """
@@ -243,27 +251,21 @@ class Tutorial:
                     conn.send(Message.STOP)
                     self._listener_thread.join()
 
-            logs = self._stop_container()
+            self._stop_container()
 
             for snapshot in reversed(self.undo_list): # We can't delete an image that has images based on it so go backwards
                 docker_helper.client.images.remove(image = snapshot.image.id)
-            
-            return logs
-        else:
-            return None
 
     def __enter__(self):
         try:
             self.start()
             return self
-        except BaseException as e: # BaseException includes KeyboardInterrupt
-            logs = self.stop() # If an error occurs in __enter__, __exit__ isn't called.
-            raise TutorialError(f"{type(e).__name__}: {e}", container_logs = logs) from e
+        except: # If an error occurs in __enter__, __exit__ isn't called.
+            self.stop()
+            raise
 
     def __exit__(self, exc_type, exc_value, traceback):
-        logs = self.stop()
-        if exc_type and issubclass(exc_type, BaseException):
-            raise TutorialError(f"{type(exc_value).__name__}: {exc_value}", container_logs = logs) from exc_value
+        self.stop()
 
     def attach_to_shell(self) -> subprocess.Popen:
         """ Attaches to the shell session in the container, making it show in the terminal. Returns the process. """
@@ -300,7 +302,7 @@ class Tutorial:
             "user": self.user,
             "puzzles": [pt.puzzle for pt in tmp_tree],
         }))
-        self._conn_to_container.recv() # Wait until complete
+        self._recv() # Wait until complete
 
         # Set the puzzle solved state
         for puzzle, solved in zip(self.get_all_puzzles(), snapshot.puzzles_solved.values()): # The lists are in the same order
@@ -341,7 +343,7 @@ class Tutorial:
     def solve_puzzle(self, puzzle: Puzzle, flag: str = None) -> Tuple[bool, str]:
         """ Tries to solve the puzzle. Returns (success, feedback) and sets the Puzzle as solved if the checker succeeded. """
         self._conn_to_container.send( (Message.SOLVE, puzzle.id, flag) )
-        (solved, feedback) = self._conn_to_container.recv()
+        (solved, feedback) = self._recv()
         puzzle.solved = solved
 
         # Update latest snapshot
@@ -353,7 +355,7 @@ class Tutorial:
     def get_student_cwd(self) -> PurePosixPath:
         """ Get the path to the students current directory/ """
         self._conn_to_container.send( (Message.GET_STUDENT_CWD,) )
-        return self._conn_to_container.recv()
+        return self._recv()
 
     def get_files(self, folder: PurePosixPath) -> List[Tuple[bool, bool, PurePosixPath]]:
         """
@@ -363,7 +365,7 @@ class Tutorial:
         assert folder.is_absolute()
 
         self._conn_to_container.send( (Message.GET_FILES, folder) )
-        return self._conn_to_container.recv()
+        return self._recv()
 
     def time(self) -> timedelta:
         """ Returns the time that the student has spend on the tutorial so far. """
@@ -403,16 +405,3 @@ class Snapshot:
     def __init__(self, image: Image, puzzles_solved: Dict[str, bool]):
         self.image = image # Docker image
         self.puzzles_solved = puzzles_solved # {puzzle_id: solved} # We need to undo solving a puzzle
-
-
-class TutorialError(Exception):
-    """
-    Class for exceptions that occur in the Tutorial.
-        container_logs - Output of the container at the time of the exception.
-        message - A description of the exception.
-    """
-    
-    def __init__(self, message, container_logs):
-        self.container_logs = container_logs
-        message = message + "\n\nContainer Logs:\n" + textwrap.indent(self.container_logs, "    ")
-        super().__init__(message)

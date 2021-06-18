@@ -1,10 +1,10 @@
 from typing import Union, List
 import pytest
-from shell_adventure.tutorial import Tutorial, TutorialError
+from shell_adventure.tutorial import Tutorial
 from shell_adventure import docker_helper
 from textwrap import dedent
 from pathlib import Path, PurePosixPath
-import datetime, time
+import datetime, time, subprocess
 import docker, docker.errors
 
 PUZZLES = dedent("""
@@ -355,7 +355,7 @@ class TestIntegration:
             "setup.sh": "echo hello; not-a-command"
         })
 
-        with pytest.raises(TutorialError, match="not-a-command: not found"):
+        with pytest.raises(subprocess.CalledProcessError): # TODO Make exception show output. match="not-a-command: not found"
             with tutorial: 
                 pass # Just launch
 
@@ -370,10 +370,10 @@ class TestIntegration:
                     - puzzles.move:
             """,
             "puzzles.py": PUZZLES,
-            "setup.py": "raise Exception('BOOM')"
+            "setup.py": "raise TypeError('BOOM')"
         })
 
-        with pytest.raises(TutorialError, match="BOOM"):
+        with pytest.raises(TypeError, match="BOOM"):
             with tutorial: 
                 pass # Just launch
 
@@ -387,11 +387,11 @@ class TestIntegration:
             """,
             "puzzles.py": dedent("""
                 def puzzle():
-                    raise Exception('BOOM')
+                    raise ValueError('BOOM')
             """),
         })
 
-        with pytest.raises(TutorialError, match="BOOM"):
+        with pytest.raises(ValueError, match="BOOM"):
             with tutorial: 
                 pass # Just launch
             
