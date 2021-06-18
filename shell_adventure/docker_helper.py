@@ -27,7 +27,8 @@ def launch(image: Union[str, Image], **container_options) -> Container:
         ],
         tty = True,
         stdin_open = True,
-        # remove = True, # Auto remove makes getting output logs difficult. We'll have to remove the container ourselves.
+        # remove = True, # Auto remove makes getting output logs difficult. Also, if the container isn't attached, the bash session won't quit
+                         # which will leave the container running even with auto remove
         detach = True,
     ), container_options)
 

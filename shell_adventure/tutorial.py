@@ -188,8 +188,7 @@ class Tutorial:
             self._conn_to_container.send( (Message.STOP,) )
             self._conn_to_container.close()
 
-        # The container should stop after the STOP message, but we'll make sure here as well.
-        self.container.stop(timeout = 4)
+        self.container.stop(timeout = 4) # Force the container to stop
         logs = "\n".join((l.decode() for l in self._container_logs))
         self.container.remove()
 
