@@ -30,6 +30,13 @@ def change_user(user: str, group: str = None):
         os.setegid(prev_user)
         os.seteuid(prev_group)
 
+def user_exists(user: str):
+    """ Returns True if the user exists (by their username) """
+    try:
+        pwd.getpwnam(user)
+        return True
+    except KeyError:
+        return False
 
 class Permissions:
     """

@@ -138,3 +138,8 @@ class TestFile:
             file = File("a.txt")
             # os.system is NOT affected by change_user currently.
             assert (file.owner(), file.group()) == ("root", "root")
+
+    def test_user_exists(self):
+        assert user_exists("student")
+        assert user_exists("root")
+        assert not user_exists("george")
