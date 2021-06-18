@@ -1,6 +1,6 @@
 from typing import List
 import pytest
-from pathlib import PurePosixPath
+from pathlib import PurePosixPath, Path
 import shell_adventure_docker
 from shell_adventure_docker.tutorial_docker import TutorialDocker
 from shell_adventure_docker.file import File
@@ -382,13 +382,19 @@ class TestTutorialDocker:
             resources = {
                 PurePosixPath("resource1.txt"): b"RESOURCE1",
                 PurePosixPath(f"{working_dir}/resource2.txt"): b"RESOURCE2",
+                PurePosixPath(f"/resource3.txt"): b"RESOURCE3", # File will be created in root, with student as owner
             }
         )
+        r1 = working_dir / "resource1.txt"
+        r2 = working_dir / "resource2.txt"
+        r3 = Path("/resource3.txt")
 
-        assert (working_dir / "resource1.txt").owner() == "student"
-        assert (working_dir / "resource1.txt").read_text() == "RESOURCE1"
-        assert (working_dir / "resource2.txt").owner() == "student"
-        assert (working_dir / "resource2.txt").read_text() == "RESOURCE2"
+        assert (r1.owner(), r1.group()) == ("student", "student")
+        assert r1.read_text() == "RESOURCE1"
+        assert (r2.owner(), r2.group()) == ("student", "student")
+        assert r2.read_text() == "RESOURCE2"
+        assert (r3.owner(), r3.group()) == ("student", "student")
+        assert r3.read_text() == "RESOURCE3"
 
     def test_resources_different_user(self, working_dir):
         tutorial = TestTutorialDocker._create_tutorial(working_dir,

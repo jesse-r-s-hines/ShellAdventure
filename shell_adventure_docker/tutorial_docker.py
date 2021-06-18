@@ -87,11 +87,11 @@ class TutorialDocker:
         shell_adventure_docker.rand = RandomHelper(name_dictionary, content_sources)
 
         # Copy resources
-        with change_user(self.user):
-            for dest, content in resources.items():
-                destPath = Path(self.home, dest) # resource paths are relative to home.
-                destPath.parent.mkdir(parents = True, exist_ok = True)
-                destPath.write_bytes(content) 
+        for dest, content in resources.items():
+            destPath = File(self.home, dest) # resource paths are relative to home.
+            destPath.parent.mkdir(parents = True, exist_ok = True)
+            destPath.write_bytes(content)
+            destPath.chown(self.user, self.user)
 
         # Run setup scripts
         with TemporaryDirectory("-shell-adventure-scripts") as dir:
