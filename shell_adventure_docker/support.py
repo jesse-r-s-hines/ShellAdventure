@@ -76,8 +76,8 @@ class Puzzle:
         self.id = str(uuid.uuid4())
 
         self._checker_args = set(inspect.getfullargspec(self.checker).args) # args of the checker function.
-        if not self._checker_args.issubset(Puzzle.allowed_checker_args): # TODO use custom exception
-            raise Exception(f'Unrecognized parameters ({", ".join(self._checker_args - Puzzle.allowed_checker_args)}), ' +
+        if not self._checker_args.issubset(Puzzle.allowed_checker_args):
+            raise TypeError(f'Unrecognized parameters ({", ".join(self._checker_args - Puzzle.allowed_checker_args)}), ' +
                             f'checker functions can only have some combination of parameters ({", ".join(Puzzle.allowed_checker_args)}).')
 
     def __getstate__(self):
@@ -158,7 +158,7 @@ def call_with_args(func: Callable[..., Any], args: Dict[str, Any]) -> Any:
 
     # Make sure there are no unrecognized parameters
     if not func_params.issubset(known_args): # TODO use custom exception
-        raise Exception(f'Unrecognized parameters ({", ".join(func_params - known_args)}), expected some combination of ({", ".join(known_args)}).')
+        raise TypeError(f'Unrecognized parameters ({", ".join(func_params - known_args)}), expected some combination of ({", ".join(known_args)}).')
 
     # Only pass the args that the checker function has
     args_to_pass = {param: args[param] for param in func_params}

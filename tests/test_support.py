@@ -12,7 +12,7 @@ class TestSupport:
         assert puzzle._checker_args == {"cwd", "flag"}
 
     def test_create_puzzle_invalid_args(self):
-        with pytest.raises(Exception, match=r"Unrecognized parameters \(blah\)"):
+        with pytest.raises(TypeError, match=r"Unrecognized parameters \(blah\)"):
             puzzle = Puzzle("Solve this puzzle.", checker = lambda blah: False)
 
     def test_create_puzzle_invalid_types(self):
@@ -80,7 +80,7 @@ class TestSupport:
         args = {"a": 1, "b": 2, }
 
         func = lambda c: True
-        with pytest.raises(Exception, match = r'Unrecognized parameters \(c\), expected some combination of \([ab], [ab]\)\.'): # TODO this should be a custom error
+        with pytest.raises(TypeError, match = r'Unrecognized parameters \(c\), expected some combination of \([ab], [ab]\)\.'): # TODO this should be a custom error
             call_with_args(func, args)
 
     def test_retry(self):
@@ -88,9 +88,9 @@ class TestSupport:
         def func():
             nonlocal count
             count += 1
-            raise Exception
+            raise KeyError("Key!")
 
-        with pytest.raises(Exception):
+        with pytest.raises(KeyError, match = "Key!"):
             support.retry(func, tries = 5, delay = 0)
 
         assert count == 5
