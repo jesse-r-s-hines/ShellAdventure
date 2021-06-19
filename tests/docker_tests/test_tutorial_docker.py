@@ -88,12 +88,23 @@ class TestTutorialDocker:
                 puzzles = ["mypuzzles.not_a_puzzle"]
             )
         
-
     def test_get_generators(self):
         module = TutorialDocker._create_module("mypuzzles", SIMPLE_PUZZLES)
         generators = TutorialDocker._get_generators_from_module(module)
         assert list(generators.keys()) == ["mypuzzles.move"]
 
+    def test_puzzle_generator_bad_return(self, working_dir):
+        puzzles = dedent("""
+            def invalid():
+                return "a string"
+        """)
+
+        with pytest.raises(UserCodeError, match="Puzzle generator did not return Puzzle"):
+            tutorial = TestTutorialDocker._create_tutorial(working_dir,
+                modules = {"mypuzzles": puzzles},
+                puzzles = ["mypuzzles.invalid"],
+            )
+            
     def test_private_methods_arent_puzzles(self):
         puzzles = dedent("""
             from shell_adventure_docker import *

@@ -42,7 +42,7 @@ class Puzzle:
     allowed_checker_args: ClassVar[Set[str]] = {"cwd", "flag"}
     """ A set of the checker args that are recognized. """
 
-    def __init__(self, question: str, checker: AutoGrader, score = 1):
+    def __init__(self, question: str, checker: AutoGrader, score: int = 1):
         """
         Construct a Puzzle object.
 
@@ -65,6 +65,9 @@ class Puzzle:
         score:
             The score given on success. Defaults to 1. 
         """
+        if not isinstance(question, str): raise TypeError("Puzzle.question should be a string.")
+        if not callable(checker): raise TypeError("Puzzle.checker should be a Callable.")
+        if not isinstance(score, int): raise TypeError("Puzzle.score should be an int.")
 
         self.question = question
         self.score = score

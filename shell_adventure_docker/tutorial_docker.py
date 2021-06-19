@@ -64,11 +64,16 @@ class TutorialDocker:
 
     def _generate_puzzle(self, generator: PuzzleGenerator) -> Puzzle:
         """ Takes a puzzle generator and generates a puzzle from it. """
-        return self._call_user_func(generator, { # TODO add documentation for args you can take in generator function
-            "home": File(self.home), # can't use home() since the user is actually root. #TODO add docs that File.home() doesn't work as expected. 
-            "root": File("/"),
-        })
+        try:
+            puzzle = self._call_user_func(generator, { # TODO add documentation for args you can take in generator function
+                "home": File(self.home), # can't use home() since the user is actually root. #TODO add docs that File.home() doesn't work as expected. 
+                "root": File("/"),
+            })
+        except Exception as e:
+            raise UserCodeError(f'Puzzle generation failed.') from e
+        if not isinstance(puzzle, Puzzle): raise UserCodeError(f'Puzzle generator did not return Puzzle')
 
+        return puzzle
 
     ### Message actions, these functions can be called by sending a message over the connection
     
@@ -130,10 +135,8 @@ class TutorialDocker:
         unknown_puzzles = set(puzzles) - set(generators.keys())
         if unknown_puzzles: raise TutorialConfigException(f"Unknown puzzle generators: {', '.join(unknown_puzzles)}") # TODO custom exception
 
-        try: # Generate the puzzles
-            puzzle_list: List[Puzzle] = [self._generate_puzzle(generators[gen]) for gen in puzzles]
-        except Exception as e:
-            raise UserCodeError(f'Puzzle generation failed.') from e
+        # Generate the puzzles
+        puzzle_list: List[Puzzle] = [self._generate_puzzle(generators[gen]) for gen in puzzles]
 
         self.puzzles = {p.id: p for p in puzzle_list}
 

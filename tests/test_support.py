@@ -15,6 +15,19 @@ class TestSupport:
         with pytest.raises(Exception, match=r"Unrecognized parameters \(blah\)"):
             puzzle = Puzzle("Solve this puzzle.", checker = lambda blah: False)
 
+    def test_create_puzzle_invalid_types(self):
+        with pytest.raises(TypeError, match = "Puzzle.checker"):
+            puzzle = Puzzle(
+                question = "Hey",
+                checker = "Not a lambda",
+            )
+
+        with pytest.raises(TypeError, match = "Puzzle.question"):
+            puzzle = Puzzle(
+                question = 1,
+                checker = lambda: False,
+            )
+
     def test_pickle_puzzle(self):
         old_puzzle = Puzzle("Solve this puzzle.", checker = lambda flag: False, score = 2)
         old_puzzle.solved = True
