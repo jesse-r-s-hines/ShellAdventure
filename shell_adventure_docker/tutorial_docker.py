@@ -126,7 +126,7 @@ class TutorialDocker:
             generators.update( TutorialDocker._get_generators_from_module(module) )
 
         unknown_puzzles = set(puzzles) - set(generators.keys())
-        if unknown_puzzles: raise Exception(f"Unknown puzzle generators: {', '.join(unknown_puzzles)}") # TODO custom exception
+        if unknown_puzzles: raise TutorialConfigException(f"Unknown puzzle generators: {', '.join(unknown_puzzles)}") # TODO custom exception
         puzzle_list: List[Puzzle] = [self._generate_puzzle(generators[gen]) for gen in puzzles]
 
         self.puzzles = {p.id: p for p in puzzle_list}

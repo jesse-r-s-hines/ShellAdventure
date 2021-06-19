@@ -88,8 +88,8 @@ class TestTutorialDocker:
     #             "bad_module": "syntax error!",
     #         })
 
-    def test_generate_error(self, working_dir):
-        with pytest.raises(Exception, match="Unknown puzzle generators: mypuzzles.not_a_puzzle"):
+    def test_puzzle_not_found(self, working_dir):
+        with pytest.raises(TutorialConfigException, match="Unknown puzzle generators: mypuzzles.not_a_puzzle"):
             tutorial = TestTutorialDocker._create_tutorial(working_dir,
                 modules = {"mypuzzles": SIMPLE_PUZZLES},
                 puzzles = ["mypuzzles.not_a_puzzle"]
