@@ -156,7 +156,6 @@ class TutorialDocker:
         self.puzzles = {p.id: p for p in puzzles}
         for puz in self.puzzles.values(): puz.extract() # Convert the pickled checker back into a function
 
-
     def solve_puzzle(self, puzzle_id: str, flag: str = None) -> Tuple[bool, str]:
         """
         Tries to solve the puzzle with the given id.
@@ -169,7 +168,10 @@ class TutorialDocker:
             "flag": flag,
             "cwd": self.student_cwd(),
         }
-        checker_result = self._call_user_func(cast(Callable, puzzle.checker), args)
+        try:
+            checker_result = self._call_user_func(cast(Callable, puzzle.checker), args)
+        except Exception as e:
+            raise UserCodeError(f'Puzzle autograder failed.') from e # TODO give more info on which puzzle failed
 
         solved = False
         if checker_result == True:

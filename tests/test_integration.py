@@ -397,7 +397,7 @@ class TestIntegration:
             """),
         })
 
-        with pytest.raises(UserCodeError) as exc_info:
+        with pytest.raises(UserCodeError, match = "Puzzle generation failed") as exc_info:
             with tutorial: 
                 pass # Just launch
 
@@ -418,13 +418,43 @@ class TestIntegration:
             """),
         })
 
-        with pytest.raises(UserCodeError) as exc_info:
+        with pytest.raises(UserCodeError, match = "Puzzle generation failed") as exc_info:
             with tutorial: 
                 pass # Just launch
 
         e = exc_info.value.__cause__
         assert type(e) == SyntaxError
             
+    def test_checker_exception(self, tmp_path):
+        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
+            "config.yaml": """
+                modules:
+                    - puzzles.py
+                puzzles:
+                    - puzzles.puzzle:
+            """,
+            "puzzles.py": dedent("""
+                from shell_adventure_docker import *
+
+                def puzzle():
+                    def checker():
+                        raise ValueError("BOOM!")
+
+                    return Puzzle(
+                        question = f"Puzzle",
+                        checker = checker,
+                    )
+        """),
+        })
+
+        with tutorial: 
+            with pytest.raises(UserCodeError, match = "Puzzle autograder failed") as exc_info:
+                tutorial.solve_puzzle(tutorial.get_all_puzzles()[0])
+
+        e = exc_info.value.__cause__
+        assert type(e) == ValueError
+        assert e.args[0] == "BOOM!"
+
     def test_undo_basic(self, tmp_path):
         # Get the number of images before we made the tutorial
         docker_client = docker_helper.client
