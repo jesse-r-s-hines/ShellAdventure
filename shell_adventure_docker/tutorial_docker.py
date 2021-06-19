@@ -2,7 +2,7 @@ from tempfile import TemporaryDirectory
 from typing import Callable, List, Tuple, Dict, Any, cast
 from types import ModuleType
 from pathlib import Path, PurePosixPath;
-import subprocess, os
+import subprocess, os, textwrap
 from multiprocessing.connection import Listener
 import inspect
 from . import support
@@ -90,7 +90,7 @@ class TutorialDocker:
         if not user_exists(self.user): raise TutorialConfigException(f'"{self.user}" doesn\'t exist')
 
         # Copy resources
-        for dest, content in resources.items():
+        for dest, content in resources.items(): # Since I'm root no errors should be able to occur here
             destPath = File(self.home, dest) # resource paths are relative to home.
             destPath.parent.mkdir(parents = True, exist_ok = True)
             destPath.write_bytes(content)
@@ -99,14 +99,23 @@ class TutorialDocker:
         # Run setup scripts
         with TemporaryDirectory("-shell-adventure-scripts") as dir:
             for name, script in setup_scripts:
+                short_name = File(name).name
                 os.chdir(self.home) # Run scripts from home
-                if name.endswith(".py"): # This will execute the module. We don't need to keep it since we aren't going to use its functions
+                os.umask(0o000)
+                if name.endswith(".py"):
                     with change_user(self.user):
-                        TutorialDocker._create_module("<string>", script) 
+                        try:
+                            TutorialDocker._create_module("<string>", script) # Execute the module
+                        except Exception as e:
+                            raise UserCodeError(f'Setup script "{short_name}" failed.') from e
                 else:
-                    file = File(dir, File(name).name) # Doesn't matter if a script overwrites another with the same name
+                    file = File(dir, short_name) # Doesn't matter if a script overwrites another with the same name
                     file.create(mode = 0o700, content = script) # Make script executable
-                    subprocess.run([file], shell = True, check = True) # throw error if fail # Run bash scripts as root.
+                    try:
+                        subprocess.run(str(file), stdout = subprocess.PIPE, stderr = subprocess.STDOUT, # combine stderr & stdout
+                                       shell = True, check = True) # throw error if fail # run scripts as root.
+                    except subprocess.CalledProcessError as e:
+                        raise UserCodeError(f'Setup script "{short_name}" failed. Output:\n' + textwrap.indent(e.output.decode(), "    "))
 
         # Load modules
         modules_list = [TutorialDocker._create_module(name, code) for name, code in modules.items()]

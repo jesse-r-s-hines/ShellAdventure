@@ -1,11 +1,13 @@
+from sys import stderr
 from typing import Union, List
 import pytest
 from shell_adventure.tutorial import Tutorial
 from shell_adventure import docker_helper
 from textwrap import dedent
 from pathlib import Path, PurePosixPath
-import datetime, time, subprocess
+import datetime, time
 import docker, docker.errors
+from shell_adventure_docker.exceptions import *
 
 PUZZLES = dedent("""
     from shell_adventure_docker import *
@@ -355,8 +357,8 @@ class TestIntegration:
             "setup.sh": "echo hello; not-a-command"
         })
 
-        with pytest.raises(subprocess.CalledProcessError): # TODO Make exception show output. match="not-a-command: not found"
-            with tutorial: 
+        with pytest.raises(UserCodeError, match="not-a-command: not found"):
+            with tutorial:
                 pass # Just launch
 
     def test_py_script_exception(self, tmp_path):
@@ -370,12 +372,16 @@ class TestIntegration:
                     - puzzles.move:
             """,
             "puzzles.py": PUZZLES,
-            "setup.py": "raise TypeError('BOOM')"
+            "setup.py": "raise TypeError('BOOM!')"
         })
 
-        with pytest.raises(TypeError, match="BOOM"):
+
+        with pytest.raises(UserCodeError, match='Setup script "setup.py" failed') as exc_info:
             with tutorial: 
                 pass # Just launch
+        e = exc_info.value.__cause__
+        assert type(e) == TypeError
+        assert e.args[0] == "BOOM!"
 
     def test_generation_exception(self, tmp_path):
         tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
