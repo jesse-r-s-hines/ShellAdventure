@@ -2,6 +2,12 @@
 import tblib.pickling_support
 import textwrap
 
+__all__ = [
+    "TutorialContainerStartupError",
+    "TutorialDockerException",
+    "TutorialConfigException",
+]
+
 class TutorialContainerStartupError(Exception): # TODO move this class out of shell_adventure_docker?
     """ Exception for when the container and tutorial fail to start. """
     
