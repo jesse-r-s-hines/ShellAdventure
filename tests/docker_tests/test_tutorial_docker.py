@@ -305,8 +305,12 @@ class TestTutorialDocker:
                 ("script.sh", r"""
                     #!/bin/bash
                     OUTPUT="$SHELL:$(pwd):$(whoami)"
-                    su student -c "echo '$OUTPUT' > output.txt"
+                    su student -c "echo '$OUTPUT' >> output.txt"
                 """.strip()),
+                ("path/to/script.sh", r"""
+                    #!/bin/bash
+                    echo 'script2.sh' >> output.txt
+                """.strip()), # Duplicate names should still work (name is just for display purposes)
                 ("script.py", dedent(r"""
                     from shell_adventure_docker import *
                     import os, getpass, pwd
@@ -316,11 +320,22 @@ class TestTutorialDocker:
                     effective_user = pwd.getpwuid(os.geteuid()).pw_name
                     output.write_text(output.read_text() + f"python:{os.getcwd()}:{effective_user}:{getpass.getuser()}\n")
                 """)),
+                ("path/to/script.py", dedent(r"""
+                    from shell_adventure_docker import *
+                    output = File("output.txt")
+                    output.write_text(output.read_text() + "script2.py\n")
+                """)),
             ]
         )
 
         output = working_dir / "output.txt"
-        assert output.read_text().splitlines() == [f'/bin/bash:{working_dir}:root', f'python:{working_dir}:student:root', 'generator']
+        assert output.read_text().splitlines() == [
+            f'/bin/bash:{working_dir}:root',
+            'script2.sh',
+            f'python:{working_dir}:student:root',
+            'script2.py',
+            'generator'
+        ]
         assert (output.owner(), output.group()) == ("student", "student")
 
     def test_restore(self, working_dir):

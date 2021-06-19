@@ -217,7 +217,7 @@ class Tutorial:
             "home": self.home,
             "user": self.user,
             "resources": {dst: src.read_bytes() for src, dst in self.resources.items()},
-            "setup_scripts": [(file.name, file.read_text()) for file in self.setup_scripts],
+            "setup_scripts": [(str(file), file.read_text()) for file in self.setup_scripts],
             "modules": {file.stem: file.read_text() for file in self.module_paths},
             "puzzles": [pt.generator for pt in tmp_tree],
             "name_dictionary": self.name_dictionary.read_text(),

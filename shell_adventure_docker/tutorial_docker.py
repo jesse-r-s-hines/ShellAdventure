@@ -104,7 +104,7 @@ class TutorialDocker:
                     with change_user(self.user):
                         TutorialDocker._create_module("<string>", script) 
                 else:
-                    file = File(dir, name)
+                    file = File(dir, File(name).name) # Doesn't matter if a script overwrites another with the same name
                     file.create(mode = 0o700, content = script) # Make script executable
                     subprocess.run([file], shell = True, check = True) # throw error if fail # Run bash scripts as root.
 

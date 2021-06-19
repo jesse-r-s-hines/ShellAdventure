@@ -239,7 +239,7 @@ class TestIntegration:
                     resource2.txt: /home/student/file2.txt
                 setup_scripts:
                     - setup.sh
-                    - setup.py
+                    - dir/setup.py
                 modules:
                     - puzzles.py
                 puzzles:
@@ -262,7 +262,7 @@ class TestIntegration:
                 OUTPUT="$SHELL:$(pwd):$(whoami)"
                 echo $OUTPUT >> output.txt
             """.strip(),
-            "setup.py": dedent(r"""
+            "dir/setup.py": dedent(r"""
                 from shell_adventure_docker import *
                 import os, getpass, pwd
 
