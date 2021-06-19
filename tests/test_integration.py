@@ -393,13 +393,37 @@ class TestIntegration:
             """,
             "puzzles.py": dedent("""
                 def puzzle():
-                    raise ValueError('BOOM')
+                    raise ValueError('BOOM!')
             """),
         })
 
-        with pytest.raises(ValueError, match="BOOM"):
+        with pytest.raises(UserCodeError) as exc_info:
             with tutorial: 
                 pass # Just launch
+
+        e = exc_info.value.__cause__
+        assert type(e) == ValueError
+        assert e.args[0] == "BOOM!"
+
+    def test_module_exception(self, tmp_path):
+        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
+            "config.yaml": """
+                modules:
+                    - puzzles.py
+                puzzles:
+                    - puzzles.puzzle:
+            """,
+            "puzzles.py": dedent("""
+                ++ syntax error
+            """),
+        })
+
+        with pytest.raises(UserCodeError) as exc_info:
+            with tutorial: 
+                pass # Just launch
+
+        e = exc_info.value.__cause__
+        assert type(e) == SyntaxError
             
     def test_undo_basic(self, tmp_path):
         # Get the number of images before we made the tutorial

@@ -117,9 +117,11 @@ class TutorialDocker:
                     except subprocess.CalledProcessError as e:
                         raise UserCodeError(f'Setup script "{short_name}" failed. Output:\n' + textwrap.indent(e.output.decode(), "    "))
 
-        # Load modules
-        modules_list = [TutorialDocker._create_module(name, code) for name, code in modules.items()]
-
+        try: # Load modules
+            modules_list = [TutorialDocker._create_module(name, code) for name, code in modules.items()]
+        except Exception as e:
+            raise UserCodeError(f'Puzzle generation failed.') from e
+    
         # Get puzzle generators from the modules
         generators: Dict[str, PuzzleGenerator] = {}
         for module in modules_list: 
@@ -127,7 +129,11 @@ class TutorialDocker:
 
         unknown_puzzles = set(puzzles) - set(generators.keys())
         if unknown_puzzles: raise TutorialConfigException(f"Unknown puzzle generators: {', '.join(unknown_puzzles)}") # TODO custom exception
-        puzzle_list: List[Puzzle] = [self._generate_puzzle(generators[gen]) for gen in puzzles]
+
+        try: # Generate the puzzles
+            puzzle_list: List[Puzzle] = [self._generate_puzzle(generators[gen]) for gen in puzzles]
+        except Exception as e:
+            raise UserCodeError(f'Puzzle generation failed.') from e
 
         self.puzzles = {p.id: p for p in puzzle_list}
 

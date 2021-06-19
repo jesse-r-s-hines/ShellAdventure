@@ -81,13 +81,6 @@ class TestTutorialDocker:
         tutorial = TestTutorialDocker._create_tutorial(working_dir, modules = {}, puzzles = [])
         assert tutorial.puzzles == {}
 
-    # TODO test module errors when I add that
-    # def test_module_error(self, working_dir):
-    #     with pytest.raises():
-    #         tutorial = TestTutorial._create_tutorial(working_dir, modules = {
-    #             "bad_module": "syntax error!",
-    #         })
-
     def test_puzzle_not_found(self, working_dir):
         with pytest.raises(TutorialConfigException, match="Unknown puzzle generators: mypuzzles.not_a_puzzle"):
             tutorial = TestTutorialDocker._create_tutorial(working_dir,
