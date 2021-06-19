@@ -182,7 +182,7 @@ class TutorialDocker:
         elif isinstance(checker_result, str):
             feedback = checker_result
         else:
-            raise Exception(f'Checker function for puzzle "{puzzle.question}" returned {type(checker_result).__name__}, bool or str expected.')
+            raise UserCodeError(f'Checker function for puzzle "{puzzle.question}" returned {type(checker_result).__name__}, bool or str expected.')
 
         puzzle.solved = solved
         return (solved, feedback)
@@ -234,7 +234,7 @@ class TutorialDocker:
                         Message.RESTORE: self.restore,
                     }
                     message, *args = conn.recv()
-                    if message not in actions: raise Exception(f"Expected initial SETUP or RESTORE message, got {message}.")
+                    if message not in actions: raise ValueError(f"Expected initial SETUP or RESTORE message, got {message}.")
                     conn.send(actions[message](**args[0]))
 
                     actions = {
@@ -250,7 +250,7 @@ class TutorialDocker:
                         if message == Message.STOP:
                             return
                         else: # call the lambda with *args, send the return value.
-                            if message not in actions: raise Exception(f"Unrecognized message {message}.")
+                            if message not in actions: raise ValueError(f"Unrecognized message {message}.")
                             conn.send(actions[message](*args)) 
                 except BaseException as e: # BaseException includes KeyboardInterrupt
                     conn.send(e)

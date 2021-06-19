@@ -148,7 +148,7 @@ class TestTutorialDocker:
         )
         [puzzle] = list(tutorial.puzzles.values())
 
-        with pytest.raises(Exception, match="bool or str expected"):
+        with pytest.raises(UserCodeError, match="bool or str expected"):
             tutorial.solve_puzzle(puzzle.id)
     # TODO test other puzzle errors
 
