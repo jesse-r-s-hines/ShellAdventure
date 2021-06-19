@@ -125,7 +125,7 @@ class TestTutorial:
             }) 
 
     def test_validation_error(self, tmp_path):
-        try:
+        with pytest.raises(YamaleError) as exc_info:
             tutorial = pytest.helpers.create_tutorial(tmp_path, {
                 "config.yaml": """
                     undo: 20
@@ -136,12 +136,11 @@ class TestTutorial:
                 """,
                 "puzzles.py": SIMPLE_PUZZLES,
             })
-            assert False, "Didn't fail validation"
-        except YamaleError as error:
-            assert re.search("undo: .* is not a bool.", error.message)
-            assert re.search("modules: Required field missing", error.message)
-            assert re.search("puzzles: .* is not a list.", error.message)
-            assert re.search("resources: Key error", error.message)
+        message = exc_info.value.args[0]
+        assert re.search("undo: .* is not a bool.", message)
+        assert re.search("modules: Required field missing", message)
+        assert re.search("puzzles: .* is not a list.", message)
+        assert re.search("resources: Key error", message)
 
     def test_config(self, tmp_path):
         with pytest.raises(YamaleError):
