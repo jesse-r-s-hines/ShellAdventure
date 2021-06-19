@@ -6,16 +6,6 @@ from . import file as f
 class RandomHelper:
     """ RandomHelper is a class that generates random names, contents, and file paths. """
 
-    _name_dictionary: List[str]
-    """ A list of strings that will be used to generate random names. """
-
-    _content_sources: List[List[str]]
-    """ The sources that will be used to generate random content. List of files, each file is a list of paragraphs. """
-
-    # It would be more efficient to store these as tree.
-    _shared_folders: List[f.File]
-    """ A list of shared folders. random.folder() can use existing folders if they are shared. """
-
     def __init__(self, name_dictionary: str, content_sources: List[str] = []):
         """
         Creates a RandomHelper.
@@ -23,7 +13,9 @@ class RandomHelper:
         """
         names = set(name_dictionary.splitlines())
         names.discard("") # remove empty entries
-        self._name_dictionary = list(names) # choice() only works on list.
+
+        # A list of strings that will be used to generate random names.
+        self._name_dictionary: List[str] = list(names) # choice() only works on list.
 
         def clean_paragraph(paragraph: str) -> str:
             # paragraph = re.sub(r"\s*\n\s*", "", paragraph) # unwrap
@@ -31,7 +23,8 @@ class RandomHelper:
             paragraph = "\n".join([l for l in paragraph.split("\n") if l.strip() != ""]) # remove blank lines.
             return paragraph
 
-        self._content_sources = []
+        # The sources that will be used to generate random content. List of files, each file is a list of paragraphs.
+        self._content_sources: List[List[str]] = []
         for source in content_sources:
             paragraphs = re.split(r"\s*\n\s*\n", source) # split into paragraphs
             paragraphs = [clean_paragraph(para) for para in paragraphs if para.strip() != ""]
@@ -39,7 +32,10 @@ class RandomHelper:
             # para_sentences = [re.findall(r".*?\.\s+", para, flags = re.DOTALL) for para in paragraphs] 
             self._content_sources.append(paragraphs)
 
-        self._shared_folders = []
+        # A list of shared folders. random.folder() can use existing folders if they are shared.
+        # It would be more efficient to store these as tree.
+        self._shared_folders: List[f.File] = []
+
 
     def name(self):
         """ Returns a random word that can be used as a file name. The name is taken from the name_dictionary. """
