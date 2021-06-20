@@ -1,0 +1,7 @@
+FROM shell-adventure:latest
+
+# Install pytest
+USER root
+RUN python -m pip --no-cache-dir install pytest pytest-cov && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*;
+USER student

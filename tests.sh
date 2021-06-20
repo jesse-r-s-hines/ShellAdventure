@@ -1,7 +1,7 @@
 #!/bin/bash
 docker build -t shell-adventure docker_image 1> /dev/null # Only print errors
-docker build -t shell-adventure/tests:main --build-arg TESTING=1 docker_image 1> /dev/null # Only print errors
-docker build -t shell-adventure/tests:alpine --file tests/docker_images/Dockerfile.tests.alpine . 1> /dev/null # Only print errors
+docker build -t shell-adventure/tests:main --file tests/docker_images/Dockerfile.tests.main docker_image 1> /dev/null # Only print errors
+docker build -t shell-adventure/tests:alpine --file tests/docker_images/Dockerfile.tests.alpine docker_image 1> /dev/null # Only print errors
 
 source .venv/bin/activate
 

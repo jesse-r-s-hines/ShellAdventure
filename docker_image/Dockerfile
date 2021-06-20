@@ -42,13 +42,6 @@ RUN apt-get update && \
     # Remove the cache made by apt update and other files to save space
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# if TESTING is 1 install pytest.
-ARG TESTING=0
-RUN if [ ${TESTING} -eq 1 ]; then \
-        python -m pip --no-cache-dir install pytest pytest-cov && \
-        rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* ; \
-    fi
-
 # Make new user and allow them to use sudo
 RUN useradd -ms /bin/bash student && \
     echo "student:student" | chpasswd && \
