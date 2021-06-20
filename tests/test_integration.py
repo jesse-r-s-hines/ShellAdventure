@@ -113,41 +113,6 @@ class TestIntegration:
         with pytest.raises(docker.errors.NotFound):
             docker_helper.client.containers.get(tutorial.container.id)
 
-    def test_cwd(self, tmp_path):
-        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
-            "config.yaml": """
-                modules:
-                    - puzzles.py
-                puzzles:
-                    - puzzles.cd_puzzle
-            """,
-            "puzzles.py": dedent("""
-                from shell_adventure_docker import *
-                def cd_puzzle():
-                    def checker(cwd):
-                        return cwd == File("/home/student")
-
-                    return Puzzle(
-                        question = f"cd into dir",
-                        checker = checker
-                    )
-            """),
-        })
-
-        with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
-            # Connect to bash
-            # TODO find way to change cwd of the bash session
-            cwd_puzzle = tutorial.get_all_puzzles()[0]
-            solved, feedback = tutorial.solve_puzzle(cwd_puzzle)
-            assert solved == True
-            assert cwd_puzzle.solved == True
-            assert feedback == "Correct!"
-
-            assert tutorial.current_score() == 1
-            assert tutorial.is_finished() == True
-
-            assert tutorial.get_student_cwd() == Path("/home/student")
-
     def test_random(self, tmp_path):
         tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
             "config.yaml": """
@@ -233,6 +198,55 @@ class TestIntegration:
             solved, feedback = tutorial.solve_puzzle(puzzle)
             assert solved == True
     
+    def test_different_user(self, tmp_path):
+        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
+            "config.yaml": """
+                home: /
+                user: root
+                modules:
+                    - puzzles.py
+                puzzles:
+                    - puzzles.puz:
+                resources:
+                    resource.txt: resource.txt
+            """,
+            "puzzles.py": dedent("""
+                from shell_adventure_docker import *
+
+                def puz(home):
+                    src = home / "A.txt"
+                    src.write_text("A")
+                    assert src.owner() == "root"
+                    dst = home / "B.txt"
+
+                    def checker(cwd):
+                        assert cwd == File("/")
+                        return not src.exists() and dst.exists()
+
+                    return Puzzle(
+                        question = f"{src} -> {dst}",
+                        checker = checker
+                    )
+            """),
+            "resource.txt": "resource!",
+        })
+        assert tutorial.home == PurePosixPath("/")
+        assert tutorial.user == "root"
+
+        # If user isn't root, trying to add file to root will fail
+        with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
+            # Check that the bash session is running as root in /
+            exit_code, output = tutorial.container.exec_run("ps -o uname= 1", user = "root")
+            assert output.decode().strip() == "root"
+            assert tutorial.get_student_cwd() == Path("/")
+
+            assert file_exists(tutorial, "/A.txt") # Generate the puzzles in root 
+            code, owner = tutorial.container.exec_run("stat -c '%U' A.txt", workdir="/")
+            assert owner.decode().strip() == "root"
+
+            code, owner = tutorial.container.exec_run("stat -c '%U' resource.txt", workdir="/")
+            assert owner.decode().strip() == "root"
+
     def test_setup_and_resources(self, tmp_path):
         tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
             "config.yaml": """
@@ -287,17 +301,13 @@ class TestIntegration:
             code, owner = tutorial.container.exec_run("stat -c '%U' file2.txt")
             assert owner.decode().strip() == "student"
 
-    def test_misc_config(self, tmp_path):
+    def test_undo_disabled(self, tmp_path):
         tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
             "config.yaml": """
-                home: /
-                user: root
                 modules:
                     - puzzles.py
                 puzzles:
                     - puzzles.puz:
-                resources:
-                    resource.txt: resource.txt
                 undo: no
             """,
             "puzzles.py": dedent("""
@@ -305,8 +315,6 @@ class TestIntegration:
 
                 def puz(home):
                     src = home / "A.txt"
-                    src.write_text("A")
-                    assert src.owner() == "root"
                     dst = home / "B.txt"
 
                     def checker():
@@ -317,73 +325,19 @@ class TestIntegration:
                         checker = checker
                     )
             """),
-            "resource.txt": "resource!",
         })
-        assert tutorial.home == PurePosixPath("/")
-        assert tutorial.user == "root"
 
         # If user isn't root, trying to add file to root will fail
         with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
-            # Check that the bash session is running as root in /
-            exit_code, output = tutorial.container.exec_run("ps -o uname= 1", user = "root")
-            assert output.decode().strip() == "root"
-            assert tutorial.get_student_cwd() == Path("/")
-
-            assert file_exists(tutorial, "/A.txt") # Generate the puzzles in root 
-            code, owner = tutorial.container.exec_run("stat -c '%U' A.txt", workdir="/")
-            assert owner.decode().strip() == "root"
-
-            code, owner = tutorial.container.exec_run("stat -c '%U' resource.txt", workdir="/")
-            assert owner.decode().strip() == "root"
-
             assert tutorial.undo_enabled == False
             tutorial.commit()
             assert len(tutorial.undo_list) == 0 # commit is ignored if undo_enabled is false
+            assert tutorial.can_undo() == False
             tutorial.undo(); tutorial.restart() # Undo, restart should just do nothing
             assert tutorial.can_undo() == False
 
-
-    def test_bash_script_exception(self, tmp_path):
-        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
-            "config.yaml": """
-                setup_scripts:
-                    - setup.sh
-                modules:
-                    - puzzles.py
-                puzzles:
-                    - puzzles.move:
-            """,
-            "puzzles.py": PUZZLES,
-            "setup.sh": "echo hello; not-a-command"
-        })
-
-        with pytest.raises(UserCodeError, match="not-a-command: not found"):
-            with tutorial:
-                pass # Just launch
-
-    def test_py_script_exception(self, tmp_path):
-        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
-            "config.yaml": """
-                setup_scripts:
-                    - setup.py
-                modules:
-                    - puzzles.py
-                puzzles:
-                    - puzzles.move:
-            """,
-            "puzzles.py": PUZZLES,
-            "setup.py": "raise TypeError('BOOM!')"
-        })
-
-
-        with pytest.raises(UserCodeError, match='Setup script "setup.py" failed') as exc_info:
-            with tutorial: 
-                pass # Just launch
-        e = exc_info.value.__cause__
-        assert type(e) == TypeError
-        assert e.args[0] == "BOOM!"
-
-    def test_generation_exception(self, tmp_path):
+    def test_exception(self, tmp_path):
+        # Test that exceptions in the container get raised in the Tutorial
         tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
             "config.yaml": """
                 modules:
@@ -400,56 +354,6 @@ class TestIntegration:
         with pytest.raises(UserCodeError, match = "Puzzle generation failed") as exc_info:
             with tutorial: 
                 pass # Just launch
-
-        e = exc_info.value.__cause__
-        assert type(e) == ValueError
-        assert e.args[0] == "BOOM!"
-
-    def test_module_exception(self, tmp_path):
-        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
-            "config.yaml": """
-                modules:
-                    - puzzles.py
-                puzzles:
-                    - puzzles.puzzle:
-            """,
-            "puzzles.py": dedent("""
-                ++ syntax error
-            """),
-        })
-
-        with pytest.raises(UserCodeError, match = "Puzzle generation failed") as exc_info:
-            with tutorial: 
-                pass # Just launch
-
-        e = exc_info.value.__cause__
-        assert type(e) == SyntaxError
-            
-    def test_checker_exception(self, tmp_path):
-        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
-            "config.yaml": """
-                modules:
-                    - puzzles.py
-                puzzles:
-                    - puzzles.puzzle:
-            """,
-            "puzzles.py": dedent("""
-                from shell_adventure_docker import *
-
-                def puzzle():
-                    def checker():
-                        raise ValueError("BOOM!")
-
-                    return Puzzle(
-                        question = f"Puzzle",
-                        checker = checker,
-                    )
-        """),
-        })
-
-        with tutorial: 
-            with pytest.raises(UserCodeError, match = "Puzzle autograder failed") as exc_info:
-                tutorial.solve_puzzle(tutorial.get_all_puzzles()[0])
 
         e = exc_info.value.__cause__
         assert type(e) == ValueError
@@ -597,7 +501,6 @@ class TestIntegration:
             assert tutorial.solve_puzzle(puz) == (True, "Correct!")
             tutorial.undo()
             assert tutorial.solve_puzzle(puz) == (True, "Correct!") # Still has _tutorial set
-
 
     def test_redo(self, tmp_path):
         tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {

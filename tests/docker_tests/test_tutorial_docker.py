@@ -208,9 +208,12 @@ class TestTutorialDocker:
         puzzles = dedent(f"""
             from shell_adventure_docker import *
 
-            def move(home, root):
+            def puzzle(home, root):
+                assert home == File("{working_dir}")
+                assert root == File("/")
+
                 def checker():
-                    return home == File("{working_dir}") and root == File("/")
+                    return True
 
                 return Puzzle(
                     question = f"Check home and root",
@@ -220,7 +223,23 @@ class TestTutorialDocker:
 
         tutorial = TestTutorialDocker._create_tutorial(working_dir,
             modules = {"mypuzzles": puzzles},
-            puzzles = ["mypuzzles.move"],
+            puzzles = ["mypuzzles.puzzle"],
+        )
+
+    def test_checker_func_args(self, working_dir):
+        puzzles = dedent("""
+            from shell_adventure_docker import *
+
+            def puzzle(home):
+                def checker(cwd):
+                    return cwd == File("/home/student")
+
+                return Puzzle( question = f"Puzzle", checker = checker )
+        """)
+
+        tutorial = TestTutorialDocker._create_tutorial(working_dir,
+            modules = {"mypuzzles": puzzles},
+            puzzles = ["mypuzzles.puzzle"],
         )
         [puzzle] = list(tutorial.puzzles.values())
 
@@ -261,7 +280,7 @@ class TestTutorialDocker:
 
     def test_student_cwd(self, working_dir):
         tutorial = TestTutorialDocker._create_tutorial(working_dir)
-        assert tutorial.student_cwd() == File("/home/student")
+        assert tutorial.student_cwd() == File("/home/student") # Gets the cwd from the bash session
 
     def test_get_files(self, working_dir):
         tutorial = TestTutorialDocker._create_tutorial(working_dir, puzzles = [])
@@ -452,3 +471,74 @@ class TestTutorialDocker:
             tutorial = TestTutorialDocker._create_tutorial(working_dir,
                 user = "henry",
             )
+
+    def test_bash_script_exception(self, working_dir):
+        with pytest.raises(UserCodeError, match="not-a-command: not found"):
+            tutorial = TestTutorialDocker._create_tutorial(working_dir,
+                setup_scripts = [
+                    ("script.sh", r"""echo hello; not-a-command"""),
+                ],
+            )
+
+    def test_py_script_exception(self, tmp_path):
+        with pytest.raises(UserCodeError, match='Setup script "script.py" failed') as exc_info:
+            tutorial = TestTutorialDocker._create_tutorial(tmp_path, 
+                 setup_scripts = [
+                    ("script.py", r"""raise TypeError('BOOM!')"""),
+                ],
+            )
+
+        e = exc_info.value.__cause__
+        assert type(e) == TypeError
+        assert e.args[0] == "BOOM!"
+
+    def test_generation_exception(self, tmp_path):
+        with pytest.raises(UserCodeError, match = "Puzzle generation failed") as exc_info:
+            tutorial = TestTutorialDocker._create_tutorial(tmp_path, 
+                modules = {"puzzles": dedent(r"""
+                    def puzzle():
+                        raise ValueError('BOOM!')
+                """)},
+                puzzles = ["puzzles.puzzle"],
+            )
+
+        e = exc_info.value.__cause__
+        assert type(e) == ValueError
+        assert e.args[0] == "BOOM!"
+
+    def test_module_exception(self, tmp_path):
+        with pytest.raises(UserCodeError, match = "Puzzle generation failed") as exc_info:
+            tutorial = TestTutorialDocker._create_tutorial(tmp_path,
+                modules = {"puzzles": dedent(r"""
+                    ++ syntax error
+                """)},
+                puzzles = ["puzzles.puzzle"],
+            )
+
+        e = exc_info.value.__cause__
+        assert type(e) == SyntaxError
+
+    def test_checker_exception(self, tmp_path):
+        tutorial = TestTutorialDocker._create_tutorial(tmp_path, 
+            modules = {"puzzles": dedent(r"""
+                from shell_adventure_docker import *
+
+                def puzzle():
+                    def checker():
+                        raise ValueError("BOOM!")
+
+                    return Puzzle(
+                        question = f"Puzzle",
+                        checker = checker,
+                    )
+            """)},
+            puzzles = ["puzzles.puzzle"],
+        )
+
+        puz_id = list(tutorial.puzzles.keys())[0]
+        with pytest.raises(UserCodeError, match = "Puzzle autograder failed") as exc_info:
+            tutorial.solve_puzzle(puz_id)
+
+        e = exc_info.value.__cause__
+        assert type(e) == ValueError
+        assert e.args[0] == "BOOM!"

@@ -1,3 +1,4 @@
+""" Test the environment in the shell-adventure container. """
 import pytest
 import subprocess
 
