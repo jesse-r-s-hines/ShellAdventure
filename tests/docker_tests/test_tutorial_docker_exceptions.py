@@ -9,28 +9,11 @@ import os, subprocess, pickle
 from textwrap import dedent;
 from shell_adventure_docker.exceptions import *
 
-SIMPLE_PUZZLES = dedent("""
-    from shell_adventure_docker import *
-
-    def move():
-        file = File("A.txt")
-        file.write_text("A")
-
-        def checker():
-            return not file.exists() and File("B.txt").exists()
-
-        return Puzzle(
-            question = f"Rename A.txt to B.txt",
-            checker = checker
-        )
-""")
-
-
 class TestTutorialDockerExceptions:
     def test_puzzle_not_found(self, working_dir):
         with pytest.raises(TutorialConfigException, match="Unknown puzzle generators: mypuzzles.not_a_puzzle"):
             tutorial = pytest.helpers.create_tutorial(working_dir,
-                modules = {"mypuzzles": SIMPLE_PUZZLES},
+                modules = {"mypuzzles": pytest.helpers.simple_puzzles()},
                 puzzles = ["mypuzzles.not_a_puzzle"]
             )
 

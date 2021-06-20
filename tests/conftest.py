@@ -2,9 +2,51 @@ pytest_plugins = ['helpers_namespace']
 import pytest
 
 from typing import Dict, Union, List
+from textwrap import dedent
 from shell_adventure.tutorial import Tutorial
 
 # Defines some fixtures for use in the rest of the tests
+
+@pytest.helpers.register #type: ignore
+def simple_puzzles() -> str: # Can't register constant with @pytest.helpers
+    return dedent("""
+        from shell_adventure_docker import *
+
+        def move():
+            file = File("A.txt")
+            file.write_text("A")
+
+            def checker():
+                return not file.exists() and File("B.txt").exists()
+
+            return Puzzle(
+                question = f"Rename A.txt to B.txt",
+                checker = checker,
+                score = 2,
+            )
+
+        def move2():
+            file = File("C.txt")
+            file.write_text("C")
+
+            def checker():
+                return not file.exists() and File("D.txt").exists()
+
+            return Puzzle(
+                question = f"Rename C.txt to D.txt",
+                checker = checker,
+                score = 3,
+            )
+    """)
+
+@pytest.helpers.register #type: ignore
+def simple_tutorial() -> str:
+    return dedent("""
+        modules:
+            - mypuzzles.py
+        puzzles:
+            - mypuzzles.move
+    """)
 
 @pytest.helpers.register #type: ignore
 def create_tutorial(tmp_path, files: Dict[str, str]) -> Tutorial:

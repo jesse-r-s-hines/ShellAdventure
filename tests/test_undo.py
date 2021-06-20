@@ -3,36 +3,6 @@ from shell_adventure.tutorial import Tutorial
 from shell_adventure import docker_helper
 from textwrap import dedent
 
-PUZZLES = dedent("""
-    from shell_adventure_docker import *
-
-    def move():
-        file = File("A.txt")
-        file.write_text("A")
-
-        def checker():
-            return not file.exists() and File("B.txt").exists()
-
-        return Puzzle(
-            question = f"Rename A.txt to B.txt",
-            checker = checker,
-            score = 2,
-        )
-
-    def move2():
-        file = File("C.txt")
-        file.write_text("C")
-
-        def checker():
-            return not file.exists() and File("D.txt").exists()
-
-        return Puzzle(
-            question = f"Rename C.txt to D.txt",
-            checker = checker,
-            score = 3,
-        )
-""")
-
 class TestUndo:
     def test_undo_disabled(self, tmp_path):
         tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
@@ -83,7 +53,7 @@ class TestUndo:
                     - puzzles.move:
                     - puzzles.move2
             """,
-            "puzzles.py": PUZZLES,
+            "puzzles.py": pytest.helpers.simple_puzzles(),
         })
 
         with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
@@ -122,7 +92,7 @@ class TestUndo:
                     - puzzles.move:
                     - puzzles.move2
             """,
-            "puzzles.py": PUZZLES,
+            "puzzles.py": pytest.helpers.simple_puzzles(),
         })
 
         with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
@@ -156,7 +126,7 @@ class TestUndo:
                     - puzzles.move:
                     - puzzles.move2
             """,
-            "puzzles.py": PUZZLES,
+            "puzzles.py": pytest.helpers.simple_puzzles(),
         })
 
         with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
@@ -221,7 +191,7 @@ class TestUndo:
                     - puzzles.move:
                     - puzzles.move2
             """,
-            "puzzles.py": PUZZLES,
+            "puzzles.py": pytest.helpers.simple_puzzles(),
         })
 
         with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()

@@ -7,32 +7,13 @@ from pathlib import PurePosixPath
 from yamale.yamale_error import YamaleError
 import re
 
-SIMPLE_PUZZLES = dedent("""
-    from shell_adventure_docker import *
-
-    def move():
-        file = File("A.txt")
-        file.write_text("A")
-
-        def checker():
-            return not file.exists() and File("B.txt").exists()
-
-        return Puzzle(
-            question = f"Rename A.txt to B.txt",
-            checker = checker
-        )
-""")
-SIMPLE_TUTORIAL = """
-    modules:
-        - mypuzzles.py
-    puzzles:
-        - mypuzzles.move
-"""
-
 class TestTutorial:
     def test_simple_tutorial(self, tmp_path):
         # Create the files
-        tutorial = pytest.helpers.create_tutorial(tmp_path, {"config.yaml": SIMPLE_TUTORIAL, "mypuzzles.py": SIMPLE_PUZZLES})
+        tutorial = pytest.helpers.create_tutorial(tmp_path, {
+            "config.yaml": pytest.helpers.simple_tutorial(),
+            "mypuzzles.py": pytest.helpers.simple_puzzles()
+        })
         tutorial = Tutorial(f"{tmp_path / 'config.yaml'}") # Strings should also work for path
         assert tutorial.config_file == tmp_path / "config.yaml"
         assert str(tutorial.name_dictionary).endswith("resources/name_dictionary.txt")
@@ -58,8 +39,8 @@ class TestTutorial:
                 content_sources:
                     - content.txt
             """,
-            "puzzle1.py": SIMPLE_PUZZLES,
-            "puzzle2.py": SIMPLE_PUZZLES,
+            "puzzle1.py": pytest.helpers.simple_puzzles(),
+            "puzzle2.py": pytest.helpers.simple_puzzles(),
             "my_dictionary.txt": "a\nb\nc\n",
             "content.txt": "STUFF\n\nSTUFF\n\nMORE STUFF\n",
             "setup.py": "File('A.txt').create()",
@@ -95,7 +76,7 @@ class TestTutorial:
                 content_sources:
                     - content.txt
             """,
-            "puzzle1.py": SIMPLE_PUZZLES, "puzzle2.py": SIMPLE_PUZZLES, "puzzle3.py": SIMPLE_PUZZLES,
+            "puzzle1.py": pytest.helpers.simple_puzzles(), "puzzle2.py": pytest.helpers.simple_puzzles(), "puzzle3.py": pytest.helpers.simple_puzzles(),
         })
         # First level
         assert [pt.generator for pt in tutorial.puzzles] == ["puzzle1.move", "puzzle2.move", "puzzle3.move"]
@@ -108,7 +89,7 @@ class TestTutorial:
 
     def test_missing_files(self, tmp_path):
         with pytest.raises(FileNotFoundError):
-            tutorial = pytest.helpers.create_tutorial(tmp_path, {"config.yaml": SIMPLE_TUTORIAL}) # Don't make any puzzle files
+            tutorial = pytest.helpers.create_tutorial(tmp_path, {"config.yaml": pytest.helpers.simple_tutorial()}) # Don't make any puzzle files
         with pytest.raises(FileNotFoundError):
             tutorial = Tutorial(tmp_path / "not_a_config_file.yaml")
 
@@ -122,7 +103,7 @@ class TestTutorial:
                     puzzles:
                         - puzzle1.move
                 """,
-                "puzzle1.py": SIMPLE_PUZZLES,
+                "puzzle1.py": pytest.helpers.simple_puzzles(),
             }) 
 
     def test_validation_error(self, tmp_path):
@@ -135,7 +116,7 @@ class TestTutorial:
                     resources:
                         1: resource
                 """,
-                "puzzles.py": SIMPLE_PUZZLES,
+                "puzzles.py": pytest.helpers.simple_puzzles(),
             })
         message = exc_info.value.args[0]
         assert re.search("undo: .* is not a bool.", message)
@@ -145,4 +126,4 @@ class TestTutorial:
 
     def test_empty_config(self, tmp_path):
         with pytest.raises(YamaleError):
-            tutorial = pytest.helpers.create_tutorial(tmp_path, {"config.yaml": "", "mypuzzles.py": SIMPLE_PUZZLES})
+            tutorial = pytest.helpers.create_tutorial(tmp_path, {"config.yaml": "", "mypuzzles.py": pytest.helpers.simple_puzzles()})

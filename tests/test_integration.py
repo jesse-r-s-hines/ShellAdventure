@@ -7,36 +7,6 @@ import datetime, time
 import docker, docker.errors
 from shell_adventure_docker.exceptions import *
 
-PUZZLES = dedent("""
-    from shell_adventure_docker import *
-
-    def move():
-        file = File("A.txt")
-        file.write_text("A")
-
-        def checker():
-            return not file.exists() and File("B.txt").exists()
-
-        return Puzzle(
-            question = f"Rename A.txt to B.txt",
-            checker = checker,
-            score = 2,
-        )
-
-    def move2():
-        file = File("C.txt")
-        file.write_text("C")
-
-        def checker():
-            return not file.exists() and File("D.txt").exists()
-
-        return Puzzle(
-            question = f"Rename C.txt to D.txt",
-            checker = checker,
-            score = 3,
-        )
-""")
-
 class TestIntegration:
     def test_basic(self, tmp_path):
         tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
@@ -47,7 +17,7 @@ class TestIntegration:
                     - puzzles.move:
                         - puzzles.move2
             """,
-            "puzzles.py": PUZZLES,
+            "puzzles.py": pytest.helpers.simple_puzzles(),
         })
 
         with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()

@@ -9,27 +9,10 @@ import os, pickle
 from textwrap import dedent;
 from shell_adventure_docker.exceptions import *
 
-SIMPLE_PUZZLES = dedent("""
-    from shell_adventure_docker import *
-
-    def move():
-        file = File("A.txt")
-        file.write_text("A")
-
-        def checker():
-            return not file.exists() and File("B.txt").exists()
-
-        return Puzzle(
-            question = f"Rename A.txt to B.txt",
-            checker = checker
-        )
-""")
-
-
 class TestTutorialDocker:
     def test_creation(self, working_dir):
         tutorial: TutorialDocker = pytest.helpers.create_tutorial(working_dir,
-            modules = {"mypuzzles": SIMPLE_PUZZLES},
+            modules = {"mypuzzles": pytest.helpers.simple_puzzles()},
             puzzles = ["mypuzzles.move"],
         )
 
@@ -44,8 +27,8 @@ class TestTutorialDocker:
     def test_multiple_modules(self, working_dir):
         tutorial: TutorialDocker = pytest.helpers.create_tutorial(working_dir,
             modules = {
-                "mypuzzles1": SIMPLE_PUZZLES,
-                "mypuzzles2": SIMPLE_PUZZLES,
+                "mypuzzles1": pytest.helpers.simple_puzzles(),
+                "mypuzzles2": pytest.helpers.simple_puzzles(),
             },
             puzzles = ["mypuzzles1.move", "mypuzzles2.move"],
         )
@@ -57,7 +40,7 @@ class TestTutorialDocker:
         assert tutorial.puzzles == {}
 
     def test_get_generators(self):
-        module = TutorialDocker._create_module("mypuzzles", SIMPLE_PUZZLES)
+        module = TutorialDocker._create_module("mypuzzles", pytest.helpers.simple_puzzles())
         generators = TutorialDocker._get_generators_from_module(module)
         assert list(generators.keys()) == ["mypuzzles.move"]
 
@@ -84,7 +67,7 @@ class TestTutorialDocker:
 
     def test_restore(self, working_dir):
         tutorial: TutorialDocker = pytest.helpers.create_tutorial(working_dir,
-            modules = {"mypuzzles": SIMPLE_PUZZLES},
+            modules = {"mypuzzles": pytest.helpers.simple_puzzles()},
             puzzles = ["mypuzzles.move"]
         )
         puzzles: List[Puzzle] = list(tutorial.puzzles.values())
@@ -130,7 +113,7 @@ class TestTutorialDocker:
     def test_root_user(self, working_dir): 
         tutorial: TutorialDocker = pytest.helpers.create_tutorial(working_dir,
             user = "root",
-            modules = {"mypuzzles": SIMPLE_PUZZLES},
+            modules = {"mypuzzles": pytest.helpers.simple_puzzles()},
             puzzles = ["mypuzzles.move"]
         )
         assert (working_dir / "A.txt").owner() == "root"
@@ -221,7 +204,7 @@ class TestTutorialDocker:
  
     def test_resources(self, working_dir):
         tutorial: TutorialDocker = pytest.helpers.create_tutorial(working_dir,
-            modules = {"mypuzzles": SIMPLE_PUZZLES},
+            modules = {"mypuzzles": pytest.helpers.simple_puzzles()},
             puzzles = ["mypuzzles.move"],
             resources = {
                 PurePosixPath("resource1.txt"): b"RESOURCE1",
@@ -243,7 +226,7 @@ class TestTutorialDocker:
     def test_resources_different_user(self, working_dir):
         tutorial: TutorialDocker = pytest.helpers.create_tutorial(working_dir,
             user = "root",
-            modules = {"mypuzzles": SIMPLE_PUZZLES},
+            modules = {"mypuzzles": pytest.helpers.simple_puzzles()},
             puzzles = ["mypuzzles.move"],
             resources = {
                 PurePosixPath("resource1.txt"): b"RESOURCE1", # Relative to home
@@ -258,7 +241,7 @@ class TestTutorialDocker:
 
     def test_resources_create_dirs(self, working_dir):
         tutorial: TutorialDocker = pytest.helpers.create_tutorial(working_dir,
-            modules = {"mypuzzles": SIMPLE_PUZZLES},
+            modules = {"mypuzzles": pytest.helpers.simple_puzzles()},
             puzzles = ["mypuzzles.move"],
             resources = {
                 PurePosixPath(f"{working_dir}/dir/resource.txt"): b"RESOURCE",

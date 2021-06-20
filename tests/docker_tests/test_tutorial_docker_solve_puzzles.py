@@ -6,27 +6,10 @@ import os
 from textwrap import dedent;
 import shell_adventure_docker
 
-SIMPLE_PUZZLES = dedent("""
-    from shell_adventure_docker import *
-
-    def move():
-        file = File("A.txt")
-        file.write_text("A")
-
-        def checker():
-            return not file.exists() and File("B.txt").exists()
-
-        return Puzzle(
-            question = f"Rename A.txt to B.txt",
-            checker = checker
-        )
-""")
-
-
 class TestTutorialDockerSolvePuzzles:
     def test_solve_puzzle(self, working_dir):
         tutorial: TutorialDocker = pytest.helpers.create_tutorial(working_dir,
-            modules = {"mypuzzles": SIMPLE_PUZZLES},
+            modules = {"mypuzzles": pytest.helpers.simple_puzzles()},
             puzzles = ["mypuzzles.move"]
         )
         [puzzle] = list(tutorial.puzzles.values())
