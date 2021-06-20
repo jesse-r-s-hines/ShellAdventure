@@ -99,7 +99,7 @@ class TestFile:
             file.chmod("u+g")
         file.create()
 
-        with pytest.raises(Exception, match="Invalid mode"):
+        with pytest.raises(ValueError, match="Invalid mode"):
             file.chmod("not-a-chmod-string")
 
     def test_chown(self, umask000, working_dir):

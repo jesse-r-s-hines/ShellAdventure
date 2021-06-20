@@ -104,8 +104,8 @@ class Tutorial:
         for module in config.get("modules"):
             # Files are relative to the config file (if module is absolute, Path will use that, if relative it will join with first)
             module = Path(self.data_dir, module)
-            if not module.exists(): raise FileNotFoundError(f'Module "{module}" not found.')
-            if module in self.module_paths: raise Exception(f'Multiple puzzle modules with name "{module.name}" found.')
+            if not module.exists(): raise FileNotFoundError(f'Module "{module}" not found.') # TODO maybe throw TutorialConfigException instead?
+            if module in self.module_paths: raise TutorialConfigException(f'Multiple puzzle modules with name "{module.name}" found.')
             self.module_paths.append(module)
 
         self.puzzles = self._parse_puzzles(config.get("puzzles"))

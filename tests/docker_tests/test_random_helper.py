@@ -1,5 +1,5 @@
 import pytest
-from shell_adventure_docker.random_helper import RandomHelper
+from shell_adventure_docker.random_helper import RandomHelper, RandomHelperException
 
 CONTENT_1 = """
 Sentence a.  Sentence b.  Sentence c.
@@ -33,7 +33,7 @@ class TestRandomHelper:
         assert random.name() in {"apple", "banana", "orange"}
         assert random.name() in {"apple", "banana", "orange"}
 
-        with pytest.raises(Exception, match="Out of unique names"):
+        with pytest.raises(RandomHelperException, match="Out of unique names"):
             random.name()
 
     def test_paragraphs(self):
@@ -117,7 +117,7 @@ class TestRandomHelper:
 
         assert random.folder(tmp_path, depth = 1, create_new_chance = 1).name == "b"
 
-        with pytest.raises(Exception, match = "Out of unique names"):
+        with pytest.raises(RandomHelperException, match = "Out of unique names"):
             random.folder(tmp_path, depth = 1, create_new_chance = 1) # "a" already exists, "b" was generated.
 
     def test_mark_shared(self, tmp_path):
@@ -127,7 +127,7 @@ class TestRandomHelper:
         assert tmp_path in random._shared_folders
 
         (tmp_path / "file.txt").touch()
-        with pytest.raises(Exception, match="Can only mark folders as shared"):
+        with pytest.raises(RandomHelperException, match="Can only mark folders as shared"):
             random.mark_shared(tmp_path / "file.txt")
 
 
@@ -152,12 +152,12 @@ class TestRandomHelper:
         (tmp_path / "a").touch()
         assert random.file(tmp_path).name == "b"
 
-        with pytest.raises(Exception, match = "Out of unique names"):
+        with pytest.raises(RandomHelperException, match = "Out of unique names"):
             random.file(tmp_path) # "a" already exists, "b" was generated.
 
         random = RandomHelper("a\nb\n")
         (tmp_path / "a.txt").touch()
         assert random.file(tmp_path, ext = "txt").name == "b.txt"
 
-        with pytest.raises(Exception, match = "Out of unique names"):
+        with pytest.raises(RandomHelperException, match = "Out of unique names"):
             random.file(tmp_path) # "a.txt" already exists, "b" was generated.

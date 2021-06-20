@@ -40,7 +40,7 @@ class RandomHelper:
     def name(self):
         """ Returns a random word that can be used as a file name. The name is taken from the name_dictionary. """
         if len(self._name_dictionary) == 0:
-            raise Exception("Out of unique names.") # TODO custom exception.
+            raise RandomHelperException("Out of unique names.") # TODO custom exception.
         choice = random.choice(self._name_dictionary)
         self._name_dictionary.remove(choice) # We can't choose the same name again.
         return choice
@@ -99,5 +99,8 @@ class RandomHelper:
     def mark_shared(self, folder: f.File):
         """ Marks a folder as shared. The folder does not have to exist yet. """
         if folder.exists() and not folder.is_dir():
-            raise Exception(f"Can't mark {folder} as shared, it already exists as a f. Can only mark folders as shared.")
+            raise RandomHelperException(f"Can't mark {folder} as shared, it already exists as a f. Can only mark folders as shared.")
         self._shared_folders.append(folder.resolve())
+
+class RandomHelperException(Exception):
+    """ Error for when the RandomHelper fails. """

@@ -1,3 +1,4 @@
+from shell_adventure_docker.exceptions import TutorialConfigException
 from typing import *
 import pytest
 from shell_adventure.tutorial import Tutorial
@@ -112,7 +113,7 @@ class TestTutorial:
             tutorial = Tutorial(tmp_path / "not_a_config_file.yaml")
 
     def test_duplicate_module_names(self, tmp_path):
-        with pytest.raises(Exception, match='Multiple puzzle modules with name "puzzle1.py" found'):
+        with pytest.raises(TutorialConfigException, match='Multiple puzzle modules with name "puzzle1.py" found'):
             tutorial = pytest.helpers.create_tutorial(tmp_path, {
                 "config.yaml": """
                     modules:
