@@ -143,6 +143,6 @@ class TestTutorial:
         assert re.search("puzzles: .* is not a list.", message)
         assert re.search("resources: Key error", message)
 
-    def test_config(self, tmp_path):
+    def test_empty_config(self, tmp_path):
         with pytest.raises(YamaleError):
             tutorial = pytest.helpers.create_tutorial(tmp_path, {"config.yaml": "", "mypuzzles.py": SIMPLE_PUZZLES})
