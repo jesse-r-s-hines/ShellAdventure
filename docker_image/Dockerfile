@@ -45,7 +45,7 @@ RUN apt-get update && \
 # if TESTING is 1 install pytest.
 ARG TESTING=0
 RUN if [ ${TESTING} -eq 1 ]; then \
-        python -m pip --no-cache-dir install pytest pytest-cov pytest-helpers-namespace && \
+        python -m pip --no-cache-dir install pytest pytest-cov && \
         rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* ; \
     fi
 

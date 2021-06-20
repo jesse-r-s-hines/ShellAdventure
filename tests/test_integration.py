@@ -6,10 +6,11 @@ from pathlib import Path, PurePosixPath
 import datetime, time
 import docker, docker.errors
 from shell_adventure_docker.exceptions import *
+from .helpers import *
 
 class TestIntegration:
     def test_basic(self, tmp_path):
-        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
+        tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
                 modules:
                     - puzzles.py
@@ -17,7 +18,7 @@ class TestIntegration:
                     - puzzles.move:
                         - puzzles.move2
             """,
-            "puzzles.py": pytest.helpers.simple_puzzles(),
+            "puzzles.py": SIMPLE_PUZZLES,
         })
 
         with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
@@ -69,7 +70,7 @@ class TestIntegration:
             docker_helper.client.containers.get(tutorial.container.id)
 
     def test_random(self, tmp_path):
-        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
+        tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
                 modules:
                     - puzzles.py
@@ -116,7 +117,7 @@ class TestIntegration:
             assert tutorial.is_finished() == True
 
     def test_user(self, tmp_path):
-        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
+        tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
                 modules:
                     - puzzles.py
@@ -154,7 +155,7 @@ class TestIntegration:
             assert solved == True
     
     def test_different_user(self, tmp_path):
-        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
+        tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
                 home: /
                 user: root
@@ -195,7 +196,7 @@ class TestIntegration:
             assert output.decode().strip() == "root"
             assert tutorial.get_student_cwd() == Path("/")
 
-            assert pytest.helpers.file_exists(tutorial, "/A.txt") # Generate the puzzles in root 
+            assert file_exists(tutorial, "/A.txt") # Generate the puzzles in root 
             code, owner = tutorial.container.exec_run("stat -c '%U' A.txt", workdir="/")
             assert owner.decode().strip() == "root"
 
@@ -203,7 +204,7 @@ class TestIntegration:
             assert owner.decode().strip() == "root"
 
     def test_setup_and_resources(self, tmp_path):
-        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
+        tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
                 resources:
                     resource1.txt: output.txt # Relative to home
@@ -257,7 +258,7 @@ class TestIntegration:
             assert owner.decode().strip() == "student"
 
     def test_undo_disabled(self, tmp_path):
-        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
+        tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
                 modules:
                     - puzzles.py
@@ -293,7 +294,7 @@ class TestIntegration:
 
     def test_exception(self, tmp_path):
         # Test that exceptions in the container get raised in the Tutorial
-        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
+        tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
                 modules:
                     - puzzles.py
@@ -315,7 +316,7 @@ class TestIntegration:
         assert e.args[0] == "BOOM!"
 
     def test_different_image(self, tmp_path):
-        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
+        tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
                 image: shell-adventure/tests:alpine
                 resources:
@@ -359,9 +360,9 @@ class TestIntegration:
             code, owner = tutorial.container.exec_run("stat -c '%U' /home/bob/resource.txt")
             assert owner.decode().strip() == "bob"
 
-            pytest.helpers.run_command(tutorial, "touch A.txt")
+            run_command(tutorial, "touch A.txt")
             puzzle = tutorial.get_all_puzzles()[0]
             assert tutorial.solve_puzzle(puzzle) == (True, "Correct!")
 
             tutorial.restart()
-            assert not pytest.helpers.file_exists(tutorial, "A.txt")
+            assert not file_exists(tutorial, "A.txt")

@@ -4,12 +4,12 @@ from shell_adventure_docker.file import File
 from shell_adventure_docker.support import Puzzle
 import os
 from textwrap import dedent;
-import shell_adventure_docker
+from .helpers import *
 
 class TestTutorialDockerSolvePuzzles:
     def test_solve_puzzle(self, working_dir):
-        tutorial: TutorialDocker = pytest.helpers.create_tutorial(working_dir,
-            modules = {"mypuzzles": pytest.helpers.simple_puzzles()},
+        tutorial = create_tutorial(working_dir,
+            modules = {"mypuzzles": SIMPLE_PUZZLES},
             puzzles = ["mypuzzles.move"]
         )
         [puzzle] = list(tutorial.puzzles.values())
@@ -37,7 +37,7 @@ class TestTutorialDockerSolvePuzzles:
                     checker = lambda flag: flag == "OK",
                 )
         """)
-        tutorial: TutorialDocker = pytest.helpers.create_tutorial(working_dir,
+        tutorial = create_tutorial(working_dir,
             modules = {"mypuzzles": puzzle},
             puzzles = ["mypuzzles.flag_puzzle"],
         )
@@ -53,7 +53,7 @@ class TestTutorialDockerSolvePuzzles:
             def puz():
                 return Puzzle(question = f"Say OK", checker = lambda flag: flag == "OK")
         """)
-        tutorial: TutorialDocker = pytest.helpers.create_tutorial(working_dir,
+        tutorial = create_tutorial(working_dir,
             modules = {"mypuzzles": module},
             puzzles = ["mypuzzles.puz"]
         )
@@ -85,7 +85,7 @@ class TestTutorialDockerSolvePuzzles:
                 )
         """)
 
-        tutorial: TutorialDocker = pytest.helpers.create_tutorial(working_dir,
+        tutorial = create_tutorial(working_dir,
             modules = {"mypuzzles": puzzles},
             puzzles = ["mypuzzles.puzzle"],
         )
@@ -101,7 +101,7 @@ class TestTutorialDockerSolvePuzzles:
                 return Puzzle( question = f"Puzzle", checker = checker )
         """)
 
-        tutorial: TutorialDocker = pytest.helpers.create_tutorial(working_dir,
+        tutorial = create_tutorial(working_dir,
             modules = {"mypuzzles": puzzles},
             puzzles = ["mypuzzles.puzzle"],
         )
@@ -128,7 +128,7 @@ class TestTutorialDockerSolvePuzzles:
                 )
         """)
 
-        tutorial: TutorialDocker = pytest.helpers.create_tutorial(working_dir,
+        tutorial = create_tutorial(working_dir,
             modules = {"mypuzzles": puzzles},
             puzzles = ["mypuzzles.move"],
             name_dictionary = "\n".join("abcdefg")

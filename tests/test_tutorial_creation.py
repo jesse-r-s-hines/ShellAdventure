@@ -6,20 +6,21 @@ from textwrap import dedent;
 from pathlib import PurePosixPath
 from yamale.yamale_error import YamaleError
 import re
+from .helpers import *
 
 class TestTutorial:
     def test_simple_tutorial(self, tmp_path):
         # Create the files
-        tutorial = pytest.helpers.create_tutorial(tmp_path, {
-            "config.yaml": pytest.helpers.simple_tutorial(),
-            "mypuzzles.py": pytest.helpers.simple_puzzles()
+        tutorial = create_tutorial(tmp_path, {
+            "config.yaml": SIMPLE_TUTORIAL,
+            "mypuzzles.py": SIMPLE_PUZZLES,
         })
         tutorial = Tutorial(f"{tmp_path / 'config.yaml'}") # Strings should also work for path
         assert tutorial.config_file == tmp_path / "config.yaml"
         assert str(tutorial.name_dictionary).endswith("resources/name_dictionary.txt")
 
     def test_creation(self, tmp_path):
-        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
+        tutorial = create_tutorial(tmp_path, {
             "config.yaml": f"""
                 image: my-custom-image:latest
                 home: /home/user
@@ -39,8 +40,8 @@ class TestTutorial:
                 content_sources:
                     - content.txt
             """,
-            "puzzle1.py": pytest.helpers.simple_puzzles(),
-            "puzzle2.py": pytest.helpers.simple_puzzles(),
+            "puzzle1.py": SIMPLE_PUZZLES,
+            "puzzle2.py": SIMPLE_PUZZLES,
             "my_dictionary.txt": "a\nb\nc\n",
             "content.txt": "STUFF\n\nSTUFF\n\nMORE STUFF\n",
             "setup.py": "File('A.txt').create()",
@@ -60,7 +61,7 @@ class TestTutorial:
         assert [pt.generator for pt in tutorial.puzzles] == ["puzzle1.move", "puzzle2.move"]
 
     def test_nested_puzzles(self, tmp_path):
-        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
+        tutorial = create_tutorial(tmp_path, {
             "config.yaml": f"""
                 modules:
                     - puzzle1.py
@@ -76,7 +77,7 @@ class TestTutorial:
                 content_sources:
                     - content.txt
             """,
-            "puzzle1.py": pytest.helpers.simple_puzzles(), "puzzle2.py": pytest.helpers.simple_puzzles(), "puzzle3.py": pytest.helpers.simple_puzzles(),
+            "puzzle1.py": SIMPLE_PUZZLES, "puzzle2.py": SIMPLE_PUZZLES, "puzzle3.py": SIMPLE_PUZZLES,
         })
         # First level
         assert [pt.generator for pt in tutorial.puzzles] == ["puzzle1.move", "puzzle2.move", "puzzle3.move"]
@@ -89,13 +90,13 @@ class TestTutorial:
 
     def test_missing_files(self, tmp_path):
         with pytest.raises(FileNotFoundError):
-            tutorial = pytest.helpers.create_tutorial(tmp_path, {"config.yaml": pytest.helpers.simple_tutorial()}) # Don't make any puzzle files
+            tutorial = create_tutorial(tmp_path, {"config.yaml": SIMPLE_TUTORIAL}) # Don't make any puzzle files
         with pytest.raises(FileNotFoundError):
             tutorial = Tutorial(tmp_path / "not_a_config_file.yaml")
 
     def test_duplicate_module_names(self, tmp_path):
         with pytest.raises(TutorialConfigException, match='Multiple puzzle modules with name "puzzle1.py" found'):
-            tutorial = pytest.helpers.create_tutorial(tmp_path, {
+            tutorial = create_tutorial(tmp_path, {
                 "config.yaml": """
                     modules:
                         - puzzle1.py
@@ -103,12 +104,12 @@ class TestTutorial:
                     puzzles:
                         - puzzle1.move
                 """,
-                "puzzle1.py": pytest.helpers.simple_puzzles(),
+                "puzzle1.py": SIMPLE_PUZZLES,
             }) 
 
     def test_validation_error(self, tmp_path):
         with pytest.raises(YamaleError) as exc_info:
-            tutorial = pytest.helpers.create_tutorial(tmp_path, {
+            tutorial = create_tutorial(tmp_path, {
                 "config.yaml": """
                     undo: 20
                     puzzles:
@@ -116,7 +117,7 @@ class TestTutorial:
                     resources:
                         1: resource
                 """,
-                "puzzles.py": pytest.helpers.simple_puzzles(),
+                "puzzles.py": SIMPLE_PUZZLES,
             })
         message = exc_info.value.args[0]
         assert re.search("undo: .* is not a bool.", message)
@@ -126,4 +127,4 @@ class TestTutorial:
 
     def test_empty_config(self, tmp_path):
         with pytest.raises(YamaleError):
-            tutorial = pytest.helpers.create_tutorial(tmp_path, {"config.yaml": "", "mypuzzles.py": pytest.helpers.simple_puzzles()})
+            tutorial = create_tutorial(tmp_path, {"config.yaml": "", "mypuzzles.py": SIMPLE_PUZZLES})

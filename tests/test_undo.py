@@ -2,10 +2,11 @@ import pytest
 from shell_adventure.tutorial import Tutorial
 from shell_adventure import docker_helper
 from textwrap import dedent
+from .helpers import *
 
 class TestUndo:
     def test_undo_disabled(self, tmp_path):
-        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
+        tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
                 modules:
                     - puzzles.py
@@ -45,7 +46,7 @@ class TestUndo:
         images_before = docker_client.images.list(all = True)
         containers_before = docker_client.containers.list(all = True)
 
-        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
+        tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
                 modules:
                     - puzzles.py
@@ -53,26 +54,26 @@ class TestUndo:
                     - puzzles.move:
                     - puzzles.move2
             """,
-            "puzzles.py": pytest.helpers.simple_puzzles(),
+            "puzzles.py": SIMPLE_PUZZLES,
         })
 
         with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
             tutorial.commit() # Bash PROMPT_COMMAND would normally run a commit for the initial state.
     
-            pytest.helpers.run_command(tutorial, "touch temp\n")
-            assert pytest.helpers.file_exists(tutorial, "temp")
+            run_command(tutorial, "touch temp\n")
+            assert file_exists(tutorial, "temp")
             assert len(tutorial.undo_list) == 2
             tutorial.undo()
             assert len(tutorial.undo_list) == 1
-            assert not pytest.helpers.file_exists(tutorial, "temp")
+            assert not file_exists(tutorial, "temp")
 
-            pytest.helpers.run_command(tutorial, "touch B\n")
-            pytest.helpers.run_command(tutorial, "touch C\n")
+            run_command(tutorial, "touch B\n")
+            run_command(tutorial, "touch C\n")
             assert len(tutorial.undo_list) == 3
             tutorial.undo()
-            assert not pytest.helpers.file_exists(tutorial, "C")
+            assert not file_exists(tutorial, "C")
             assert len(tutorial.undo_list) == 2
-            pytest.helpers.run_command(tutorial, "touch D\n")
+            run_command(tutorial, "touch D\n")
             assert len(tutorial.undo_list) == 3
 
             images_during = docker_client.images.list(all = True)
@@ -84,7 +85,7 @@ class TestUndo:
         assert len(containers_before) == len(containers_after)
 
     def test_undo_with_puzzle_solving(self, tmp_path):
-        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
+        tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
                 modules:
                     - puzzles.py
@@ -92,7 +93,7 @@ class TestUndo:
                     - puzzles.move:
                     - puzzles.move2
             """,
-            "puzzles.py": pytest.helpers.simple_puzzles(),
+            "puzzles.py": SIMPLE_PUZZLES,
         })
 
         with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
@@ -101,24 +102,24 @@ class TestUndo:
             puz1 = tutorial.get_all_puzzles()[0]
             puz2 = tutorial.get_all_puzzles()[1]
 
-            pytest.helpers.run_command(tutorial, "mv A.txt B.txt\n")
+            run_command(tutorial, "mv A.txt B.txt\n")
             assert tutorial.solve_puzzle(puz1) == (True, "Correct!")
             assert (puz1.solved, puz2.solved) == (True, False)
 
             tutorial.undo()
-            assert pytest.helpers.file_exists(tutorial, "A.txt") and not pytest.helpers.file_exists(tutorial, "B.txt")
+            assert file_exists(tutorial, "A.txt") and not file_exists(tutorial, "B.txt")
             assert (puz1.solved, puz2.solved) == (False, False) # Puzzle is no longer solved
 
-            pytest.helpers.run_command(tutorial, "mv A.txt B.txt\n")
+            run_command(tutorial, "mv A.txt B.txt\n")
             assert tutorial.solve_puzzle(puz1) == (True, "Correct!") # Re-solve puzzle
 
-            pytest.helpers.run_command(tutorial, "mv C.txt D.txt\n")
+            run_command(tutorial, "mv C.txt D.txt\n")
             assert tutorial.solve_puzzle(puz2) == (True, "Correct!")
 
             assert tutorial.is_finished()
 
     def test_undo_empty_stack(self, tmp_path):
-        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
+        tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
                 modules:
                     - puzzles.py
@@ -126,7 +127,7 @@ class TestUndo:
                     - puzzles.move:
                     - puzzles.move2
             """,
-            "puzzles.py": pytest.helpers.simple_puzzles(),
+            "puzzles.py": SIMPLE_PUZZLES,
         })
 
         with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
@@ -137,10 +138,10 @@ class TestUndo:
             tutorial.undo() # Should do nothing since we have nothing to undo
             assert len(tutorial.undo_list) == 1
 
-            pytest.helpers.run_command(tutorial, "touch A\n")
-            pytest.helpers.run_command(tutorial, "touch B\n")
-            pytest.helpers.run_command(tutorial, "touch C\n")
-            pytest.helpers.run_command(tutorial, "touch D\n")
+            run_command(tutorial, "touch A\n")
+            run_command(tutorial, "touch B\n")
+            run_command(tutorial, "touch C\n")
+            run_command(tutorial, "touch D\n")
             assert len(tutorial.undo_list) == 5
             assert tutorial.can_undo()
 
@@ -154,7 +155,7 @@ class TestUndo:
             assert len(tutorial.undo_list) == 1
 
     def test_undo_sets_tutorial(self, tmp_path):
-        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
+        tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
                 modules:
                     - puzzles.py
@@ -177,13 +178,13 @@ class TestUndo:
             tutorial.commit() # Bash PROMPT_COMMAND would normally run a commit before first command
             puz = tutorial.get_all_puzzles()[0]
 
-            pytest.helpers.run_command(tutorial, "touch A\n")
+            run_command(tutorial, "touch A\n")
             assert tutorial.solve_puzzle(puz) == (True, "Correct!")
             tutorial.undo()
             assert tutorial.solve_puzzle(puz) == (True, "Correct!") # Still has _tutorial set
 
     def test_redo(self, tmp_path):
-        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
+        tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
                 modules:
                     - puzzles.py
@@ -191,7 +192,7 @@ class TestUndo:
                     - puzzles.move:
                     - puzzles.move2
             """,
-            "puzzles.py": pytest.helpers.simple_puzzles(),
+            "puzzles.py": SIMPLE_PUZZLES,
         })
 
         with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
@@ -200,20 +201,20 @@ class TestUndo:
             puz1 = tutorial.get_all_puzzles()[0]
             puz2 = tutorial.get_all_puzzles()[1]
 
-            pytest.helpers.run_command(tutorial, "mv A.txt B.txt\n")
+            run_command(tutorial, "mv A.txt B.txt\n")
             assert tutorial.solve_puzzle(puz1) == (True, "Correct!")
 
-            pytest.helpers.run_command(tutorial, "mv C.txt D.txt\n")
+            run_command(tutorial, "mv C.txt D.txt\n")
             assert tutorial.solve_puzzle(puz2) == (True, "Correct!")
 
             tutorial.restart()
             assert len(tutorial.undo_list) == 1
             assert (puz1.solved, puz2.solved) == (False, False)
-            assert pytest.helpers.file_exists(tutorial, "A.txt")
-            assert pytest.helpers.file_exists(tutorial, "C.txt")
+            assert file_exists(tutorial, "A.txt")
+            assert file_exists(tutorial, "C.txt")
 
     def test_undo_pickle_failure(self, tmp_path):
-        tutorial: Tutorial = pytest.helpers.create_tutorial(tmp_path, {
+        tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
                 modules:
                     - puzzles.py

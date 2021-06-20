@@ -1,30 +1,24 @@
-from typing import List
 import pytest
-from pathlib import PurePosixPath, Path
-import shell_adventure_docker
-from shell_adventure_docker.tutorial_docker import TutorialDocker
-from shell_adventure_docker.file import File
-from shell_adventure_docker.support import Puzzle
-import os, subprocess, pickle
 from textwrap import dedent;
 from shell_adventure_docker.exceptions import *
+from .helpers import *
 
 class TestTutorialDockerExceptions:
     def test_puzzle_not_found(self, working_dir):
         with pytest.raises(TutorialConfigException, match="Unknown puzzle generators: mypuzzles.not_a_puzzle"):
-            tutorial = pytest.helpers.create_tutorial(working_dir,
-                modules = {"mypuzzles": pytest.helpers.simple_puzzles()},
+            tutorial = create_tutorial(working_dir,
+                modules = {"mypuzzles": SIMPLE_PUZZLES},
                 puzzles = ["mypuzzles.not_a_puzzle"]
             )
 
     def test_config_error(self, working_dir):
         with pytest.raises(TutorialConfigException, match="doesn't exist"):
-            tutorial = pytest.helpers.create_tutorial(working_dir,
+            tutorial = create_tutorial(working_dir,
                 home = "/not/a/dir",
             )
 
         with pytest.raises(TutorialConfigException, match="doesn't exist"):
-            tutorial = pytest.helpers.create_tutorial(working_dir,
+            tutorial = create_tutorial(working_dir,
                 user = "henry",
             )
 
@@ -36,7 +30,7 @@ class TestTutorialDockerExceptions:
         """)
 
         with pytest.raises(UserCodeError, match="Puzzle generator did not return Puzzle"):
-            tutorial = pytest.helpers.create_tutorial(working_dir,
+            tutorial = create_tutorial(working_dir,
                 modules = {"mypuzzles": puzzles},
                 puzzles = ["mypuzzles.invalid"],
             )
@@ -51,7 +45,7 @@ class TestTutorialDockerExceptions:
                     checker = lambda: 100,
                 )
         """)
-        tutorial = pytest.helpers.create_tutorial(working_dir,
+        tutorial = create_tutorial(working_dir,
             modules = {"mypuzzles": puzzles},
             puzzles = ["mypuzzles.invalid"],
         )
@@ -64,7 +58,7 @@ class TestTutorialDockerExceptions:
 
     def test_bash_script_exception(self, working_dir):
         with pytest.raises(UserCodeError, match="not-a-command: not found"):
-            tutorial = pytest.helpers.create_tutorial(working_dir,
+            tutorial = create_tutorial(working_dir,
                 setup_scripts = [
                     ("script.sh", r"""echo hello; not-a-command"""),
                 ],
@@ -72,7 +66,7 @@ class TestTutorialDockerExceptions:
 
     def test_py_script_exception(self, tmp_path):
         with pytest.raises(UserCodeError, match='Setup script "script.py" failed') as exc_info:
-            tutorial = pytest.helpers.create_tutorial(tmp_path, 
+            tutorial = create_tutorial(tmp_path, 
                  setup_scripts = [
                     ("script.py", r"""raise TypeError('BOOM!')"""),
                 ],
@@ -84,7 +78,7 @@ class TestTutorialDockerExceptions:
 
     def test_generation_exception(self, tmp_path):
         with pytest.raises(UserCodeError, match = "Puzzle generation failed") as exc_info:
-            tutorial = pytest.helpers.create_tutorial(tmp_path, 
+            tutorial = create_tutorial(tmp_path, 
                 modules = {"puzzles": dedent(r"""
                     def puzzle():
                         raise ValueError('BOOM!')
@@ -98,7 +92,7 @@ class TestTutorialDockerExceptions:
 
     def test_module_exception(self, tmp_path):
         with pytest.raises(UserCodeError, match = "Puzzle generation failed") as exc_info:
-            tutorial = pytest.helpers.create_tutorial(tmp_path,
+            tutorial = create_tutorial(tmp_path,
                 modules = {"puzzles": dedent(r"""
                     ++ syntax error
                 """)},
@@ -109,7 +103,7 @@ class TestTutorialDockerExceptions:
         assert type(e) == SyntaxError
 
     def test_checker_exception(self, tmp_path):
-        tutorial = pytest.helpers.create_tutorial(tmp_path, 
+        tutorial = create_tutorial(tmp_path, 
             modules = {"puzzles": dedent(r"""
                 from shell_adventure_docker import *
 
