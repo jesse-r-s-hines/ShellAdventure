@@ -104,8 +104,8 @@ class Tutorial:
         for module in config.get("modules"):
             # Files are relative to the config file (if module is absolute, Path will use that, if relative it will join with first)
             module = Path(self.data_dir, module)
-            if not module.exists(): raise FileNotFoundError(f'Module "{module}" not found.') # TODO maybe throw TutorialConfigException instead?
-            if module in self.module_paths: raise TutorialConfigException(f'Multiple puzzle modules with name "{module.name}" found.')
+            if not module.exists(): raise FileNotFoundError(f'Module "{module}" not found.') # TODO maybe throw ConfigError instead?
+            if module in self.module_paths: raise ConfigError(f'Multiple puzzle modules with name "{module.name}" found.')
             self.module_paths.append(module)
 
         self.puzzles = self._parse_puzzles(config.get("puzzles"))
@@ -190,7 +190,7 @@ class Tutorial:
             self._conn_to_container = retry(lambda: Client(support.conn_addr_to_container, authkey = support.conn_key), tries = 20, delay = 0.2)
         except Exception as e:
             logs = "\n".join((l.decode() for l in self._container_logs))
-            raise TutorialContainerStartupError("Tutorial container failed to start.", container_logs = logs) from e
+            raise ContainerError("Tutorial container failed to start.", container_logs = logs) from e
 
     def _stop_container(self):
         """ Stops the container and remove it and the connection to it. """

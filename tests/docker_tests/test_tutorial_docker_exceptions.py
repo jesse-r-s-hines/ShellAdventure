@@ -5,19 +5,19 @@ from .helpers import *
 
 class TestTutorialDockerExceptions:
     def test_puzzle_not_found(self, working_dir):
-        with pytest.raises(TutorialConfigException, match="Unknown puzzle generators: mypuzzles.not_a_puzzle"):
+        with pytest.raises(ConfigError, match="Unknown puzzle generators: mypuzzles.not_a_puzzle"):
             tutorial = create_tutorial(working_dir,
                 modules = {"mypuzzles": SIMPLE_PUZZLES},
                 puzzles = ["mypuzzles.not_a_puzzle"]
             )
 
     def test_config_error(self, working_dir):
-        with pytest.raises(TutorialConfigException, match="doesn't exist"):
+        with pytest.raises(ConfigError, match="doesn't exist"):
             tutorial = create_tutorial(working_dir,
                 home = "/not/a/dir",
             )
 
-        with pytest.raises(TutorialConfigException, match="doesn't exist"):
+        with pytest.raises(ConfigError, match="doesn't exist"):
             tutorial = create_tutorial(working_dir,
                 user = "henry",
             )

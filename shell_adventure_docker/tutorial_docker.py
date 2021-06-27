@@ -91,8 +91,8 @@ class TutorialDocker:
         self.home = Path(home).resolve()
         self.user = user
         if not self.home.exists() or not self.home.is_dir():
-            raise TutorialConfigException(f'"{self.home}" doesn\'t exist or isn\'t a directory')
-        if not user_exists(self.user): raise TutorialConfigException(f'"{self.user}" doesn\'t exist')
+            raise ConfigError(f'"{self.home}" doesn\'t exist or isn\'t a directory')
+        if not user_exists(self.user): raise ConfigError(f'"{self.user}" doesn\'t exist')
 
         # Copy resources
         for dest, content in resources.items(): # Since I'm root no errors should be able to occur here
@@ -133,7 +133,7 @@ class TutorialDocker:
             generators.update( TutorialDocker._get_generators_from_module(module) )
 
         unknown_puzzles = set(puzzles) - set(generators.keys())
-        if unknown_puzzles: raise TutorialConfigException(f"Unknown puzzle generators: {', '.join(unknown_puzzles)}") # TODO custom exception
+        if unknown_puzzles: raise ConfigError(f"Unknown puzzle generators: {', '.join(unknown_puzzles)}") # TODO custom exception
 
         # Generate the puzzles
         puzzle_list: List[Puzzle] = [self._generate_puzzle(generators[gen]) for gen in puzzles]

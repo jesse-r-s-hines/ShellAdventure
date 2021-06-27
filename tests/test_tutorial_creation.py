@@ -1,4 +1,3 @@
-from shell_adventure_docker.exceptions import TutorialConfigException
 from typing import *
 import pytest
 from shell_adventure.tutorial import Tutorial
@@ -7,6 +6,7 @@ from pathlib import PurePosixPath
 from yamale.yamale_error import YamaleError
 import re
 from .helpers import *
+from shell_adventure_docker.exceptions import *
 
 class TestTutorial:
     def test_simple_tutorial(self, tmp_path):
@@ -95,7 +95,7 @@ class TestTutorial:
             tutorial = Tutorial(tmp_path / "not_a_config_file.yaml")
 
     def test_duplicate_module_names(self, tmp_path):
-        with pytest.raises(TutorialConfigException, match='Multiple puzzle modules with name "puzzle1.py" found'):
+        with pytest.raises(ConfigError, match='Multiple puzzle modules with name "puzzle1.py" found'):
             tutorial = create_tutorial(tmp_path, {
                 "config.yaml": """
                     modules:

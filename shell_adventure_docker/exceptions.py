@@ -3,14 +3,18 @@ import tblib.pickling_support
 import textwrap, traceback
 
 __all__ = [
-    "TutorialContainerStartupError",
+    "TutorialError",
+    "ContainerError",
+    "ConfigError",
     "UserCodeError",
-    "TutorialConfigException",
     "format_exc",
     "format_user_exc",
 ]
 
-class TutorialContainerStartupError(Exception): # TODO move this class out of shell_adventure_docker?
+class TutorialError(Exception):
+    """ Base class for exceptions thrown by the tutorial. """
+
+class ContainerError(TutorialError): # TODO move this class out of shell_adventure_docker?
     """ Exception for when the container and tutorial fail to start. """
     
     def __init__(self, message, container_logs = None):
@@ -19,9 +23,10 @@ class TutorialContainerStartupError(Exception): # TODO move this class out of sh
             message = message + "\n\nContainer Logs:\n" + textwrap.indent(self.container_logs, "    ")
         super().__init__(message)
 
-class TutorialConfigException(Exception):
+class ConfigError(TutorialError):
     """ Thrown if something is wrong with the Tutorial config. """
-class UserCodeError(Exception):
+
+class UserCodeError(TutorialError):
     """ Class for when user supplied code such as PuzzleGenerator's and AutoGrader's throw. """
 
 def format_exc(e: Exception) -> str:
