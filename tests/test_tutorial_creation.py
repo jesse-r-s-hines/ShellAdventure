@@ -126,6 +126,19 @@ class TestTutorial:
         assert re.search("puzzles: .* is not a list.", message)
         assert re.search("resources: Key error", message)
 
+    def test_validation_error_puzzles(self, tmp_path):
+        with pytest.raises(ConfigError, match = "Length of .* is greater than 1"):
+            tutorial = create_tutorial(tmp_path, {
+                "config.yaml": f"""
+                    modules:
+                        - puzzles.py
+                    puzzles:
+                        - puzzles.move:
+                          puzzles.move2:
+                """,
+                "puzzles.py": SIMPLE_PUZZLES,
+            })
+
     def test_config_parse_error(self, tmp_path):
         with pytest.raises(ConfigError, match = "block sequence entries are not allowed in this context"):
             tutorial = create_tutorial(tmp_path, {

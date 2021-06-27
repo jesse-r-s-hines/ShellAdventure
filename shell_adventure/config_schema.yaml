@@ -12,4 +12,4 @@ undo: bool(required = False)
 
 --- # Includes
 # To make a pretty tree structure, puzzle is a str or single element dict containing a list of puzzles
-puzzle: any(str(), map(list(include('puzzle'), required = False), key = str()))
+puzzle: any(str(), map(list(include('puzzle'), required = False), key = str(), min = 1, max = 1))

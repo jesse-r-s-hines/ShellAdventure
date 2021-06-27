@@ -5,5 +5,5 @@ ttkthemes
 Pillow
 dill
 deepmerge
-yamale
+yamale>=3.0.7
 tblib
