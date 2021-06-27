@@ -257,41 +257,6 @@ class TestIntegration:
             code, owner = tutorial.container.exec_run("stat -c '%U' file2.txt")
             assert owner.decode().strip() == "student"
 
-    def test_undo_disabled(self, tmp_path):
-        tutorial = create_tutorial(tmp_path, {
-            "config.yaml": """
-                modules:
-                    - puzzles.py
-                puzzles:
-                    - puzzles.puz:
-                undo: no
-            """,
-            "puzzles.py": dedent("""
-                from shell_adventure_docker import *
-
-                def puz(home):
-                    src = home / "A.txt"
-                    dst = home / "B.txt"
-
-                    def checker():
-                        return not src.exists() and dst.exists()
-
-                    return Puzzle(
-                        question = f"{src} -> {dst}",
-                        checker = checker
-                    )
-            """),
-        })
-
-        # If user isn't root, trying to add file to root will fail
-        with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
-            assert tutorial.undo_enabled == False
-            tutorial.commit()
-            assert len(tutorial.undo_list) == 0 # commit is ignored if undo_enabled is false
-            assert tutorial.can_undo() == False
-            tutorial.undo(); tutorial.restart() # Undo, restart should just do nothing
-            assert tutorial.can_undo() == False
-
     def test_exception(self, tmp_path):
         # Test that exceptions in the container get raised in the Tutorial
         tutorial = create_tutorial(tmp_path, {
