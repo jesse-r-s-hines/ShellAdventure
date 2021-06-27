@@ -10,7 +10,8 @@ from datetime import datetime, timedelta
 from . import docker_helper, PKG_PATH
 from shell_adventure_docker import support
 from shell_adventure_docker.support import Puzzle, PathLike, Message, retry
-import yamale
+from textwrap import indent
+import yaml, yamale
 from yamale.schema import Schema
 from shell_adventure_docker.exceptions import * # Order matters here, we need to register exceptions as picklable after they are defined.
 
@@ -85,10 +86,16 @@ class Tutorial:
         self.config_file = Path(config_file).resolve()
         self.data_dir = self.config_file.parent
 
-        data = yamale.make_data(self.config_file) # Parse the YAML data
-        yamale.validate(Tutorial.config_schema, data) # Throws if invalid
-        [(config, _)] = data # data is [(data, file_name),...] we should only have one though
-        
+        try:
+            data = yamale.make_data(config_file) # Parse the YAML data
+            yamale.validate(Tutorial.config_schema, data) # Throws if invalid
+            [(config, _)] = data # data is [(data, file_name),...] we should only have one though
+        except yamale.YamaleError as e:
+            errors = "\n".join(e.results[0].errors)
+            raise ConfigError(f'Validation error in "{config_file}":\n{indent(errors, "    ")}')
+        except yaml.YAMLError as e:
+            raise ConfigError(str(e))
+
         self.image = config.get("image", "shell-adventure:latest")
 
         home = (config.get("home") or # Use config home if it exists else image WorkingDir if it exists else "/"

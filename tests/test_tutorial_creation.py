@@ -3,7 +3,6 @@ import pytest
 from shell_adventure.tutorial import Tutorial
 from textwrap import dedent;
 from pathlib import PurePosixPath
-from yamale.yamale_error import YamaleError
 import re
 from .helpers import *
 from shell_adventure_docker.exceptions import *
@@ -108,7 +107,7 @@ class TestTutorial:
             }) 
 
     def test_validation_error(self, tmp_path):
-        with pytest.raises(YamaleError) as exc_info:
+        with pytest.raises(ConfigError) as exc_info:
             tutorial = create_tutorial(tmp_path, {
                 "config.yaml": """
                     undo: 20
@@ -120,11 +119,22 @@ class TestTutorial:
                 "puzzles.py": SIMPLE_PUZZLES,
             })
         message = exc_info.value.args[0]
+        
+        assert re.search('Validation error in ".*/config.yaml"', message)
         assert re.search("undo: .* is not a bool.", message)
         assert re.search("modules: Required field missing", message)
         assert re.search("puzzles: .* is not a list.", message)
         assert re.search("resources: Key error", message)
 
+    def test_config_parse_error(self, tmp_path):
+        with pytest.raises(ConfigError, match = "block sequence entries are not allowed in this context"):
+            tutorial = create_tutorial(tmp_path, {
+                "config.yaml": """
+                    modules: - -
+                """,
+                "puzzles.py": SIMPLE_PUZZLES,
+            })
+
     def test_empty_config(self, tmp_path):
-        with pytest.raises(YamaleError):
+        with pytest.raises(ConfigError):
             tutorial = create_tutorial(tmp_path, {"config.yaml": "", "mypuzzles.py": SIMPLE_PUZZLES})
