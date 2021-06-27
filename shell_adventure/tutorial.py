@@ -232,8 +232,8 @@ class Tutorial:
         if any(map(lambda p: p.checker == None, generated_puzzles)): # Check if any puzzle checker failed to pickle
             self.undo_enabled = False # TODO raise warning if undo is disabled because of pickling error
 
-        self._listener_thread = Thread(target=self._listen)
-        self._listener_thread.start()
+        # self._listener_thread = Thread(target=self._listen)
+        # self._listener_thread.start()
 
         self.start_time = datetime.now()
 
