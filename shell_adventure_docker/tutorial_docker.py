@@ -120,7 +120,7 @@ class TutorialDocker:
                         subprocess.run(str(file), stdout = subprocess.PIPE, stderr = subprocess.STDOUT, # combine stderr & stdout
                                        shell = True, check = True) # throw error if fail # run scripts as root.
                     except subprocess.CalledProcessError as e:
-                        raise UserCodeError(f'Setup script "{short_name}" failed. Output:\n' + textwrap.indent(e.output.decode(), "    "))
+                        raise UserCodeError(f'Setup script "{short_name}" failed. Output:\n' + textwrap.indent(e.output.decode(), "  "))
 
         try: # Load modules
             modules_list = [TutorialDocker._create_module(name, code) for name, code in modules.items()]

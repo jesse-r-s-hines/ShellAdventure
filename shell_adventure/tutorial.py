@@ -92,7 +92,7 @@ class Tutorial:
             [(config, _)] = data # data is [(data, file_name),...] we should only have one though
         except yamale.YamaleError as e:
             errors = "\n".join(e.results[0].errors)
-            raise ConfigError(f'Validation error in "{config_file}":\n{indent(errors, "    ")}')
+            raise ConfigError(f'Validation error in "{config_file}":\n{indent(errors, "  ")}')
         except yaml.YAMLError as e:
             raise ConfigError(str(e))
 

@@ -20,7 +20,7 @@ class ContainerError(TutorialError): # TODO move this class out of shell_adventu
     def __init__(self, message, container_logs = None):
         self.container_logs = container_logs
         if container_logs:
-            message = message + "\n\nContainer Logs:\n" + textwrap.indent(self.container_logs, "    ")
+            message = message + "\n\nContainer Logs:\n" + textwrap.indent(self.container_logs, "  ")
         super().__init__(message)
 
 class ConfigError(TutorialError):
