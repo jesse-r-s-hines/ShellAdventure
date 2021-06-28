@@ -5,8 +5,8 @@ from textwrap import dedent
 from pathlib import Path, PurePosixPath
 import datetime, time
 import docker, docker.errors
-from shell_adventure_docker.exceptions import *
 from .helpers import *
+from shell_adventure_docker.exceptions import *
 
 class TestIntegration:
     def test_basic(self, tmp_path):
@@ -275,10 +275,18 @@ class TestIntegration:
         with pytest.raises(UserCodeError, match = "Puzzle generation failed") as exc_info:
             with tutorial: 
                 pass # Just launch
+        
+        expected = dedent("""
+            Puzzle generation failed:
+              Traceback (most recent call last):
+                File "<string>", line 3, in puzzle
+              ValueError: BOOM!
+        """).lstrip()
+        assert str(exc_info.value) == expected
 
-        e = exc_info.value.__cause__
-        assert type(e) == ValueError
-        assert str(e) == "BOOM!"
+        orig_e = exc_info.value.original_exc
+        assert type(orig_e) == ValueError
+        assert str(orig_e) == "BOOM!"
 
     def test_different_image(self, tmp_path):
         tutorial = create_tutorial(tmp_path, {

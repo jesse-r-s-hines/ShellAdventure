@@ -72,7 +72,7 @@ class TestTutorialDockerExceptions:
                 ],
             )
 
-        e = exc_info.value.__cause__
+        e = exc_info.value.original_exc
         assert type(e) == TypeError
         assert str(e) == "BOOM!"
 
@@ -86,7 +86,7 @@ class TestTutorialDockerExceptions:
                 puzzles = ["puzzles.puzzle"],
             )
 
-        e = exc_info.value.__cause__
+        e = exc_info.value.original_exc
         assert type(e) == ValueError
         assert str(e) == "BOOM!"
 
@@ -99,7 +99,7 @@ class TestTutorialDockerExceptions:
                 puzzles = ["puzzles.puzzle"],
             )
 
-        e = exc_info.value.__cause__
+        e = exc_info.value.original_exc
         assert type(e) == SyntaxError
 
     def test_checker_exception(self, tmp_path):
@@ -123,6 +123,6 @@ class TestTutorialDockerExceptions:
         with pytest.raises(UserCodeError, match = "Puzzle autograder failed") as exc_info:
             tutorial.solve_puzzle(puz_id)
 
-        e = exc_info.value.__cause__
+        e = exc_info.value.original_exc
         assert type(e) == ValueError
         assert str(e) == "BOOM!"

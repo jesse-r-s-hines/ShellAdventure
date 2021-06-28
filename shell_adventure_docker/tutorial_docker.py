@@ -70,7 +70,7 @@ class TutorialDocker:
                 "root": File("/"),
             })
         except Exception as e:
-            raise UserCodeError(f'Puzzle generation failed.') from e
+            raise UserCodeError(f'Puzzle generation failed:', original_exc = e)
         if not isinstance(puzzle, Puzzle): raise UserCodeError(f'Puzzle generator did not return Puzzle')
 
         return puzzle
@@ -112,7 +112,7 @@ class TutorialDocker:
                         try:
                             TutorialDocker._create_module("<string>", script) # Execute the module
                         except Exception as e:
-                            raise UserCodeError(f'Setup script "{short_name}" failed.') from e
+                            raise UserCodeError(f'Setup script "{short_name}" failed:', original_exc = e)
                 else:
                     file = File(dir, short_name) # Doesn't matter if a script overwrites another with the same name
                     file.create(mode = 0o700, content = script) # Make script executable
@@ -120,12 +120,12 @@ class TutorialDocker:
                         subprocess.run(str(file), stdout = subprocess.PIPE, stderr = subprocess.STDOUT, # combine stderr & stdout
                                        shell = True, check = True) # throw error if fail # run scripts as root.
                     except subprocess.CalledProcessError as e:
-                        raise UserCodeError(f'Setup script "{short_name}" failed. Output:\n' + textwrap.indent(e.output.decode(), "  "))
+                        raise UserCodeError(f'Setup script "{short_name}" failed. Output:\n{textwrap.indent(e.output.decode(), "  ")}')
 
         try: # Load modules
             modules_list = [TutorialDocker._create_module(name, code) for name, code in modules.items()]
         except Exception as e:
-            raise UserCodeError(f'Puzzle generation failed.') from e
+            raise UserCodeError(f'Puzzle generation failed:', original_exc = e) # TODO give more info on which puzzle failed
     
         # Get puzzle generators from the modules
         generators: Dict[str, PuzzleGenerator] = {}
@@ -174,7 +174,7 @@ class TutorialDocker:
         try:
             checker_result = self._call_user_func(cast(Callable, puzzle.checker), args)
         except Exception as e:
-            raise UserCodeError(f'Puzzle autograder failed.') from e # TODO give more info on which puzzle failed
+            raise UserCodeError(f'Puzzle autograder failed:', original_exc = e) # TODO give more info on which puzzle failed
 
         solved = False
         if checker_result == True:
