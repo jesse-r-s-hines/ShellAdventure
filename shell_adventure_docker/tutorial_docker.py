@@ -5,14 +5,14 @@ from pathlib import Path, PurePosixPath;
 import subprocess, os, textwrap
 from multiprocessing.connection import Listener
 import inspect
-from . import support
-from .support import PathLike, Message, sentence_list, extra_func_params
-from .puzzle import Puzzle, PuzzleGenerator
+from shell_adventure_shared import support
+from shell_adventure_shared.support import PathLike, Message, sentence_list, extra_func_params
+from shell_adventure_shared.puzzle import Puzzle, PuzzleGenerator
 from .file import File
 from .permissions import change_user, user_exists
 from .random_helper import RandomHelper
 import shell_adventure_docker # For access to globals
-from .tutorial_errors import * # Order matters here, we need to register exceptions as picklable after they are defined.
+from shell_adventure_shared.tutorial_errors import * # Order matters here, we need to register exceptions as picklable after they are defined.
 
 class TutorialDocker:
     """ Contains the information for a running tutorial docker side. """

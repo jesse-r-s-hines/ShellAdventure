@@ -1,6 +1,6 @@
 import pytest, re
-from shell_adventure_docker import support
-from shell_adventure_docker.support import call_with_args, sentence_list, UnrecognizedParamsError
+from shell_adventure_shared import support
+from shell_adventure_shared.support import call_with_args, sentence_list, UnrecognizedParamsError
 
 class TestSupport:
     def test_call_with_args(self):

@@ -6,7 +6,7 @@ docker build -t shell-adventure/tests:alpine --file tests/docker_images/Dockerfi
 source .venv/bin/activate
 
 echo "=========== mypy analysis ==========="
-mypy shell_adventure shell_adventure_docker tests
+mypy shell_adventure shell_adventure_docker shell_adventure_shared tests
 
 # See https://docs.pytest.org/en/documentation-restructure/how-to/usage.html#possible-exit-codes for meaning of pytest exit codes
 echo -e "\n\n"

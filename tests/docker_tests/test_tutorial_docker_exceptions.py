@@ -1,8 +1,8 @@
 from _pytest.python_api import raises
 import pytest, re
 from textwrap import dedent;
-from shell_adventure_docker.tutorial_errors import *
-from shell_adventure_docker import support
+from shell_adventure_shared.tutorial_errors import *
+from shell_adventure_shared import support
 from .helpers import *
 
 class TestTutorialDockerExceptions:

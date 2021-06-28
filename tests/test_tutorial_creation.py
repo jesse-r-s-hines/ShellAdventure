@@ -5,7 +5,7 @@ from textwrap import dedent;
 from pathlib import PurePosixPath
 import re
 from .helpers import *
-from shell_adventure_docker.tutorial_errors import *
+from shell_adventure_shared.tutorial_errors import *
 
 class TestTutorial:
     def test_simple_tutorial(self, tmp_path):

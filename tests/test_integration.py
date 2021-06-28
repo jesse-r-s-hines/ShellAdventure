@@ -6,7 +6,7 @@ from pathlib import Path, PurePosixPath
 import datetime, time
 import docker, docker.errors
 from .helpers import *
-from shell_adventure_docker.tutorial_errors import *
+from shell_adventure_shared.tutorial_errors import *
 
 class TestIntegration:
     def test_basic(self, tmp_path):

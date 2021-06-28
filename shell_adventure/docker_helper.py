@@ -5,8 +5,9 @@ from typing import Union
 import docker, deepmerge
 from docker.models.images import Image
 from docker.models.containers import Container
-import shell_adventure_docker
+import shell_adventure
 
+BASE_PATH = shell_adventure.PKG_PATH.parent
 client = docker.from_env()
 
 def launch(image: Union[str, Image], **container_options) -> Container:
@@ -17,10 +18,13 @@ def launch(image: Union[str, Image], **container_options) -> Container:
     Returns (container, volume). You can attach to the container to interact with the shell session inside.
     Make sure to clean up the container and volume when you are done with them.
     """
-    docker_path = '/usr/local/shell_adventure_docker'
+    docker_path = '/usr/local'
 
     container_options = deepmerge.always_merger.merge(dict(
-        volumes = {shell_adventure_docker.PKG_PATH: {'bind': docker_path, 'mode': 'ro'}},
+        volumes = {
+            BASE_PATH / "shell_adventure_docker": {'bind': f"{docker_path}/shell_adventure_docker", 'mode': 'ro'},
+            BASE_PATH / "shell_adventure_shared": {'bind': f"{docker_path}/shell_adventure_shared", 'mode': 'ro'},
+        },
         network_mode = "host",
         cap_add = [
             "CAP_SYS_PTRACE", # Allows us to call `pwdx` to get working directory of student
@@ -34,16 +38,3 @@ def launch(image: Union[str, Image], **container_options) -> Container:
 
     container = client.containers.run(image, **container_options)
     return container
-
-# def _make_volume() -> TemporaryDirectory:
-#     """
-#     Moves files needed into a tmp directory that we can use as a Docker volume. Returns the volume.
-#     """
-#     volume = TemporaryDirectory(prefix = "shell-adventure-")
-#     vol_path = Path(volume.name)
-
-#     # Copy files into the volume (we don't want to give the container access to the real files)
-#     shutil.copytree(PKG.parent / "shell_adventure_docker", vol_path / "shell_adventure_docker",
-#                     ignore = shutil.ignore_patterns("__pycache__"))
-
-#     return volume

@@ -1,7 +1,7 @@
 import pytest
 from shell_adventure_docker.tutorial_docker import TutorialDocker
 from shell_adventure_docker.file import File
-from shell_adventure_docker.puzzle import Puzzle
+from shell_adventure_shared.puzzle import Puzzle
 import os
 from textwrap import dedent;
 from .helpers import *
