@@ -6,7 +6,8 @@ import subprocess, os, textwrap
 from multiprocessing.connection import Listener
 import inspect
 from . import support
-from .support import Puzzle, PathLike, Message, PuzzleGenerator, sentence_list, extra_func_params
+from .support import PathLike, Message, sentence_list, extra_func_params
+from .puzzle import Puzzle, PuzzleGenerator
 from .file import File
 from .permissions import change_user, user_exists
 from .random_helper import RandomHelper

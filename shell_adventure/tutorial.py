@@ -9,7 +9,8 @@ from pathlib import Path, PurePosixPath;
 from datetime import datetime, timedelta
 from . import docker_helper, PKG_PATH
 from shell_adventure_docker import support
-from shell_adventure_docker.support import Puzzle, PathLike, Message, retry
+from shell_adventure_docker.support import PathLike, Message, retry
+from shell_adventure_docker.puzzle import Puzzle
 from textwrap import indent
 import yaml, yamale
 from yamale.schema import Schema

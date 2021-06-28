@@ -1,4 +1,4 @@
-from .support import Puzzle
+from .puzzle import Puzzle
 from .file import File
 from .permissions import Permissions, change_user
 from .random_helper import RandomHelper

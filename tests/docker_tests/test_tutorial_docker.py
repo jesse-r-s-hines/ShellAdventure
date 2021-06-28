@@ -4,7 +4,7 @@ from pathlib import PurePosixPath, Path
 import shell_adventure_docker
 from shell_adventure_docker.tutorial_docker import TutorialDocker
 from shell_adventure_docker.file import File
-from shell_adventure_docker.support import Puzzle
+from shell_adventure_docker.puzzle import Puzzle
 import os, pickle
 from textwrap import dedent;
 from shell_adventure_docker.tutorial_errors import *
