@@ -278,7 +278,7 @@ class TestIntegration:
 
         e = exc_info.value.__cause__
         assert type(e) == ValueError
-        assert e.args[0] == "BOOM!"
+        assert str(e) == "BOOM!"
 
     def test_different_image(self, tmp_path):
         tutorial = create_tutorial(tmp_path, {

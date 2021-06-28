@@ -118,7 +118,7 @@ class TestTutorial:
                 """,
                 "puzzles.py": SIMPLE_PUZZLES,
             })
-        message = exc_info.value.args[0]
+        message = str(exc_info.value)
         
         assert re.search('Validation error in ".*/config.yaml"', message)
         assert re.search("undo: .* is not a bool.", message)

@@ -74,7 +74,7 @@ class TestTutorialDockerExceptions:
 
         e = exc_info.value.__cause__
         assert type(e) == TypeError
-        assert e.args[0] == "BOOM!"
+        assert str(e) == "BOOM!"
 
     def test_generation_exception(self, tmp_path):
         with pytest.raises(UserCodeError, match = "Puzzle generation failed") as exc_info:
@@ -88,7 +88,7 @@ class TestTutorialDockerExceptions:
 
         e = exc_info.value.__cause__
         assert type(e) == ValueError
-        assert e.args[0] == "BOOM!"
+        assert str(e) == "BOOM!"
 
     def test_module_exception(self, tmp_path):
         with pytest.raises(UserCodeError, match = "Puzzle generation failed") as exc_info:
@@ -125,4 +125,4 @@ class TestTutorialDockerExceptions:
 
         e = exc_info.value.__cause__
         assert type(e) == ValueError
-        assert e.args[0] == "BOOM!"
+        assert str(e) == "BOOM!"
