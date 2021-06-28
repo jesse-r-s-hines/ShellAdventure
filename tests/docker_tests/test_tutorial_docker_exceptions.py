@@ -1,14 +1,16 @@
-import pytest
+from _pytest.python_api import raises
+import pytest, re
 from textwrap import dedent;
 from shell_adventure_docker.exceptions import *
+from shell_adventure_docker import support
 from .helpers import *
 
 class TestTutorialDockerExceptions:
     def test_puzzle_not_found(self, working_dir):
-        with pytest.raises(ConfigError, match="Unknown puzzle generators: mypuzzles.not_a_puzzle"):
+        with pytest.raises(ConfigError, match=re.escape("Unknown puzzle generator(s) mypuzzles.puzz_a, mypuzzles.puzz_b and mypuzzles.puzz_c")):
             tutorial = create_tutorial(working_dir,
                 modules = {"mypuzzles": SIMPLE_PUZZLES},
-                puzzles = ["mypuzzles.not_a_puzzle"]
+                puzzles = ["mypuzzles.puzz_a", "mypuzzles.puzz_b", "mypuzzles.puzz_c"]
             )
 
     def test_config_error(self, working_dir):
@@ -54,7 +56,39 @@ class TestTutorialDockerExceptions:
         with pytest.raises(UserCodeError, match="bool or str expected"):
             tutorial.solve_puzzle(puzzle.id)
 
+    def test_generator_unrecognized_params(self, working_dir):
+        puzzles = dedent("""
+            from shell_adventure_docker import *
 
+            def puzzle(not_a_param):
+                return Puzzle(
+                    question = f"This puzzle is invalid",
+                    checker = lambda: True,
+                )
+        """)
+        with pytest.raises(UserCodeError, match=r"Unrecognized param\(s\) not_a_param in puzzle generator"):
+            tutorial = create_tutorial(working_dir,
+                modules = {"mypuzzles": puzzles},
+                puzzles = ["mypuzzles.puzzle"],
+            )
+
+    def test_checker_unrecognized_params(self, working_dir):
+        puzzles = dedent("""
+            from shell_adventure_docker import *
+
+            def puzzle():
+                return Puzzle(
+                    question = f"This puzzle is invalid",
+                    checker = lambda not_a_param: True,
+                )
+        """)
+
+        with pytest.raises(UserCodeError, match=r"Unrecognized param\(s\) not_a_param in checker function") as exc_info:
+            tutorial = create_tutorial(working_dir,
+                modules = {"mypuzzles": puzzles},
+                puzzles = ["mypuzzles.puzzle"],
+            )
+        assert type(exc_info.value.original_exc) is support.UnrecognizedParamsError
 
     def test_bash_script_exception(self, working_dir):
         with pytest.raises(UserCodeError, match="not-a-command: not found"):

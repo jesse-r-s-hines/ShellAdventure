@@ -1,7 +1,7 @@
 from typing import Callable
-import pytest
+import pytest, re
 from shell_adventure_docker import support
-from shell_adventure_docker.support import Puzzle, call_with_args
+from shell_adventure_docker.support import Puzzle, call_with_args, sentence_list, UnrecognizedParamsError
 import pickle
 
 class TestSupport:
@@ -9,10 +9,10 @@ class TestSupport:
         puzzle = Puzzle("Solve this puzzle.", checker = lambda cwd, flag: False)
 
         assert puzzle.solved == False
-        assert puzzle._checker_args == {"cwd", "flag"}
+        assert puzzle._checker_args == ["cwd", "flag"]
 
     def test_create_puzzle_invalid_args(self):
-        with pytest.raises(TypeError, match=r"Unrecognized parameters \(blah\)"):
+        with pytest.raises(UnrecognizedParamsError, match = re.escape("Unrecognized param(s) blah")):
             puzzle = Puzzle("Solve this puzzle.", checker = lambda blah: False)
 
     def test_create_puzzle_invalid_types(self):
@@ -39,7 +39,7 @@ class TestSupport:
         assert old_puzzle.score == new_puzzle.score
         assert old_puzzle.solved == new_puzzle.solved
         assert old_puzzle.id == new_puzzle.id
-        assert old_puzzle._checker_args == {"flag"}
+        assert old_puzzle._checker_args == ["flag"]
 
         assert isinstance(old_puzzle.checker, Callable) # Doesn't affect original
 
@@ -80,7 +80,7 @@ class TestSupport:
         args = {"a": 1, "b": 2, }
 
         func = lambda c: True
-        with pytest.raises(TypeError, match = r'Unrecognized parameters \(c\), expected some combination of \([ab], [ab]\)\.'): # TODO this should be a custom error
+        with pytest.raises(UnrecognizedParamsError, match = re.escape('Unrecognized param(s) c. Expected a and/or b.')):
             call_with_args(func, args)
 
     def test_retry(self):
@@ -94,3 +94,13 @@ class TestSupport:
             support.retry(func, tries = 5, delay = 0)
 
         assert count == 5
+
+    def test_sentence_list(self):
+        assert sentence_list(["a", "b", "c"]) == "a, b and c"
+        assert sentence_list(["a", "b"]) == "a and b"
+        assert sentence_list(["a"]) == "a"
+        assert sentence_list([]) == ""
+
+        assert sentence_list(["a", "b", "c"], sep = "+", last_sep = "=") == "a+b=c"
+        assert sentence_list( (str(i) for i in range(3)) ) == "0, 1 and 2" # iterables work as well as list
+

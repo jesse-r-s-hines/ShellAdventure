@@ -6,7 +6,7 @@ import subprocess, os, textwrap
 from multiprocessing.connection import Listener
 import inspect
 from . import support
-from .support import Puzzle, PathLike, Message, PuzzleGenerator, retry
+from .support import Puzzle, PathLike, Message, PuzzleGenerator, sentence_list, extra_func_params
 from .file import File
 from .permissions import change_user, user_exists
 from .random_helper import RandomHelper
@@ -64,14 +64,22 @@ class TutorialDocker:
 
     def _generate_puzzle(self, generator: PuzzleGenerator) -> Puzzle:
         """ Takes a puzzle generator and generates a puzzle from it. """
+        args = { # TODO add documentation for args you can take in generator function
+            "home": File(self.home), # can't use home() since the user is actually root. #TODO add docs that File.home() doesn't work as expected. 
+            "root": File("/"),
+        }
+
+        extra_params = extra_func_params(generator, list(args.keys()))
+        if extra_params: # TODO give details of which puzzle exception was in
+            raise UserCodeError(
+                f'Unrecognized param(s) {sentence_list(extra_params)} in puzzle generator. Expected {sentence_list(args.keys(), last_sep = " and/or ")}.'
+            )
         try:
-            puzzle = self._call_user_func(generator, { # TODO add documentation for args you can take in generator function
-                "home": File(self.home), # can't use home() since the user is actually root. #TODO add docs that File.home() doesn't work as expected. 
-                "root": File("/"),
-            })
+            puzzle = self._call_user_func(generator, args)
         except Exception as e:
             raise UserCodeError(f'Puzzle generation failed:', original_exc = e)
-        if not isinstance(puzzle, Puzzle): raise UserCodeError(f'Puzzle generator did not return Puzzle')
+        if not isinstance(puzzle, Puzzle):
+            raise UserCodeError(f'Puzzle generator did not return Puzzle')
 
         return puzzle
 
@@ -125,15 +133,15 @@ class TutorialDocker:
         try: # Load modules
             modules_list = [TutorialDocker._create_module(name, code) for name, code in modules.items()]
         except Exception as e:
-            raise UserCodeError(f'Puzzle generation failed:', original_exc = e) # TODO give more info on which puzzle failed
+            raise UserCodeError(f'Puzzle generation failed:', original_exc = e)
     
         # Get puzzle generators from the modules
         generators: Dict[str, PuzzleGenerator] = {}
         for module in modules_list: 
             generators.update( TutorialDocker._get_generators_from_module(module) )
 
-        unknown_puzzles = set(puzzles) - set(generators.keys())
-        if unknown_puzzles: raise ConfigError(f"Unknown puzzle generators: {', '.join(unknown_puzzles)}") # TODO custom exception
+        unknown_puzzles = [p for p in puzzles if p not in generators]
+        if unknown_puzzles: raise ConfigError(f"Unknown puzzle generator(s) {sentence_list(unknown_puzzles)}") # TODO custom exception
 
         # Generate the puzzles
         puzzle_list: List[Puzzle] = [self._generate_puzzle(generators[gen]) for gen in puzzles]

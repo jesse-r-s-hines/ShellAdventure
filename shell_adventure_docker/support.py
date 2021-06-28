@@ -5,7 +5,7 @@ as part of the shell_adventure package.
 """
 
 from __future__ import annotations
-from typing import Union, Callable,  Dict, Any, Set, ClassVar
+from typing import Iterable, Union, Callable,  Dict, Any, List, ClassVar
 import os, time, uuid, inspect, dill
 from enum import Enum
 
@@ -39,7 +39,7 @@ class Puzzle:
     id: str
     """ A unique identifier for the puzzle. """
 
-    allowed_checker_args: ClassVar[Set[str]] = {"cwd", "flag"}
+    allowed_checker_args: ClassVar[List[str]] = ["cwd", "flag"]
     """ A set of the checker args that are recognized. """
 
     def __init__(self, question: str, checker: AutoGrader, score: int = 1):
@@ -75,10 +75,14 @@ class Puzzle:
         self.solved = False
         self.id = str(uuid.uuid4())
 
-        self._checker_args = set(inspect.getfullargspec(self.checker).args) # args of the checker function.
-        if not self._checker_args.issubset(Puzzle.allowed_checker_args):
-            raise TypeError(f'Unrecognized parameters ({", ".join(self._checker_args - Puzzle.allowed_checker_args)}), ' +
-                            f'checker functions can only have some combination of parameters ({", ".join(Puzzle.allowed_checker_args)}).')
+        self._checker_args = inspect.getfullargspec(self.checker).args # args of the checker function.
+        extra_params = extra_func_params(self.checker, Puzzle.allowed_checker_args)
+        if extra_params:
+            raise UnrecognizedParamsError(
+                f'Unrecognized param(s) {sentence_list(extra_params)} in checker function. ' +
+                f'Expected {sentence_list(Puzzle.allowed_checker_args, last_sep = " and/or ")}.',
+                extra_params = extra_params
+            )
 
     def __getstate__(self):
         """
@@ -147,6 +151,11 @@ class Message(Enum):
     MAKE_COMMIT = 'MAKE_COMMIT'
     """ Make a Docker commit of the container so we can undo a command. """
 
+def extra_func_params(func: Callable[..., Any], params: List[str]):
+    """ Returns any params of func that aren't in params. You can use this to check if you can safely use call_with_args() """
+    func_params = set(inspect.getfullargspec(func).args)
+    return [parm for parm in func_params if parm not in params]
+
 def call_with_args(func: Callable[..., Any], args: Dict[str, Any]) -> Any:
     """
     Takes a function and a map of args to their names. Any values in args that have the same name as a parameter of func
@@ -154,15 +163,31 @@ def call_with_args(func: Callable[..., Any], args: Dict[str, Any]) -> Any:
     Returns the return result of func.
     """
     func_params = set(inspect.getfullargspec(func).args)
-    known_args = set(args.keys())
+    known_args = list(args.keys())
 
     # Make sure there are no unrecognized parameters
-    if not func_params.issubset(known_args): # TODO use custom exception
-        raise TypeError(f'Unrecognized parameters ({", ".join(func_params - known_args)}), expected some combination of ({", ".join(known_args)}).')
+    extra_params = extra_func_params(func, known_args)
+    if extra_params:
+        raise UnrecognizedParamsError(
+            f'Unrecognized param(s) {sentence_list(extra_params)}. Expected {sentence_list(known_args, last_sep = " and/or ")}.',
+            extra_params = extra_params
+        )
 
     # Only pass the args that the checker function has
     args_to_pass = {param: args[param] for param in func_params}
     return func(**args_to_pass)
+
+class UnrecognizedParamsError(Exception):
+    """ Exception for when call_with_args's func has paramaters not in the given paramater list. """
+    def __init__(self, message: str, extra_params: List[str]):
+        self.message = message
+        self.extra_params = extra_params
+
+    def __str__(self):
+        return self.message
+    
+    def __reduce__(self): # Make it picklable
+        return (type(self), (self.message, self.extra_params))
 
 def retry(func: Callable[[], Any], tries = 16, delay = 0.25) -> Any:
     """
@@ -175,3 +200,19 @@ def retry(func: Callable[[], Any], tries = 16, delay = 0.25) -> Any:
         except:
             time.sleep(delay)
     return func() # Last time just let the errors get raised.
+
+def sentence_list(arr: Iterable[str], sep: str = ", ", last_sep: str = " and "):
+    """
+    Takes a list of strings, returns a string representing the list with the final seperator different. Eg.
+    >>> sentence_list(["a", "b", "c"])
+    "a, b and c"
+    """
+    arr = list(arr)
+    if len(arr) == 0:
+        return ""
+    elif len(arr) == 1:
+        return arr[0]
+    else:
+        return sep.join(arr[:-1]) + last_sep + arr[-1]
+
+    
