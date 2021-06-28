@@ -1,4 +1,4 @@
-""" Contains various exception classes """
+""" Contains various exception classes that the tutorial will throw. """
 import tblib.pickling_support
 import textwrap, traceback
 

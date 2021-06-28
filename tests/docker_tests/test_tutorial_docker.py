@@ -7,7 +7,7 @@ from shell_adventure_docker.file import File
 from shell_adventure_docker.support import Puzzle
 import os, pickle
 from textwrap import dedent;
-from shell_adventure_docker.exceptions import *
+from shell_adventure_docker.tutorial_errors import *
 from .helpers import *
 
 class TestTutorialDocker:

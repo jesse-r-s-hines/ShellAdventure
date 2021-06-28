@@ -1,7 +1,7 @@
 import pytest
 from textwrap import dedent
-from shell_adventure_docker import exceptions
-from shell_adventure_docker.exceptions import *
+from shell_adventure_docker import tutorial_errors
+from shell_adventure_docker.tutorial_errors import *
 
 class TestExceptions:
     def test_format_user_exc(self):

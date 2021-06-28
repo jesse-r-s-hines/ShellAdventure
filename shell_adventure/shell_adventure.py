@@ -1,7 +1,7 @@
 import sys
 from shell_adventure.gui import GUI
 from shell_adventure.tutorial import Tutorial
-from shell_adventure_docker.exceptions import *
+from shell_adventure_docker.tutorial_errors import *
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:

@@ -1,7 +1,7 @@
 from _pytest.python_api import raises
 import pytest, re
 from textwrap import dedent;
-from shell_adventure_docker.exceptions import *
+from shell_adventure_docker.tutorial_errors import *
 from shell_adventure_docker import support
 from .helpers import *
 

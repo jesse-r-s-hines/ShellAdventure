@@ -13,7 +13,7 @@ from shell_adventure_docker.support import Puzzle, PathLike, Message, retry
 from textwrap import indent
 import yaml, yamale
 from yamale.schema import Schema
-from shell_adventure_docker.exceptions import * # Order matters here, we need to register exceptions as picklable after they are defined.
+from shell_adventure_docker.tutorial_errors import * # Order matters here, we need to register exceptions as picklable after they are defined.
 
 class Tutorial:
     """ Contains the information for a running tutorial. """
