@@ -2,6 +2,7 @@
 docker build -t shell-adventure docker_image 1> /dev/null # Only print errors
 docker build -t shell-adventure/tests:main --file tests/docker_images/Dockerfile.tests.main docker_image 1> /dev/null # Only print errors
 docker build -t shell-adventure/tests:alpine --file tests/docker_images/Dockerfile.tests.alpine docker_image 1> /dev/null # Only print errors
+docker build -t shell-adventure/tests:missing-deps --file tests/docker_images/Dockerfile.tests.missing-deps docker_image 1> /dev/null # Only print errors
 
 source .venv/bin/activate
 

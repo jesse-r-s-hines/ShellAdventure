@@ -339,3 +339,19 @@ class TestIntegration:
 
             tutorial.restart()
             assert not file_exists(tutorial, "A.txt")
+
+    def test_missing_deps(self, tmp_path):
+        tutorial = create_tutorial(tmp_path, {
+            "config.yaml": """
+                image: shell-adventure/tests:missing-deps
+                modules:
+                    - puzzles.py
+                puzzles:
+                    - puzzles.move:
+            """,
+            "puzzles.py": SIMPLE_PUZZLES,
+        })
+    
+        with pytest.raises(ContainerError, match = "dill, tblib, python-lorem"):
+            with tutorial:
+                pass
