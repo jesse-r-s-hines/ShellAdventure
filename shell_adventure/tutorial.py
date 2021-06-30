@@ -135,7 +135,8 @@ class Tutorial:
         self._conn_to_container: Connection = None # Connection to send messages to docker container.
         self._listener_thread: Thread = None # Thread running a Listener that will trigger the docker commits.
                                              # The Docker container should send a signal after every bash command the student enters.
-        self._container_logs: Generator[bytes, None, None] = None # The stream that contains the docker side tutorial output.
+        self._logs_stream: Generator[bytes, None, None] = None # The stream that contains the docker side tutorial output.
+        self._logs: str = ""
 
         self.undo_list = []
 
@@ -165,6 +166,7 @@ class Tutorial:
 
         return puzzle_trees
 
+
     def _listen(self):
         """
         Listen for the docker container to tell us when a command has been entered.
@@ -185,6 +187,12 @@ class Tutorial:
         if isinstance(data, BaseException): raise data
         return data
 
+
+    def logs(self):
+        """ Return the container logs so far as a string. """
+        self._logs += "\n".join((l.decode() for l in self._logs_stream))
+        return self._logs
+
     def _start_container(self, image: str):
         """ Starts the container and connects to it. """
         try:
@@ -192,13 +200,12 @@ class Tutorial:
                 user = self.user,
                 working_dir = str(self.home)
             )
-            _, self._container_logs = self.container.exec_run(["python3", "/usr/local/shell_adventure_docker/start.py"],
-                                                                user = "root", stream = True)
+            _, self._logs_stream = self.container.exec_run(["python3", "/usr/local/shell_adventure_docker/start.py"],
+                                                                      user = "root", stream = True)
             # retry the connection a few times since the container may take a bit to get started.
             self._conn_to_container = retry(lambda: Client(support.conn_addr_to_container, authkey = support.conn_key), tries = 20, delay = 0.2)
         except Exception as e:
-            logs = "\n".join((l.decode() for l in self._container_logs))
-            raise ContainerStartupError("Tutorial container failed to start.", container_logs = logs) from e
+            raise ContainerStartupError("Tutorial container failed to start.", container_logs = self.logs()) from e
 
     def _stop_container(self):
         """ Stops the container and remove it and the connection to it. """

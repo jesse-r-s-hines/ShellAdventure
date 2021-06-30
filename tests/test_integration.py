@@ -355,3 +355,5 @@ class TestIntegration:
         with pytest.raises(ContainerStartupError, match = "dill, tblib, python-lorem"):
             with tutorial:
                 pass
+
+        assert "dill, tblib, python-lorem" in tutorial.logs()
