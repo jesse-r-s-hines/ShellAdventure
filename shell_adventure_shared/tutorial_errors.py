@@ -5,6 +5,8 @@ import textwrap, traceback
 __all__ = [
     "TutorialError",
     "ContainerError",
+    "ContainerStartupError",
+    "ContainerStoppedError",
     "ConfigError",
     "UserCodeError",
     "format_exc",
@@ -14,22 +16,34 @@ __all__ = [
 class TutorialError(Exception):
     """ Base class for exceptions thrown by the tutorial. """
 
-class ContainerError(TutorialError): # TODO move this class out of shell_adventure_docker?
-    """ Exception for when the container and tutorial fail to start. """
+class ContainerError(TutorialError):
+    """
+    Exception for when something goes wrong in the container that we can't catch in the container side Python,
+    such as the container failing to start.
+    """
     
-    def __init__(self, message, container_logs = None):
-        self.message = message
-        self.container_logs = container_logs
+    def __init__(self, message: str, container_logs: str = ""):
+        self.message: str = message
+        self.container_logs: str = container_logs
 
     def __str__(self):
         string = self.message
-        if self.container_logs:
+        if self.container_logs.strip():
             string += "\n\nContainer Logs:\n" + textwrap.indent(self.container_logs, "  ")
         return string
 
     def __reduce__(self):
         # So we can pickle the exceptions, https://stackoverflow.com/questions/49715881/how-to-pickle-inherited-exceptions
         return (type(self), (self.message, self.container_logs))
+
+class ContainerStartupError(ContainerError):
+    """ Exception for when the container and tutorial fail to start. """
+
+class ContainerStoppedError(ContainerError):
+    """
+    Exception for when the container stops during the tutorial without sending us an error. This will happen if something
+    stops/crashes the container or the main process (such using Ctrl-D to end the shell session)
+    """
 
 class ConfigError(TutorialError):
     """ Thrown if something is wrong with the Tutorial config. """

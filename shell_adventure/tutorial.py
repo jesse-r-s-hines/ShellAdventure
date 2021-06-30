@@ -198,7 +198,7 @@ class Tutorial:
             self._conn_to_container = retry(lambda: Client(support.conn_addr_to_container, authkey = support.conn_key), tries = 20, delay = 0.2)
         except Exception as e:
             logs = "\n".join((l.decode() for l in self._container_logs))
-            raise ContainerError("Tutorial container failed to start.", container_logs = logs) from e
+            raise ContainerStartupError("Tutorial container failed to start.", container_logs = logs) from e
 
     def _stop_container(self):
         """ Stops the container and remove it and the connection to it. """
