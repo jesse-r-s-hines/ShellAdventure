@@ -181,11 +181,13 @@ class Tutorial:
                     elif data == Message.MAKE_COMMIT:
                         self.commit()
 
-    def _recv(self) -> Any:
-        """ Receives a value from the connection to the container. If the container sent an exception, raise it. """
-        data = self._conn_to_container.recv()
-        if isinstance(data, BaseException): raise data
-        return data
+    def _send(self, message: Message, *args) -> Any:
+        """ Sends a message to the container, and returns the response. If the container sent an exception, raise it. """
+        self._conn_to_container.send( (message, *args) )
+        response = self._conn_to_container.recv()
+        if isinstance(response, BaseException):
+            raise response
+        return response
 
 
     def logs(self):
@@ -228,7 +230,7 @@ class Tutorial:
         
         tmp_tree = PuzzleTree("", dependents=self.puzzles) # Put puzzles under a dummy node so we can iterate  it.
 
-        self._conn_to_container.send((Message.SETUP, {
+        generated_puzzles = self._send(Message.SETUP, {
             "home": self.home,
             "user": self.user,
             "resources": {dst: src.read_bytes() for src, dst in self.resources.items()},
@@ -237,8 +239,7 @@ class Tutorial:
             "puzzles": [pt.generator for pt in tmp_tree],
             "name_dictionary": self.name_dictionary.read_text(),
             "content_sources": [file.read_text() for file in self.content_sources],
-        }))
-        generated_puzzles = self._recv()
+        })
 
         # store the puzzles in the PuzzleTree (unflatten from preorder list)
         for pt, puzzle in zip(tmp_tree, generated_puzzles):
@@ -312,12 +313,11 @@ class Tutorial:
         self._start_container(snapshot.image)
 
         tmp_tree = PuzzleTree("", dependents=self.puzzles) # Put puzzles under a dummy node so we can iterate  it.
-        self._conn_to_container.send((Message.RESTORE, {
+        self._send(Message.RESTORE, {
             "home": self.home,
             "user": self.user,
             "puzzles": [pt.puzzle for pt in tmp_tree],
-        }))
-        self._recv() # Wait until complete
+        })
 
         # Set the puzzle solved state
         for puzzle, solved in zip(self.get_all_puzzles(), snapshot.puzzles_solved.values()): # The lists are in the same order
@@ -357,8 +357,7 @@ class Tutorial:
 
     def solve_puzzle(self, puzzle: Puzzle, flag: str = None) -> Tuple[bool, str]:
         """ Tries to solve the puzzle. Returns (success, feedback) and sets the Puzzle as solved if the checker succeeded. """
-        self._conn_to_container.send( (Message.SOLVE, puzzle.id, flag) )
-        (solved, feedback) = self._recv()
+        (solved, feedback) = self._send(Message.SOLVE, puzzle.id, flag)
         puzzle.solved = solved
 
         # Update latest snapshot
@@ -369,8 +368,7 @@ class Tutorial:
 
     def get_student_cwd(self) -> PurePosixPath:
         """ Get the path to the students current directory/ """
-        self._conn_to_container.send( (Message.GET_STUDENT_CWD,) )
-        return self._recv()
+        return self._send(Message.GET_STUDENT_CWD)
 
     def get_files(self, folder: PurePosixPath) -> List[Tuple[bool, bool, PurePosixPath]]:
         """
@@ -378,9 +376,7 @@ class Tutorial:
         Folder should be an absolute path.
         """
         assert folder.is_absolute()
-
-        self._conn_to_container.send( (Message.GET_FILES, folder) )
-        return self._recv()
+        return self._send(Message.GET_FILES, folder)
 
     def time(self) -> timedelta:
         """ Returns the time that the student has spend on the tutorial so far. """
