@@ -284,10 +284,6 @@ class TestIntegration:
         """).lstrip()
         assert str(exc_info.value) == expected
 
-        orig_e = exc_info.value.original_exc
-        assert type(orig_e) == ValueError
-        assert str(orig_e) == "BOOM!"
-
     def test_different_image(self, tmp_path):
         tutorial = create_tutorial(tmp_path, {
             "config.yaml": """

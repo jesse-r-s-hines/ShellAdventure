@@ -51,18 +51,18 @@ class ConfigError(TutorialError):
 class UserCodeError(TutorialError):
     """ Class for when user supplied code such as PuzzleGenerator's and AutoGrader's throw. """
 
-    def __init__(self, message: str, original_exc: Exception = None):
+    def __init__(self, message: str, tb_str: str = None):
         self.message = message
-        self.original_exc = original_exc
+        self.tb_str = tb_str
 
     def __str__(self):
         string = self.message
-        if self.original_exc:
-            string += "\n" + textwrap.indent(format_user_exc(self.original_exc), "  ")
+        if self.tb_str:
+            string += "\n" + textwrap.indent(self.tb_str, "  ")
         return string
 
     def __reduce__(self):
-        return (type(self), (self.message, self.original_exc))
+        return (type(self), (self.message, self.tb_str))
 
 
 def format_exc(e: Exception) -> str:

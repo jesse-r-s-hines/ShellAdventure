@@ -88,7 +88,7 @@ class TestTutorialDockerExceptions:
                 modules = {"mypuzzles": puzzles},
                 puzzles = ["mypuzzles.puzzle"],
             )
-        assert type(exc_info.value.original_exc) is support.UnrecognizedParamsError
+        assert "UnrecognizedParamsError" in str(exc_info.value)
 
     def test_bash_script_exception(self, working_dir):
         with pytest.raises(UserCodeError, match="not-a-command: not found"):
@@ -106,9 +106,7 @@ class TestTutorialDockerExceptions:
                 ],
             )
 
-        e = exc_info.value.original_exc
-        assert type(e) == TypeError
-        assert str(e) == "BOOM!"
+        assert "TypeError: BOOM!" in str(exc_info.value)
 
     def test_generation_exception(self, tmp_path):
         with pytest.raises(UserCodeError, match = "Puzzle generation failed") as exc_info:
@@ -120,9 +118,7 @@ class TestTutorialDockerExceptions:
                 puzzles = ["puzzles.puzzle"],
             )
 
-        e = exc_info.value.original_exc
-        assert type(e) == ValueError
-        assert str(e) == "BOOM!"
+        assert "ValueError: BOOM!" in str(exc_info.value)
 
     def test_module_exception(self, tmp_path):
         with pytest.raises(UserCodeError, match = "Puzzle generation failed") as exc_info:
@@ -133,8 +129,15 @@ class TestTutorialDockerExceptions:
                 puzzles = ["puzzles.puzzle"],
             )
 
-        e = exc_info.value.original_exc
-        assert type(e) == SyntaxError
+        expected = dedent("""
+            Puzzle generation failed:
+              Traceback (most recent call last):
+                File "<string>", line 2
+                  ++ syntax error
+                            ^
+              SyntaxError: invalid syntax
+        """).lstrip()
+        assert expected == str(exc_info.value)
 
     def test_checker_exception(self, tmp_path):
         tutorial = create_tutorial(tmp_path, 
@@ -157,6 +160,4 @@ class TestTutorialDockerExceptions:
         with pytest.raises(UserCodeError, match = "Puzzle autograder failed") as exc_info:
             tutorial.solve_puzzle(puz_id)
 
-        e = exc_info.value.original_exc
-        assert type(e) == ValueError
-        assert str(e) == "BOOM!"
+        assert "ValueError: BOOM!" in str(exc_info.value)
