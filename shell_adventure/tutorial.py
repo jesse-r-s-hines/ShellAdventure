@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Any, Generator, List, Tuple, Dict, ClassVar
 from multiprocessing.connection import Listener, Client, Connection
-import docker, docker.errors, subprocess, os
+import docker, docker.errors, subprocess, os, pickle
 from threading import Thread
 from docker.models.images import Image
 from docker.models.containers import Container
@@ -184,9 +184,14 @@ class Tutorial:
     def _send(self, message: Message, *args) -> Any:
         """ Sends a message to the container, and returns the response. If the container sent an exception, raise it. """
         self._conn_to_container.send( (message, *args) )
-        response = self._conn_to_container.recv()
+        try:
+            response = self._conn_to_container.recv()
+        except pickle.PicklingError as e:
+            raise e
+        except: # The container died without sending any exception info (i.e. Ctrl-D out of bash session)
+            raise ContainerStoppedError("Tutorial container stopped unexpectedly.", container_logs = self.logs())
         if isinstance(response, BaseException):
-            raise response
+            raise response # container will send Python exception if something fails.
         return response
 
 
@@ -212,7 +217,8 @@ class Tutorial:
     def _stop_container(self):
         """ Stops the container and remove it and the connection to it. """
         if self._conn_to_container != None:
-            self._conn_to_container.send( (Message.STOP,) )
+            try: self._conn_to_container.send( (Message.STOP,) )
+            except: pass
             self._conn_to_container.close()
 
         if self.container:

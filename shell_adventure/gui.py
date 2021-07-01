@@ -8,7 +8,7 @@ from PIL import ImageTk, Image
 from .scrolled_frame import VerticalScrolledFrame
 from . import tutorial, PKG_PATH
 from shell_adventure_shared.puzzle import Puzzle
-
+import time
 class GUI(ThemedTk):
     def __init__(self, tutorial: tutorial.Tutorial, undo_callback: Callable): # TODO find a better way to restart the bash session
         """ Creates and launches the Shell Adventure GUI. Pass it the tutorial object. """
@@ -277,7 +277,7 @@ class GUI(ThemedTk):
         """ Override. """
         self.destroy()
         # Raising the exception so that we can handle it in the launch script 
-        raise val from None # none so we don't get "while handling..."
+        raise val
 
 class WrappingLabel(ttk.Label):
     """Label that automatically adjusts the wrap to the size"""
