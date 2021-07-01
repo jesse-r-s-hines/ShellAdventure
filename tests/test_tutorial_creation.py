@@ -30,7 +30,7 @@ class TestTutorial:
                     - setup.py
                     - setup.sh 
                 modules:
-                    - puzzle1.py # Relative path
+                    - path/to/puzzle1.py # Relative path
                     - {tmp_path / "puzzle2.py"} # Absolute path
                 puzzles:
                     - puzzle1.move
@@ -39,7 +39,7 @@ class TestTutorial:
                 content_sources:
                     - content.txt
             """,
-            "puzzle1.py": SIMPLE_PUZZLES,
+            "path/to/puzzle1.py": SIMPLE_PUZZLES,
             "puzzle2.py": SIMPLE_PUZZLES,
             "my_dictionary.txt": "a\nb\nc\n",
             "content.txt": "STUFF\n\nSTUFF\n\nMORE STUFF\n",
@@ -56,7 +56,7 @@ class TestTutorial:
 
         assert tutorial.resources == {tmp_path / "my_resource.txt": PurePosixPath("file1.txt")}
         assert [s for s in tutorial.setup_scripts] == [tmp_path / "setup.py", tmp_path / "setup.sh"]
-        assert [m for m in tutorial.module_paths] == [tmp_path / "puzzle1.py", tmp_path / "puzzle2.py"]
+        assert [m for m in tutorial.module_paths] == [tmp_path / "path/to/puzzle1.py", tmp_path / "puzzle2.py"]
         assert [pt.generator for pt in tutorial.puzzles] == ["puzzle1.move", "puzzle2.move"]
 
     def test_nested_puzzles(self, tmp_path):
@@ -94,16 +94,17 @@ class TestTutorial:
             tutorial = Tutorial(tmp_path / "not_a_config_file.yaml")
 
     def test_duplicate_module_names(self, tmp_path):
-        with pytest.raises(ConfigError, match='Multiple puzzle modules with name "puzzle1.py" found'):
+        with pytest.raises(ConfigError, match='Multiple puzzle modules with name "puzzle1" found'):
             tutorial = create_tutorial(tmp_path, {
                 "config.yaml": """
                     modules:
                         - puzzle1.py
-                        - puzzle1.py
+                        - path/to/puzzle1.py
                     puzzles:
                         - puzzle1.move
                 """,
                 "puzzle1.py": SIMPLE_PUZZLES,
+                "path/to/puzzle1.py": SIMPLE_PUZZLES,
             }) 
 
     def test_validation_error(self, tmp_path):

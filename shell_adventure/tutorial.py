@@ -108,13 +108,15 @@ class Tutorial:
                      docker_helper.client.api.inspect_image(self.image)["Config"]["User"] or
                      "root")
 
-        self.module_paths = []
+        module_paths: Dict[str, Path] = {}
         for module in config.get("modules"):
             # Files are relative to the config file (if module is absolute, Path will use that, if relative it will join with first)
             module = Path(self.data_dir, module)
             if not module.exists(): raise FileNotFoundError(f'Module "{module}" not found.') # TODO maybe throw ConfigError instead?
-            if module in self.module_paths: raise ConfigError(f'Multiple puzzle modules with name "{module.name}" found.')
-            self.module_paths.append(module)
+            if module.stem in module_paths: # Can't have the same name, even with different paths
+                raise ConfigError(f'Multiple puzzle modules with name "{module.stem}" found.') 
+            module_paths[module.stem] = module
+        self.module_paths = list(module_paths.values())
 
         self.puzzles = self._parse_puzzles(config.get("puzzles"))
 
