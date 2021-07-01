@@ -3,7 +3,7 @@ FROM alpine:3
 
 # Install stuff
 RUN apk add --no-cache python3 py3-pip
-RUN python3 -m pip --no-cache-dir install dill tblib python-lorem 
+RUN python3 -m pip --no-cache-dir install dill python-lorem 
 
 # Make new user and allow them to use sudo
 RUN adduser -D bob

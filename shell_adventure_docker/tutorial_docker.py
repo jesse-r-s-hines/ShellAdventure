@@ -12,7 +12,7 @@ from .file import File
 from .permissions import change_user, user_exists
 from .random_helper import RandomHelper
 import shell_adventure_docker # For access to globals
-from shell_adventure_shared.tutorial_errors import * # Order matters here, we need to register exceptions as picklable after they are defined.
+from shell_adventure_shared.tutorial_errors import *
 
 class TutorialDocker:
     """ Contains the information for a running tutorial docker side. """

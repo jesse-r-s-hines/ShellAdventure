@@ -348,8 +348,8 @@ class TestIntegration:
             "puzzles.py": SIMPLE_PUZZLES,
         })
     
-        with pytest.raises(ContainerStartupError, match = "dill, tblib, python-lorem"):
+        with pytest.raises(ContainerStartupError, match = "dill, python-lorem"):
             with tutorial:
                 pass
 
-        assert "dill, tblib, python-lorem" in tutorial.logs()
+        assert "dill, python-lorem" in tutorial.logs()

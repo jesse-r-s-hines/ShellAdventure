@@ -10,7 +10,6 @@ from shell_adventure_shared.support import sentence_list
 deps = {
     # import_name: pip_package_name
     "dill": "dill",
-    "tblib": "tblib",
     "lorem": "python-lorem",
 }
 

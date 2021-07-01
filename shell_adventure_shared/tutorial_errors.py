@@ -1,5 +1,4 @@
 """ Contains various exception classes that the tutorial will throw. """
-import tblib.pickling_support
 import textwrap, traceback
 
 __all__ = [
@@ -98,6 +97,3 @@ def format_user_exc(e: Exception) -> str:
     lines = traceback.format_list(frames) + traceback.format_exception_only(type(e), e)
     
     return "Traceback (most recent call last):\n" + "".join(lines)
-
-# Need to make sure that this is called before I try to pickle any exceptions and after any exceptions are defined
-tblib.pickling_support.install()

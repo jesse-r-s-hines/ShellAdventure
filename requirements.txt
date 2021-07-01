@@ -6,4 +6,3 @@ Pillow
 dill
 deepmerge
 yamale>=3.0.7
-tblib
