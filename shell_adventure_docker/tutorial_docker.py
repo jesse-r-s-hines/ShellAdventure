@@ -264,5 +264,7 @@ class TutorialDocker:
                         else: # call the lambda with *args, send the return value.
                             if message not in actions: raise ValueError(f"Unrecognized message {message}.")
                             conn.send(actions[message](*args)) 
-                except BaseException as e: # BaseException includes KeyboardInterrupt
+                except TutorialError as e:
                     conn.send(e)
+                except BaseException as e: # Any other exception will get wrapped
+                    conn.send(UnhandledError("An error occurred in the container:", tb_str = format_exc(e)))

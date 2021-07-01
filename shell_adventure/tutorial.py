@@ -190,8 +190,8 @@ class Tutorial:
             raise e
         except: # The container died without sending any exception info (i.e. Ctrl-D out of bash session)
             raise ContainerStoppedError("Tutorial container stopped unexpectedly.", container_logs = self.logs())
-        if isinstance(response, BaseException):
-            raise response # container will send Python exception if something fails.
+        if isinstance(response, TutorialError):
+            raise response # container will send a TutorialError exception if something fails.
         return response
 
 

@@ -8,7 +8,9 @@ __all__ = [
     "ContainerStartupError",
     "ContainerStoppedError",
     "ConfigError",
+    "WrappedError",
     "UserCodeError",
+    "UnhandledError",
     "format_exc",
     "format_user_exc",
 ]
@@ -48,8 +50,15 @@ class ContainerStoppedError(ContainerError):
 class ConfigError(TutorialError):
     """ Thrown if something is wrong with the Tutorial config. """
 
-class UserCodeError(TutorialError):
-    """ Class for when user supplied code such as PuzzleGenerator's and AutoGrader's throw. """
+class WrappedError(TutorialError):
+    """
+    Base class for an exception that is wrapping another so that we can pickle it and send it to the host.
+    You can pass it a tb_str which is a string representation of the original error traceback.
+    """
+    # We can't send arbitrary errors and traceback info over the connection since they may not be pickleable. tblib has hacks
+    # that let us send tracebacks, but we still can't guarantee that an error thrown by user created code will pickle. Also, 
+    # sending the traceback object makes it so we can't see the lines of the original file since the file doesn't exist outside
+    # the container. So instead we just wrap exceptions, and store the traceback in formatted string form.
 
     def __init__(self, message: str, tb_str: str = None):
         self.message = message
@@ -63,6 +72,15 @@ class UserCodeError(TutorialError):
 
     def __reduce__(self):
         return (type(self), (self.message, self.tb_str))
+
+class UserCodeError(WrappedError):
+    """ Class for when user supplied code such as PuzzleGenerator's and AutoGrader's throw. """
+
+class UnhandledError(WrappedError):
+    """
+    Class for an unexpected error in our code occurs. It wrap the exception and stores the traceback as a string so
+    that we can send it over the network to the host.
+    """
 
 
 def format_exc(e: Exception) -> str:
