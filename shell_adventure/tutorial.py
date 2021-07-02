@@ -199,7 +199,8 @@ class Tutorial:
 
     def logs(self):
         """ Return the container logs so far as a string. """
-        self._logs += "\n".join((l.decode() for l in self._logs_stream))
+        if self._logs_stream != None:
+            self._logs += "\n".join((l.decode() for l in self._logs_stream))
         return self._logs
 
     def _start_container(self, image: str):
