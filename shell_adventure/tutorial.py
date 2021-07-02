@@ -214,8 +214,11 @@ class Tutorial:
                                                                       user = "root", stream = True)
             # retry the connection a few times since the container may take a bit to get started.
             self._conn_to_container = retry(lambda: Client(support.conn_addr_to_container, authkey = support.conn_key), tries = 20, delay = 0.2)
-        except Exception as e:
-            raise ContainerStartupError("Tutorial container failed to start.", container_logs = self.logs()) from e
+        except (docker.errors.DockerException, ConnectionError) as e:
+            raise ContainerStartupError(
+                f"Tutorial container failed to start:\n {str(e)}",
+                container_logs = self.logs()
+            )
 
     def _stop_container(self):
         """ Stops the container and remove it and the connection to it. """
