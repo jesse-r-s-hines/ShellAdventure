@@ -21,12 +21,11 @@ SIMPLE_PUZZLES = dedent("""
 def create_tutorial(working_dir, **setup) -> TutorialDocker:
     """
     Factory for TutorialDocker. Pass args that will be passed to setup().
-    Provides some default for setup() args
-    tutorial.home to working_dir
+    Provides some default for setup() args, sets tutorial.home to working_dir
     """
     default_setup = {
         "home": working_dir,
-        "user": "student",
+        "user": None, # Default to container's user
         "resources": {},
         "setup_scripts": [],
         "modules": {PurePath("puzzles.py"): SIMPLE_PUZZLES},

@@ -31,10 +31,10 @@ class Tutorial:
     # Config fields
 
     home: PurePosixPath
-    """ This is the folder in the container that puzzle generators and checkers will be run in. Defaults to the WORKDIR of the container. """
+    """ This is the folder in the container that puzzle generators and checkers will be run in. If None, the WORKDIR of the container will be used. """
 
     user: str
-    """ This is the name of the user that the student is logged in as. Defaults to the USER of the container. """
+    """ This is the name of the user that the student is logged in as. If None, the USER of the container will be used. """
 
     resources: Dict[Path, PurePosixPath]
     """
@@ -99,14 +99,8 @@ class Tutorial:
 
         self.image = config.get("image", "shell-adventure:latest")
 
-        home = (config.get("home") or # Use config home if it exists else image WorkingDir if it exists else "/"
-                docker_helper.client.api.inspect_image(self.image)["Config"]["WorkingDir"] or
-                "/")
-        self.home = PurePosixPath(home)
-
-        self.user = (config.get("user") or # use config user if it exists else image User if it exists else root
-                     docker_helper.client.api.inspect_image(self.image)["Config"]["User"] or
-                     "root")
+        self.home = PurePosixPath(config["home"]) if "home" in config else None # If None, we'll use default home of image
+        self.user = config.get("user", None) # If None we'll use default user of image
 
         module_paths: Dict[str, Path] = {}
         for module in config.get("modules"):
@@ -208,7 +202,7 @@ class Tutorial:
         try:
             self.container = docker_helper.launch(image,
                 user = self.user,
-                working_dir = str(self.home)
+                working_dir = str(self.home) if self.home else None
             )
             _, self._logs_stream = self.container.exec_run(["python3", "/usr/local/shell_adventure_docker/start.py"],
                                                                       user = "root", stream = True)

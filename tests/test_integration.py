@@ -321,8 +321,8 @@ class TestIntegration:
         with tutorial:
             tutorial.commit()
 
-            assert tutorial.home == Path("/home/bob") # take defaults from container
-            assert tutorial.user == "bob"
+            assert tutorial.home == None and tutorial.user == None # Will use defaults from the container
+    
             exit_code, output = tutorial.container.exec_run("ps -o user=", user = "root")
              # alpine's ps can't filter by pid, it just gives a list of all processes. We want the first (PID 1)
             assert output.decode().splitlines()[0] == "bob"
@@ -355,3 +355,37 @@ class TestIntegration:
                 pass
 
         assert "dill, python-lorem" in tutorial.logs()
+
+    def test_wrong_user(self, tmp_path):
+        # Test that exceptions in the container get raised in the Tutorial
+        tutorial = create_tutorial(tmp_path, {
+            "config.yaml": """
+                user: not-a-user
+                modules:
+                    - puzzles.py
+                puzzles:
+                    - puzzles.move:
+            """,
+            "puzzles.py": SIMPLE_PUZZLES
+        })
+
+        with pytest.raises(ContainerError, match = "unable to find user not-a-user"):
+            with tutorial: 
+                pass # Just launch
+    
+    def test_missing_image(self, tmp_path):
+        # Test that exceptions in the container get raised in the Tutorial
+        tutorial = create_tutorial(tmp_path, {
+            "config.yaml": """
+                image: not-a-docker-image
+                modules:
+                    - puzzles.py
+                puzzles:
+                    - puzzles.move:
+            """,
+            "puzzles.py": SIMPLE_PUZZLES
+        })
+
+        with pytest.raises(ContainerStartupError, match = "Not Found .* not-a-docker-image"):
+            with tutorial: 
+                pass # Just launch

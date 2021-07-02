@@ -2,7 +2,7 @@ from tempfile import TemporaryDirectory
 from typing import Callable, List, Tuple, Dict, Any, cast
 from types import ModuleType
 from pathlib import Path, PurePath, PurePosixPath;
-import subprocess, os, textwrap, copy
+import subprocess, os, pwd, textwrap, copy
 from multiprocessing.connection import Listener
 import importlib.util, inspect, traceback
 from shell_adventure_shared import support
@@ -124,9 +124,20 @@ class TutorialDocker:
         lines = traceback.format_list(frames) + traceback.format_exception_only(type(e), e)
         return "Traceback (most recent call last):\n" + "".join(lines)
 
+    def _set_home_and_user(self, home: PathLike = None, user: str = None):
+        """ Sets home and user, or if they are None default to home and user of the shell session. Checks if home and user are valid. """
+        self.home = Path(home if home else self.student_cwd()).resolve()
+        # see https://stackoverflow.com/questions/5327707/how-could-i-get-the-user-name-from-a-process-id-in-python-on-linux
+        self.user = user if user else pwd.getpwuid(Path(f"/proc/{self.shell_pid}").stat().st_uid).pw_name
+
+        if not self.home.exists() or not self.home.is_dir():
+            raise ConfigError(f'"{self.home}" doesn\'t exist or isn\'t a directory')
+        if not user_exists(self.user): raise ConfigError(f'"{self.user}" doesn\'t exist')
+
+
     ### Message actions, these functions can be called by sending a message over the connection
     
-    def setup(self, home: PathLike, user: str, resources: Dict[PurePosixPath, bytes], setup_scripts: List[Tuple[PurePath, str]],
+    def setup(self, *, home: PathLike = None, user: str = None, resources: Dict[PurePosixPath, bytes], setup_scripts: List[Tuple[PurePath, str]],
               modules: Dict[PurePath, str], puzzles: List[str], name_dictionary: str, content_sources: List[str]) -> List[Puzzle]:
         """
         Initializes the tutorial with the given settings. Generates the puzzles in the modules.
@@ -137,12 +148,7 @@ class TutorialDocker:
         shell_adventure_docker._tutorial = self
         shell_adventure_docker.rand = RandomHelper(name_dictionary, content_sources)
 
-        self.home = Path(home).resolve()
-        self.user = user
-        if not self.home.exists() or not self.home.is_dir():
-            raise ConfigError(f'"{self.home}" doesn\'t exist or isn\'t a directory')
-        if not user_exists(self.user): raise ConfigError(f'"{self.user}" doesn\'t exist')
-
+        self._set_home_and_user(home, user)
         self.modules = modules
 
         # Copy resources
@@ -203,12 +209,11 @@ class TutorialDocker:
         we have to restart the container and processes. We don't need to regenerate the puzzles, but we do need to resend the puzzle objects so
         we can use the checkers.
         """
-        # TODO Refactor this to not be so duplicated
-        self.home = Path(home).resolve()
-        self.user = user
+        shell_adventure_docker._tutorial = self
+
+        self._set_home_and_user(home, user)
         self.modules = modules
 
-        shell_adventure_docker._tutorial = self
         self.puzzles = {p.id: p for p in puzzles}
         for puz in self.puzzles.values(): puz.extract() # Convert the pickled checker back into a function
 
