@@ -1,6 +1,6 @@
 from typing import List
 import pytest
-from pathlib import PurePosixPath, Path
+from pathlib import PurePosixPath, Path, PurePath
 import shell_adventure_docker
 from shell_adventure_docker.tutorial_docker import TutorialDocker
 from shell_adventure_docker.file import File
@@ -13,7 +13,7 @@ from .helpers import *
 class TestTutorialDocker:
     def test_creation(self, working_dir):
         tutorial = create_tutorial(working_dir,
-            modules = {"mypuzzles": SIMPLE_PUZZLES},
+            modules = {PurePath("mypuzzles.py"): SIMPLE_PUZZLES},
             puzzles = ["mypuzzles.move"],
         )
 
@@ -28,8 +28,8 @@ class TestTutorialDocker:
     def test_multiple_modules(self, working_dir):
         tutorial = create_tutorial(working_dir,
             modules = {
-                "mypuzzles1": SIMPLE_PUZZLES,
-                "mypuzzles2": SIMPLE_PUZZLES,
+                PurePath("mypuzzles1.py"): SIMPLE_PUZZLES,
+                PurePath("mypuzzles2.py"): SIMPLE_PUZZLES,
             },
             puzzles = ["mypuzzles1.move", "mypuzzles2.move"],
         )
@@ -41,7 +41,7 @@ class TestTutorialDocker:
         assert tutorial.puzzles == {}
 
     def test_get_generators(self):
-        module = TutorialDocker._create_module("mypuzzles", SIMPLE_PUZZLES)
+        module = TutorialDocker._create_module(PurePath("mypuzzles.py"), SIMPLE_PUZZLES)
         generators = TutorialDocker._get_generators_from_module(module)
         assert list(generators.keys()) == ["mypuzzles.move"]
 
@@ -62,13 +62,14 @@ class TestTutorialDocker:
                 )
         """)
 
-        module = TutorialDocker._create_module("mypuzzles", puzzles)
+        module = TutorialDocker._create_module(PurePath("mypuzzles.py"), puzzles)
         generators = TutorialDocker._get_generators_from_module(module)
         assert list(generators.keys()) == ["mypuzzles.move"]
 
     def test_restore(self, working_dir):
+        modules = {PurePath("mypuzzles.py"): SIMPLE_PUZZLES}
         tutorial = create_tutorial(working_dir,
-            modules = {"mypuzzles": SIMPLE_PUZZLES},
+            modules = modules,
             puzzles = ["mypuzzles.move"]
         )
         puzzles: List[Puzzle] = list(tutorial.puzzles.values())
@@ -76,7 +77,10 @@ class TestTutorialDocker:
         puz = puzzles[0].id
 
         tutorial = TutorialDocker()
-        tutorial.restore(home = working_dir, user = "student", puzzles = puzzles)
+        tutorial.restore(
+            home = working_dir, user = "student",
+            modules = modules, puzzles = puzzles
+        )
 
         assert tutorial.solve_puzzle(puz) == (False, "Incorrect!")
         os.system("mv A.txt B.txt")
@@ -86,7 +90,7 @@ class TestTutorialDocker:
     def test_user(self, working_dir): 
         tutorial = create_tutorial(working_dir,
             user = "student",
-            modules = {"mypuzzles": dedent("""
+            modules = {PurePath("mypuzzles.py"): dedent("""
                 from shell_adventure_docker import *
                 import getpass
 
@@ -114,7 +118,7 @@ class TestTutorialDocker:
     def test_root_user(self, working_dir): 
         tutorial = create_tutorial(working_dir,
             user = "root",
-            modules = {"mypuzzles": SIMPLE_PUZZLES},
+            modules = {PurePath("mypuzzles.py"): SIMPLE_PUZZLES},
             puzzles = ["mypuzzles.move"]
         )
         assert (working_dir / "A.txt").owner() == "root"
@@ -153,7 +157,7 @@ class TestTutorialDocker:
 
     def test_setup_scripts(self, working_dir):
         tutorial = create_tutorial(working_dir,
-            modules = {"mypuzzles": dedent(r"""
+            modules = {PurePath("mypuzzles.py"): dedent(r"""
                 from shell_adventure_docker import *
 
                 def puzzle():
@@ -167,16 +171,16 @@ class TestTutorialDocker:
             """)},
             puzzles = ["mypuzzles.puzzle"],
             setup_scripts = [
-                ("script.sh", r"""
+                (PurePath("script.sh"), r"""
                     #!/bin/bash
                     OUTPUT="$SHELL:$(pwd):$(whoami)"
                     su student -c "echo '$OUTPUT' >> output.txt"
                 """.strip()),
-                ("path/to/script.sh", r"""
+                (PurePath("path/to/script.sh"), r"""
                     #!/bin/bash
                     echo 'script2.sh' >> output.txt
                 """.strip()), # Duplicate names should still work (name is just for display purposes)
-                ("script.py", dedent(r"""
+                (PurePath("script.py"), dedent(r"""
                     from shell_adventure_docker import *
                     import os, getpass, pwd
 
@@ -185,7 +189,7 @@ class TestTutorialDocker:
                     effective_user = pwd.getpwuid(os.geteuid()).pw_name
                     output.write_text(output.read_text() + f"python:{os.getcwd()}:{effective_user}:{getpass.getuser()}\n")
                 """)),
-                ("path/to/script.py", dedent(r"""
+                (PurePath("path/to/script.py"), dedent(r"""
                     from shell_adventure_docker import *
                     output = File("output.txt")
                     output.write_text(output.read_text() + "script2.py\n")
@@ -205,7 +209,7 @@ class TestTutorialDocker:
  
     def test_resources(self, working_dir):
         tutorial = create_tutorial(working_dir,
-            modules = {"mypuzzles": SIMPLE_PUZZLES},
+            modules = {PurePath("mypuzzles.py"): SIMPLE_PUZZLES},
             puzzles = ["mypuzzles.move"],
             resources = {
                 PurePosixPath("resource1.txt"): b"RESOURCE1",
@@ -227,7 +231,7 @@ class TestTutorialDocker:
     def test_resources_different_user(self, working_dir):
         tutorial = create_tutorial(working_dir,
             user = "root",
-            modules = {"mypuzzles": SIMPLE_PUZZLES},
+            modules = {PurePath("mypuzzles.py"): SIMPLE_PUZZLES},
             puzzles = ["mypuzzles.move"],
             resources = {
                 PurePosixPath("resource1.txt"): b"RESOURCE1", # Relative to home
@@ -242,7 +246,7 @@ class TestTutorialDocker:
 
     def test_resources_create_dirs(self, working_dir):
         tutorial = create_tutorial(working_dir,
-            modules = {"mypuzzles": SIMPLE_PUZZLES},
+            modules = {PurePath("mypuzzles.py"): SIMPLE_PUZZLES},
             puzzles = ["mypuzzles.move"],
             resources = {
                 PurePosixPath(f"{working_dir}/dir/resource.txt"): b"RESOURCE",

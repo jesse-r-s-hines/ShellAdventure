@@ -11,7 +11,6 @@ __all__ = [
     "UserCodeError",
     "UnhandledError",
     "format_exc",
-    "format_user_exc",
 ]
 
 class TutorialError(Exception):
@@ -87,13 +86,3 @@ def format_exc(e: Exception) -> str:
     lines = traceback.format_exception(type(e), e, e.__traceback__)
     return "".join(lines)
 
-def format_user_exc(e: Exception) -> str:
-    """
-    Format an exception in user supplied code. Filters out our code from the traceback so we
-    can show only the relevant data to the user.
-    """
-    # See https://stackoverflow.com/questions/31949760/how-to-limit-python-traceback-to-specific-files
-    frames = [f for f in traceback.extract_tb(e.__traceback__) if f.filename == "<string>"]
-    lines = traceback.format_list(frames) + traceback.format_exception_only(type(e), e)
-    
-    return "Traceback (most recent call last):\n" + "".join(lines)

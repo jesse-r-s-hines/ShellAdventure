@@ -1,7 +1,7 @@
 import pytest
 from shell_adventure_docker.tutorial_docker import TutorialDocker
 from shell_adventure_docker.file import File
-from shell_adventure_shared.puzzle import Puzzle
+from pathlib import PurePath
 import os
 from textwrap import dedent;
 from .helpers import *
@@ -9,7 +9,7 @@ from .helpers import *
 class TestTutorialDockerSolvePuzzles:
     def test_solve_puzzle(self, working_dir):
         tutorial = create_tutorial(working_dir,
-            modules = {"mypuzzles": SIMPLE_PUZZLES},
+            modules = {PurePath("mypuzzles.py"): SIMPLE_PUZZLES},
             puzzles = ["mypuzzles.move"]
         )
         [puzzle] = list(tutorial.puzzles.values())
@@ -38,7 +38,7 @@ class TestTutorialDockerSolvePuzzles:
                 )
         """)
         tutorial = create_tutorial(working_dir,
-            modules = {"mypuzzles": puzzle},
+            modules = {PurePath("mypuzzles.py"): puzzle},
             puzzles = ["mypuzzles.flag_puzzle"],
         )
         [puzzle] = list(tutorial.puzzles.values())
@@ -54,7 +54,7 @@ class TestTutorialDockerSolvePuzzles:
                 return Puzzle(question = f"Say OK", checker = lambda flag: flag == "OK")
         """)
         tutorial = create_tutorial(working_dir,
-            modules = {"mypuzzles": module},
+            modules = {PurePath("mypuzzles.py"): module},
             puzzles = ["mypuzzles.puz"]
         )
         [puzzle] = list(tutorial.puzzles.values())
@@ -86,7 +86,7 @@ class TestTutorialDockerSolvePuzzles:
         """)
 
         tutorial = create_tutorial(working_dir,
-            modules = {"mypuzzles": puzzles},
+            modules = {PurePath("mypuzzles.py"): puzzles},
             puzzles = ["mypuzzles.puzzle"],
         )
 
@@ -102,7 +102,7 @@ class TestTutorialDockerSolvePuzzles:
         """)
 
         tutorial = create_tutorial(working_dir,
-            modules = {"mypuzzles": puzzles},
+            modules = {PurePath("mypuzzles.py"): puzzles},
             puzzles = ["mypuzzles.puzzle"],
         )
         [puzzle] = list(tutorial.puzzles.values())
@@ -129,7 +129,7 @@ class TestTutorialDockerSolvePuzzles:
         """)
 
         tutorial = create_tutorial(working_dir,
-            modules = {"mypuzzles": puzzles},
+            modules = {PurePath("mypuzzles.py"): puzzles},
             puzzles = ["mypuzzles.move"],
             name_dictionary = "\n".join("abcdefg")
         )

@@ -276,13 +276,15 @@ class TestIntegration:
             with tutorial: 
                 pass # Just launch
         
-        expected = dedent("""
+        # Shouldn't include our code in the traceback, and traceback should show the real path on the host
+        expected = dedent(f"""
             Puzzle generation failed:
               Traceback (most recent call last):
-                File "<string>", line 3, in puzzle
+                File "{tmp_path}/puzzles.py", line 3, in puzzle
+                  raise ValueError('BOOM!')
               ValueError: BOOM!
         """).lstrip()
-        assert str(exc_info.value) == expected
+        assert expected == str(exc_info.value)
 
     def test_different_image(self, tmp_path):
         tutorial = create_tutorial(tmp_path, {

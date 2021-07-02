@@ -1,4 +1,5 @@
 from textwrap import dedent
+from pathlib import PurePath
 from shell_adventure_docker.tutorial_docker import TutorialDocker
 
 SIMPLE_PUZZLES = dedent("""
@@ -28,7 +29,7 @@ def create_tutorial(working_dir, **setup) -> TutorialDocker:
         "user": "student",
         "resources": {},
         "setup_scripts": [],
-        "modules": {"puzzles": SIMPLE_PUZZLES},
+        "modules": {PurePath("puzzles.py"): SIMPLE_PUZZLES},
         "puzzles": ["puzzles.move"],
         "name_dictionary": "apple\nbanana\n",
         "content_sources": [],

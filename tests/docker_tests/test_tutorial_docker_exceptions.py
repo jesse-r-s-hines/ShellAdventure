@@ -1,6 +1,7 @@
+from pathlib import PurePath
 from _pytest.python_api import raises
 import pytest, re
-from textwrap import dedent;
+from textwrap import dedent, indent;
 from shell_adventure_shared.tutorial_errors import *
 from shell_adventure_shared import support
 from .helpers import *
@@ -9,7 +10,7 @@ class TestTutorialDockerExceptions:
     def test_puzzle_not_found(self, working_dir):
         with pytest.raises(ConfigError, match=re.escape("Unknown puzzle generator(s) mypuzzles.puzz_a, mypuzzles.puzz_b and mypuzzles.puzz_c")):
             tutorial = create_tutorial(working_dir,
-                modules = {"mypuzzles": SIMPLE_PUZZLES},
+                modules = {PurePath("mypuzzles.py"): SIMPLE_PUZZLES},
                 puzzles = ["mypuzzles.puzz_a", "mypuzzles.puzz_b", "mypuzzles.puzz_c"]
             )
 
@@ -33,7 +34,7 @@ class TestTutorialDockerExceptions:
 
         with pytest.raises(UserCodeError, match="Puzzle generator did not return Puzzle"):
             tutorial = create_tutorial(working_dir,
-                modules = {"mypuzzles": puzzles},
+                modules = {PurePath("mypuzzles.py"): puzzles},
                 puzzles = ["mypuzzles.invalid"],
             )
 
@@ -48,7 +49,7 @@ class TestTutorialDockerExceptions:
                 )
         """)
         tutorial = create_tutorial(working_dir,
-            modules = {"mypuzzles": puzzles},
+            modules = {PurePath("mypuzzles"): puzzles},
             puzzles = ["mypuzzles.invalid"],
         )
         [puzzle] = list(tutorial.puzzles.values())
@@ -68,7 +69,7 @@ class TestTutorialDockerExceptions:
         """)
         with pytest.raises(UserCodeError, match=r"Unrecognized param\(s\) not_a_param in puzzle generator"):
             tutorial = create_tutorial(working_dir,
-                modules = {"mypuzzles": puzzles},
+                modules = {PurePath("mypuzzles.py"): puzzles},
                 puzzles = ["mypuzzles.puzzle"],
             )
 
@@ -85,7 +86,7 @@ class TestTutorialDockerExceptions:
 
         with pytest.raises(UserCodeError, match=r"Unrecognized param\(s\) not_a_param in checker function") as exc_info:
             tutorial = create_tutorial(working_dir,
-                modules = {"mypuzzles": puzzles},
+                modules = {PurePath("mypuzzles.py"): puzzles},
                 puzzles = ["mypuzzles.puzzle"],
             )
         assert "UnrecognizedParamsError" in str(exc_info.value)
@@ -94,7 +95,7 @@ class TestTutorialDockerExceptions:
         with pytest.raises(UserCodeError, match="not-a-command: not found"):
             tutorial = create_tutorial(working_dir,
                 setup_scripts = [
-                    ("script.sh", r"""echo hello; not-a-command"""),
+                    (PurePath("script.sh"), r"""echo hello; not-a-command"""),
                 ],
             )
 
@@ -102,16 +103,23 @@ class TestTutorialDockerExceptions:
         with pytest.raises(UserCodeError, match='Setup script "script.py" failed') as exc_info:
             tutorial = create_tutorial(tmp_path, 
                  setup_scripts = [
-                    ("script.py", r"""raise TypeError('BOOM!')"""),
+                    (PurePath("script.py"), r"""raise TypeError('BOOM!')"""),
                 ],
             )
 
-        assert "TypeError: BOOM!" in str(exc_info.value)
+        expected = dedent("""
+            Setup script "script.py" failed:
+              Traceback (most recent call last):
+                File "script.py", line 1, in <module>
+                  raise TypeError('BOOM!')
+              TypeError: BOOM!
+        """).lstrip()
+        assert expected == str(exc_info.value)
 
     def test_generation_exception(self, tmp_path):
         with pytest.raises(UserCodeError, match = "Puzzle generation failed") as exc_info:
             tutorial = create_tutorial(tmp_path, 
-                modules = {"puzzles": dedent(r"""
+                modules = {PurePath("puzzles.py"): dedent(r"""
                     def puzzle():
                         raise ValueError('BOOM!')
                 """)},
@@ -123,8 +131,8 @@ class TestTutorialDockerExceptions:
     def test_module_exception(self, tmp_path):
         with pytest.raises(UserCodeError, match = "Puzzle generation failed") as exc_info:
             tutorial = create_tutorial(tmp_path,
-                modules = {"puzzles": dedent(r"""
-                    ++ syntax error
+                modules = {PurePath("/path/to/puzzles.py"): dedent(r"""
+                    1 ++
                 """)},
                 puzzles = ["puzzles.puzzle"],
             )
@@ -132,16 +140,16 @@ class TestTutorialDockerExceptions:
         expected = dedent("""
             Puzzle generation failed:
               Traceback (most recent call last):
-                File "<string>", line 2
-                  ++ syntax error
-                            ^
+                File "/path/to/puzzles.py", line 2
+                  1 ++
+                     ^
               SyntaxError: invalid syntax
         """).lstrip()
         assert expected == str(exc_info.value)
 
     def test_checker_exception(self, tmp_path):
         tutorial = create_tutorial(tmp_path, 
-            modules = {"puzzles": dedent(r"""
+            modules = {PurePath("puzzles.py"): dedent(r"""
                 from shell_adventure_docker import *
 
                 def puzzle():
@@ -161,3 +169,43 @@ class TestTutorialDockerExceptions:
             tutorial.solve_puzzle(puz_id)
 
         assert "ValueError: BOOM!" in str(exc_info.value)
+
+    def test_format_user_exception(self, tmp_path):
+        tutorial = create_tutorial(tmp_path,
+            modules = {PurePath("/path/to/puzzles.py"): dedent(r"""
+                from shell_adventure_docker import *
+                import lorem
+
+                def _fails():
+                    lorem.get_paragraph("a")
+
+                def throws():
+                    def checker():
+                        _fails()
+
+                    return Puzzle(
+                        question = "Fails!",
+                        checker = checker,
+                    )
+            """)},
+            puzzles = ["puzzles.throws"],
+        )
+        [puzzle] = list(tutorial.puzzles.values())
+
+        with pytest.raises(UserCodeError) as exc_info:
+            tutorial.solve_puzzle(puzzle.id)
+
+        # Shouldn't include our code. Should include library code.
+        expected = dedent("""
+          Puzzle autograder failed:
+            Traceback (most recent call last):
+              File "/path/to/puzzles.py", line 10, in checker
+                _fails()
+              File "/path/to/puzzles.py", line 6, in _fails
+                lorem.get_paragraph("a")
+              File "/usr/local/lib/python3.8/dist-packages/lorem.py", line 424, in get_paragraph
+                return sep.join(itertools.islice(paragraph(count, comma, word_range, sentence_range), count))
+            ValueError: Stop argument for islice() must be None or an integer: 0 <= x <= sys.maxsize.
+        """).lstrip()
+        assert expected == str(exc_info.value)
+

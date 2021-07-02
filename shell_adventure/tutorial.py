@@ -5,7 +5,7 @@ import docker, docker.errors, subprocess, os, pickle
 from threading import Thread
 from docker.models.images import Image
 from docker.models.containers import Container
-from pathlib import Path, PurePosixPath;
+from pathlib import Path, PurePath, PurePosixPath;
 from datetime import datetime, timedelta
 from . import docker_helper, PKG_PATH
 from shell_adventure_shared import support
@@ -242,8 +242,8 @@ class Tutorial:
             "home": self.home,
             "user": self.user,
             "resources": {dst: src.read_bytes() for src, dst in self.resources.items()},
-            "setup_scripts": [(str(file), file.read_text()) for file in self.setup_scripts],
-            "modules": {file.stem: file.read_text() for file in self.module_paths},
+            "setup_scripts": [(PurePath(file), file.read_text()) for file in self.setup_scripts],
+            "modules": {PurePath(file): file.read_text() for file in self.module_paths},
             "puzzles": [pt.generator for pt in tmp_tree],
             "name_dictionary": self.name_dictionary.read_text(),
             "content_sources": [file.read_text() for file in self.content_sources],
@@ -324,6 +324,7 @@ class Tutorial:
         self._send(Message.RESTORE, {
             "home": self.home,
             "user": self.user,
+            "modules": {PurePath(file): file.read_text() for file in self.module_paths},
             "puzzles": [pt.puzzle for pt in tmp_tree],
         })
 

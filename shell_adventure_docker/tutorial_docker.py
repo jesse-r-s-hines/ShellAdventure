@@ -1,17 +1,17 @@
 from tempfile import TemporaryDirectory
 from typing import Callable, List, Tuple, Dict, Any, cast
 from types import ModuleType
-from pathlib import Path, PurePosixPath;
-import subprocess, os, textwrap
+from pathlib import Path, PurePath, PurePosixPath;
+import subprocess, os, textwrap, copy
 from multiprocessing.connection import Listener
-import inspect
+import importlib.util, inspect, traceback
 from shell_adventure_shared import support
 from shell_adventure_shared.support import PathLike, Message, sentence_list, extra_func_params
 from shell_adventure_shared.puzzle import Puzzle, PuzzleGenerator
 from .file import File
 from .permissions import change_user, user_exists
 from .random_helper import RandomHelper
-import shell_adventure_docker # For access to globals
+import shell_adventure_docker, shell_adventure_shared # For access to globals
 from shell_adventure_shared.tutorial_errors import *
 
 class TutorialDocker:
@@ -22,6 +22,9 @@ class TutorialDocker:
 
     user: str
     """ This is the name of the user that the student is logged in as. """
+
+    modules: Dict[PurePath, str]
+    """ Map of the puzzle modules, filename mapped to file contents. """
 
     puzzles: Dict[str, Puzzle]
     """ Puzzles in this tutorial, mapped to their id. """
@@ -34,14 +37,19 @@ class TutorialDocker:
         # We don't really do anything in here, the tutorial is initialized in the "setup" method when we are actually sent the settings.
         self.home = None
         self.user = None
+        self.modules = {} # We keep the modules as strings, so we can reconstruct the traceback if an error is thrown
         self.puzzles = {}
         self.shell_pid: int = 1 # The shell is the main process of the container which is always 1
 
     @staticmethod
-    def _create_module(name: str, code: str) -> ModuleType:
+    def _create_module(path: PurePath, code: str) -> ModuleType:
         """ Constructs a module object from a string of python code. Executes the module. """
-        module = ModuleType(name)
-        exec(code, module.__dict__) # Uses funcs as globals.
+        spec = importlib.util.spec_from_loader(path.stem, loader = None)
+        module = importlib.util.module_from_spec(spec)
+        # We don't want the puzzle modules to exist on disk, but exceptions from exec'ed strings don't have as much info
+        # If we compile the code with a special "filename", we can inject the file line info into any exceptions that are thrown.
+        compiled_code = compile(code, f"<string>:{path}", "exec") 
+        exec(compiled_code, module.__dict__) # Execute the module
         return module
 
     @staticmethod
@@ -78,16 +86,48 @@ class TutorialDocker:
         try:
             puzzle = self._call_user_func(generator, args)
         except Exception as e:
-            raise UserCodeError(f'Puzzle generation failed:', tb_str = format_user_exc(e))
+            raise UserCodeError(f'Puzzle generation failed:', tb_str = self._format_user_exc(e))
         if not isinstance(puzzle, Puzzle):
             raise UserCodeError(f'Puzzle generator did not return Puzzle')
 
         return puzzle
 
+    def _format_user_exc(self, e: Exception) -> str:
+        """
+        Format an exception in user supplied code. Filters out our code from the traceback so we
+        can show only the relevant data to the user, and injects the line data from the original file.
+        Since the user code doesn't exist as a file on disk, we need to do some magic on the traceback
+        if we want pretty traceback messages.
+        """
+        # This magically shows line info in tracebacks and errors. I think I got all cases, but its possible that something might break this
+        # It would be simpler and more robust to just have puzzles on disk in the container, but that would let the student see them.
+
+        our_packages = {shell_adventure_docker.PKG_PATH, shell_adventure_shared.PKG_PATH}
+
+        # See https://stackoverflow.com/questions/31949760/how-to-limit-python-traceback-to-specific-files
+        frames = []
+        for f in traceback.extract_tb(e.__traceback__):
+            if f.filename.startswith("<string>:"): # User code, get the line info from the string 
+                _, path = f.filename.split(":", 2) # "<string>:/path/to/file/on/host/puzzles.py"
+                frames.append(traceback.FrameSummary( # See https://docs.python.org/library/traceback.html#framesummary-objects
+                    filename = path, lineno = f.lineno, lookup_line = False, locals = None, name = f.name,
+                    line = self.modules[PurePath(path)].splitlines()[f.lineno - 1],
+                ))
+            elif not our_packages.intersection(Path(f.filename).parents): # include library code in the traceback
+                frames.append(f)
+            # But don't include our code in the traceback, show only the user's code to keep traceback short
+        
+        if isinstance(e, SyntaxError) and e.filename.startswith("<string>:"): # Syntax errors need to have the filename fixed as well
+            e = copy.copy(e) # shallow copy
+            e.filename = e.filename.split(":", 2)[1]
+
+        lines = traceback.format_list(frames) + traceback.format_exception_only(type(e), e)
+        return "Traceback (most recent call last):\n" + "".join(lines)
+
     ### Message actions, these functions can be called by sending a message over the connection
     
-    def setup(self, home: PathLike, user: str, resources: Dict[PurePosixPath, bytes], setup_scripts: List[Tuple[str, str]], modules: Dict[str, str], puzzles: List[str],
-              name_dictionary: str, content_sources: List[str]) -> List[Puzzle]:
+    def setup(self, home: PathLike, user: str, resources: Dict[PurePosixPath, bytes], setup_scripts: List[Tuple[PurePath, str]],
+              modules: Dict[PurePath, str], puzzles: List[str], name_dictionary: str, content_sources: List[str]) -> List[Puzzle]:
         """
         Initializes the tutorial with the given settings. Generates the puzzles in the modules.
         The initialization is done separate from the constructor so that it can be done after the connection with the host is setup.
@@ -103,6 +143,8 @@ class TutorialDocker:
             raise ConfigError(f'"{self.home}" doesn\'t exist or isn\'t a directory')
         if not user_exists(self.user): raise ConfigError(f'"{self.user}" doesn\'t exist')
 
+        self.modules = modules
+
         # Copy resources
         for dest, content in resources.items(): # Since I'm root no errors should be able to occur here
             destPath = File(self.home, dest) # resource paths are relative to home.
@@ -110,31 +152,32 @@ class TutorialDocker:
             destPath.write_bytes(content)
             destPath.chown(self.user, self.user)
 
+        # So we can show errors in setup scripts
+        self.modules = {**self.modules, **{p: source for (p, source) in setup_scripts if p.suffix == ".py"}}
         # Run setup scripts
         with TemporaryDirectory("-shell-adventure-scripts") as dir:
-            for name, script in setup_scripts:
-                short_name = File(name).name
+            for path, script in setup_scripts:
                 os.chdir(self.home) # Run scripts from home
                 os.umask(0o000)
-                if name.endswith(".py"):
+                if path.suffix == ".py":
                     with change_user(self.user):
                         try:
-                            TutorialDocker._create_module("<string>", script) # Execute the module
+                            TutorialDocker._create_module(path, script) # Execute the module
                         except Exception as e:
-                            raise UserCodeError(f'Setup script "{short_name}" failed:', tb_str = format_user_exc(e))
+                            raise UserCodeError(f'Setup script "{path.name}" failed:', tb_str = self._format_user_exc(e))
                 else:
-                    file = File(dir, short_name) # Doesn't matter if a script overwrites another with the same name
+                    file = File(dir, path.name) # Doesn't matter if a script overwrites another with the same name
                     file.create(mode = 0o700, content = script) # Make script executable
                     try:
                         subprocess.run(str(file), stdout = subprocess.PIPE, stderr = subprocess.STDOUT, # combine stderr & stdout
                                        shell = True, check = True) # throw error if fail # run scripts as root.
                     except subprocess.CalledProcessError as e:
-                        raise UserCodeError(f'Setup script "{short_name}" failed. Output:\n{textwrap.indent(e.output.decode(), "  ")}')
+                        raise UserCodeError(f'Setup script "{path.name}" failed. Output:\n{textwrap.indent(e.output.decode(), "  ")}')
 
         try: # Load modules
-            modules_list = [TutorialDocker._create_module(name, code) for name, code in modules.items()]
+            modules_list = [TutorialDocker._create_module(path, code) for path, code in modules.items()]
         except Exception as e:
-            raise UserCodeError(f'Puzzle generation failed:', tb_str = format_user_exc(e))
+            raise UserCodeError(f'Puzzle generation failed:', tb_str = self._format_user_exc(e))
     
         # Get puzzle generators from the modules
         generators: Dict[str, PuzzleGenerator] = {}
@@ -154,7 +197,7 @@ class TutorialDocker:
 
         return puzzle_list
 
-    def restore(self, home: PathLike, user: str, puzzles: List[Puzzle]):
+    def restore(self, home: PathLike, user: str, modules: Dict[PurePath, str], puzzles: List[Puzzle]):
         """
         Restore the tutorial after we've loading a snapshot. This is for usage after an undo. Docker commit keeps all filesystem state, but
         we have to restart the container and processes. We don't need to regenerate the puzzles, but we do need to resend the puzzle objects so
@@ -163,6 +206,7 @@ class TutorialDocker:
         # TODO Refactor this to not be so duplicated
         self.home = Path(home).resolve()
         self.user = user
+        self.modules = modules
 
         shell_adventure_docker._tutorial = self
         self.puzzles = {p.id: p for p in puzzles}
@@ -183,7 +227,7 @@ class TutorialDocker:
         try:
             checker_result = self._call_user_func(cast(Callable, puzzle.checker), args)
         except Exception as e:
-            raise UserCodeError(f'Puzzle autograder failed:', tb_str = format_user_exc(e)) # TODO give more info on which puzzle failed
+            raise UserCodeError(f'Puzzle autograder failed:', tb_str = self._format_user_exc(e)) # TODO give more info on which puzzle failed
 
         solved = False
         if checker_result == True:
