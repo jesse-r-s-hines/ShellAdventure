@@ -5,6 +5,7 @@ import shell_adventure_docker
 from shell_adventure_docker.tutorial_docker import TutorialDocker
 from shell_adventure_docker.file import File
 from shell_adventure_shared.puzzle import Puzzle
+from shell_adventure_docker.random_helper import RandomHelperException
 import os, pickle
 from textwrap import dedent;
 from shell_adventure_shared.tutorial_errors import *
@@ -18,7 +19,10 @@ class TestTutorialDocker:
         )
 
         assert shell_adventure_docker._tutorial is tutorial # should be set
-        assert shell_adventure_docker.rand == None # _random should be None after generation is complete
+        assert tutorial.rand == None # _random should be None after generation is complete
+        with pytest.raises(RandomHelperException):
+            shell_adventure_docker.rand()
+
         assert File.home() == working_dir # File.home() should use tutorial home
 
         [puzzle] = list(tutorial.puzzles.values())

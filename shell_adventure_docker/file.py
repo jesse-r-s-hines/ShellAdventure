@@ -114,9 +114,7 @@ class File(PosixPath):
         in the Tutorial config. The file is not created on disk and is not marked as shared. You can pass an
         extension which will be added to the random name. Will not create a file with a name that already exists.
         """
-        if (shell_adventure_docker.rand == None):
-            raise RandomHelperException("Can't make random files until rand has been initialized.")
-        return shell_adventure_docker.rand.file(self, ext = ext)
+        return shell_adventure_docker.rand().file(self, ext = ext)
 
     def random_folder(self, depth: Union[int, Tuple[int, int]] = (1, 3), create_new_chance: float = 0.5) -> File:
         """
@@ -144,12 +142,8 @@ class File(PosixPath):
         # random_folder() doesn't create the file on disk. Use mkdir() with parents = True to make the folder.
         >>> folder.mkdir(parents = True) 
         """
-        if (shell_adventure_docker.rand == None):
-            raise RandomHelperException("Can't make random files until rand has been initialized.")
-        return shell_adventure_docker.rand.folder(self, depth, create_new_chance)
+        return shell_adventure_docker.rand().folder(self, depth, create_new_chance)
 
     def mark_shared(self):
         """ Marks the a File as shared. File should be a directory, though it does not have to exist yet. """
-        if (shell_adventure_docker.rand == None):
-            raise RandomHelperException("Can't mark shared files until rand has been initialized.")
-        shell_adventure_docker.rand.mark_shared(self)
+        shell_adventure_docker.rand().mark_shared(self)

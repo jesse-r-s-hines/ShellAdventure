@@ -115,7 +115,7 @@ class TestTutorialDockerSolvePuzzles:
 
             def move(home):
                 src = home.random_file("txt")
-                src.write_text(rand.paragraphs(3))
+                src.write_text(rand().paragraphs(3))
                 
                 dst = home.random_folder().random_file("txt") # Don't create yet
 

@@ -159,6 +159,24 @@ class TestTutorialDockerExceptions:
         """).lstrip()
         assert expected == str(exc_info.value)
 
+    def test_checker_cant_call_rand(self, tmp_path):
+        tutorial = create_tutorial(tmp_path, 
+            modules = {PurePath("puzzles.py"): dedent(r"""
+                from shell_adventure_docker import *
+
+                def puzzle():
+                    return Puzzle(
+                        question = f"Puzzle",
+                        checker = lambda: rand().name(),
+                    )
+            """)},
+            puzzles = ["puzzles.puzzle"],
+        )
+
+        puz_id = list(tutorial.puzzles.keys())[0]
+        with pytest.raises(UserCodeError, match = "You can only use randomization in Puzzle generators"):
+            tutorial.solve_puzzle(puz_id)
+
     def test_format_user_exception(self, tmp_path):
         tutorial = create_tutorial(tmp_path,
             modules = {PurePath("/path/to/puzzles.py"): dedent(r"""

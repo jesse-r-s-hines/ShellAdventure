@@ -32,6 +32,9 @@ class TutorialDocker:
     shell_pid: int
     """ The pid of the shell session the tutorial is connected to. """
 
+    rand: RandomHelper
+    """ The RandomHelper which will be used when creating random files and folders. """
+
     def __init__(self):
         """ Create a tutorial. You need to call setup() afterwards to actually set and generate the puzzles etc. """
         # We don't really do anything in here, the tutorial is initialized in the "setup" method when we are actually sent the settings.
@@ -40,6 +43,7 @@ class TutorialDocker:
         self.modules = {} # We keep the modules as strings, so we can reconstruct the traceback if an error is thrown
         self.puzzles = {}
         self.shell_pid: int = 1 # The shell is the main process of the container which is always 1
+        self.rand = None
 
     @staticmethod
     def _create_module(path: PurePath, code: str) -> ModuleType:
@@ -147,7 +151,7 @@ class TutorialDocker:
         """
         # Unfortunately we have to have some package level variables allow File methods to access the RandomHelper and TutorialDocker
         shell_adventure_docker._tutorial = self
-        shell_adventure_docker.rand = RandomHelper(name_dictionary, content_sources)
+        self.rand = RandomHelper(name_dictionary, content_sources)
 
         self._set_home_and_user(home, user)
         self.modules = modules
@@ -171,7 +175,7 @@ class TutorialDocker:
         self.puzzles = {p.id: p for p in puzzle_list}
 
         # Reset rand after generation is complete. You can't use it during the tutorial since we don't restore it on restart
-        shell_adventure_docker.rand = None
+        self.rand = None
 
         return puzzle_list
 

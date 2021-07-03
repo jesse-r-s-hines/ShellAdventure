@@ -18,7 +18,7 @@ RUN apt-get update && \
     apt-get reinstall -y '?and(?installed, !?name(libc6))' && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# # Install stuff new stuff
+# Install stuff
 RUN apt-get update && \
     # Now we can install new packages
     apt-get install -y \

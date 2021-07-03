@@ -57,6 +57,7 @@ class TestIntegration:
             assert solved == True
             assert move_puzzle2.solved == True
             assert feedback == "Correct!"
+            assert tutorial.is_finished() == True
 
             assert tutorial.time() > datetime.timedelta(0)
 
@@ -76,6 +77,7 @@ class TestIntegration:
                     - puzzles.py
                 puzzles:
                     - puzzles.random_puzzle
+                    - puzzles.rand_not_in_checker
                 content_sources:
                     - content.txt
             """,
@@ -85,7 +87,7 @@ class TestIntegration:
                 from shell_adventure_docker import *
                 def random_puzzle(home):
                     src = home.random_file("txt")
-                    src.write_text(rand.paragraphs(3))
+                    src.write_text(rand().paragraphs(3))
                     
                     dst = home.random_folder().random_file("txt") # Don't create yet
 
@@ -96,11 +98,14 @@ class TestIntegration:
                         question = f"{src} -> {dst}",
                         checker = checker
                     )
+
+                def rand_not_in_checker(home):
+                    return Puzzle(question = "", checker = lambda: rand().name())
             """),
         })
 
         with tutorial:
-            rand_puzzle = tutorial.get_all_puzzles()[0]
+            [rand_puzzle, rand_not_in_checker]  = tutorial.get_all_puzzles()
             src, dst = rand_puzzle.question.split(" -> ")
 
             exit_code, output = run_command(tutorial, ["cat", src])
@@ -114,7 +119,8 @@ class TestIntegration:
             solved, feedback = tutorial.solve_puzzle(rand_puzzle)
             assert solved == True
 
-            assert tutorial.is_finished() == True
+            with pytest.raises(UserCodeError, match = "You can only use randomization in Puzzle generators"):
+                tutorial.solve_puzzle(rand_not_in_checker)
 
     def test_user(self, tmp_path):
         tutorial = create_tutorial(tmp_path, {
