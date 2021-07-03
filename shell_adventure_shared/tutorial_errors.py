@@ -22,13 +22,13 @@ class ContainerError(TutorialError):
     such as the container failing to start.
     """
     
-    def __init__(self, message: str, container_logs: str = ""):
+    def __init__(self, message: str, container_logs: str = None):
         self.message: str = message
         self.container_logs: str = container_logs
 
     def __str__(self):
         string = self.message
-        if self.container_logs.strip():
+        if self.container_logs:
             string += "\n\nContainer Logs:\n" + textwrap.indent(self.container_logs, "  ")
         return string
 
@@ -76,8 +76,8 @@ class UserCodeError(WrappedError):
 
 class UnhandledError(WrappedError):
     """
-    Class for an unexpected error in our code occurs. It wrap the exception and stores the traceback as a string so
-    that we can send it over the network to the host.
+    Class for when an unexpected error occurs in the container. It wraps the exception and stores the traceback as
+    a string so that we can send it over the network to the host.
     """
 
 

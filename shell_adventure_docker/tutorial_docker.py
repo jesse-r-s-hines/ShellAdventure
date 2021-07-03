@@ -191,7 +191,7 @@ class TutorialDocker:
             generators.update( TutorialDocker._get_generators_from_module(module) )
 
         unknown_puzzles = [p for p in puzzles if p not in generators]
-        if unknown_puzzles: raise ConfigError(f"Unknown puzzle generator(s) {sentence_list(unknown_puzzles)}") # TODO custom exception
+        if unknown_puzzles: raise ConfigError(f"Unknown puzzle generator(s) {sentence_list(unknown_puzzles)}")
 
         # Generate the puzzles
         puzzle_list: List[Puzzle] = [self._generate_puzzle(generators[gen]) for gen in puzzles]
