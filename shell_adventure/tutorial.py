@@ -182,12 +182,10 @@ class Tutorial:
             self.container.stop(timeout = 4) # Force the container to stop
             self.container.remove()
 
-    def start(self):
+    def _start(self):
         """
-        Starts the tutorial.
-        Launches the container, sets up a connection and generates the puzzles.
-        In general you should use a tutorial as a context manager instead to start/stop the tutorial, which will
-        guarantee that the container gets cleaned up.
+        Starts the tutorial. Launches the container, sets up a connection and generates the puzzles. Used by
+        the Tutorial context manager.
         """
         self._start_container(self.image)
         
@@ -214,11 +212,9 @@ class Tutorial:
 
         self.start_time = datetime.now()
 
-    def stop(self):
+    def _stop(self):
         """
-        Stop the tutorial, clean up all resources.
-        In general you should use a tutorial as a context manager instead to start/stop the tutorial, which will
-        guarantee that the container gets cleaned up.
+        Stop the tutorial, remove the container, and clean up all resources. Used by the Tutorial context manager.
         """
         if not self.end_time: # Check that we haven't already stopped the container
             self.end_time = datetime.now()
@@ -229,15 +225,19 @@ class Tutorial:
                 docker_helper.client.images.remove(image = self._snapshot.id)
 
     def __enter__(self):
+        """
+        Launch a tutorial by using it as a context manager, which will launch the tutorial container, generate the puzzles,
+        and ensure the container is removed on exit.
+        """
         try:
-            self.start()
+            self._start()
             return self
         except: # If an error occurs in __enter__, __exit__ isn't called.
-            self.stop()
-            raise
+            self._stop()
+            raise # reraise exception
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self.stop()
+        self._stop()
 
     def attach_to_shell(self) -> subprocess.Popen:
         """ Attaches to the shell session in the container, making it show in the terminal. Returns the process. """

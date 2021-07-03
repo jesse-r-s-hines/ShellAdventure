@@ -21,7 +21,7 @@ class TestIntegration:
             "puzzles.py": SIMPLE_PUZZLES,
         })
 
-        with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
+        with tutorial: # Context manager will start and stop the container
             assert docker_helper.client.containers.get(tutorial.container.id) != None
 
             # Puzzles were generated
@@ -99,7 +99,7 @@ class TestIntegration:
             """),
         })
 
-        with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
+        with tutorial:
             rand_puzzle = tutorial.get_all_puzzles()[0]
             src, dst = rand_puzzle.question.split(" -> ")
 
@@ -144,7 +144,7 @@ class TestIntegration:
             """),
         })
 
-        with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
+        with tutorial:
             # Check that the bash session is running as student in /home/student
             exit_code, output = run_command(tutorial, "ps -o uname= 1", user = "root")
             assert output == "student"
@@ -187,7 +187,7 @@ class TestIntegration:
         assert tutorial.user == "root"
 
         # If user isn't root, trying to add file to root will fail
-        with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
+        with tutorial:
             # Check that the bash session is running as root in /
             exit_code, output = run_command(tutorial, "ps -o uname= 1", user = "root")
             assert output == "root"
