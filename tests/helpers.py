@@ -1,5 +1,5 @@
 
-from typing import Dict, Union, List
+from typing import Dict, Tuple, Union, List
 from textwrap import dedent
 from shell_adventure.tutorial import Tutorial
 
@@ -55,9 +55,14 @@ def create_tutorial(tmp_path, files: Dict[str, str]) -> Tutorial:
 
     return Tutorial(tmp_path / "config.yaml")
 
-def run_command(tutorial: Tutorial, command: Union[str, List[str]]):
-    """ Execute a command in a tutorial. """
-    tutorial.container.exec_run(command)
+def run_command(tutorial: Tutorial, cmd: Union[str, List[str]],  **kwargs) -> Tuple[int, str]:
+    """ Execute a command in a tutorial, return the exit code and output """
+    kwargs = {
+        "workdir": str(tutorial.home) if tutorial.home else None,
+        **kwargs,
+    }
+    exit_code, output = tutorial.container.exec_run(cmd, **kwargs)
+    return (exit_code, output.decode().strip())
 
 def file_exists(tutorial: Tutorial, file: str): 
     """ Checks if a file exists in the container. """

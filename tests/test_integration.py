@@ -35,7 +35,7 @@ class TestIntegration:
             assert tutorial.total_score() == 5
             assert tutorial.current_score() == 0
 
-            tutorial.container.exec_run(["mv", "A.txt", "B.txt"])
+            run_command(tutorial, "mv A.txt B.txt")
 
             move_puzzle = tutorial.get_current_puzzles()[0]
             solved, feedback = tutorial.solve_puzzle(move_puzzle)
@@ -50,7 +50,7 @@ class TestIntegration:
             assert [p.question for p in tutorial.get_current_puzzles()] == ["Rename A.txt to B.txt", "Rename C.txt to D.txt"]
             assert [p.question for p in tutorial.get_all_puzzles()] == ["Rename A.txt to B.txt", "Rename C.txt to D.txt"]
     
-            tutorial.container.exec_run(["mv", "C.txt", "D.txt"])
+            run_command(tutorial, "mv C.txt D.txt")
 
             move_puzzle2 = tutorial.get_current_puzzles()[1]
             solved, feedback = tutorial.solve_puzzle(move_puzzle2)
@@ -103,14 +103,14 @@ class TestIntegration:
             rand_puzzle = tutorial.get_all_puzzles()[0]
             src, dst = rand_puzzle.question.split(" -> ")
 
-            exit_code, output = tutorial.container.exec_run(["cat", src])
-            assert "STUFF" in output.decode()
+            exit_code, output = run_command(tutorial, ["cat", src])
+            assert "STUFF" in output
 
             solved, feedback = tutorial.solve_puzzle(rand_puzzle)
             assert solved == False
 
-            tutorial.container.exec_run(["mkdir", "--parents", src, str(Path(dst).parent)])
-            tutorial.container.exec_run(["mv", src, dst])
+            run_command(tutorial, ["mkdir", "--parents", src, str(Path(dst).parent)])
+            run_command(tutorial, ["mv", src, dst])
             solved, feedback = tutorial.solve_puzzle(rand_puzzle)
             assert solved == True
 
@@ -146,8 +146,8 @@ class TestIntegration:
 
         with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
             # Check that the bash session is running as student in /home/student
-            exit_code, output = tutorial.container.exec_run("ps -o uname= 1", user = "root")
-            assert output.decode().strip() == "student"
+            exit_code, output = run_command(tutorial, "ps -o uname= 1", user = "root")
+            assert output == "student"
             assert tutorial.get_student_cwd() == Path("/home/student")
 
             puzzle = tutorial.get_all_puzzles()[0]
@@ -192,16 +192,16 @@ class TestIntegration:
         # If user isn't root, trying to add file to root will fail
         with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
             # Check that the bash session is running as root in /
-            exit_code, output = tutorial.container.exec_run("ps -o uname= 1", user = "root")
-            assert output.decode().strip() == "root"
+            exit_code, output = run_command(tutorial, "ps -o uname= 1", user = "root")
+            assert output == "root"
             assert tutorial.get_student_cwd() == Path("/")
 
             assert file_exists(tutorial, "/A.txt") # Generate the puzzles in root 
-            code, owner = tutorial.container.exec_run("stat -c '%U' A.txt", workdir="/")
-            assert owner.decode().strip() == "root"
+            code, owner = run_command(tutorial, "stat -c '%U' A.txt", workdir="/")
+            assert owner == "root"
 
-            code, owner = tutorial.container.exec_run("stat -c '%U' resource.txt", workdir="/")
-            assert owner.decode().strip() == "root"
+            code, owner = run_command(tutorial, "stat -c '%U' resource.txt", workdir="/")
+            assert owner == "root"
 
     def test_setup_and_resources(self, tmp_path):
         tutorial = create_tutorial(tmp_path, {
@@ -248,14 +248,14 @@ class TestIntegration:
         })
 
         with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
-            exit_code, output = tutorial.container.exec_run(["cat", "output.txt"])
-            assert output.decode().splitlines() == ['resource', '/bin/bash:/home/student:root', 'python:/home/student:student:root', 'generator']
+            exit_code, output = run_command(tutorial, "cat output.txt")
+            assert output.splitlines() == ['resource', '/bin/bash:/home/student:root', 'python:/home/student:student:root', 'generator']
 
-            exit_code, output = tutorial.container.exec_run(["cat", "file2.txt"])
-            assert output.decode() == "2"
+            exit_code, output = run_command(tutorial, "cat file2.txt")
+            assert output == "2"
 
-            code, owner = tutorial.container.exec_run("stat -c '%U' file2.txt")
-            assert owner.decode().strip() == "student"
+            code, owner = run_command(tutorial, "stat -c '%U' file2.txt")
+            assert owner == "student"
 
     def test_exception(self, tmp_path):
         # Test that exceptions in the container get raised in the Tutorial
@@ -321,13 +321,13 @@ class TestIntegration:
         with tutorial:
             assert tutorial.home == None and tutorial.user == None # Will use defaults from the container
     
-            exit_code, output = tutorial.container.exec_run("ps -o user=", user = "root")
+            exit_code, output = run_command(tutorial, "ps -o user=", user = "root")
              # alpine's ps can't filter by pid, it just gives a list of all processes. We want the first (PID 1)
-            assert output.decode().splitlines()[0] == "bob"
+            assert output.splitlines()[0] == "bob"
             assert tutorial.get_student_cwd() == Path("/home/bob")
 
-            code, owner = tutorial.container.exec_run("stat -c '%U' /home/bob/resource.txt")
-            assert owner.decode().strip() == "bob"
+            code, owner = run_command(tutorial, "stat -c '%U' /home/bob/resource.txt")
+            assert owner == "bob"
 
             puzzle = tutorial.get_all_puzzles()[0]
             assert tutorial.solve_puzzle(puzzle) == (True, "Correct!")

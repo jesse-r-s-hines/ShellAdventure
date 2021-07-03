@@ -3,7 +3,7 @@ from shell_adventure_docker.file import File
 from shell_adventure_docker.permissions import *
 import os, stat
 
-class TestFile:
+class TestPermissions:
     def test_creating_permissions(self, umask000, working_dir):
         p = Permissions(0o644)
         assert p.user.read == True

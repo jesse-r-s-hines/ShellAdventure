@@ -7,7 +7,7 @@ import re
 from .helpers import *
 from shell_adventure_shared.tutorial_errors import *
 
-class TestTutorial:
+class TestTutorialCreation:
     def test_simple_tutorial(self, tmp_path):
         # Create the files
         tutorial = create_tutorial(tmp_path, {

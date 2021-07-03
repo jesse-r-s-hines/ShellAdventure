@@ -4,7 +4,7 @@ from shell_adventure_shared.support import UnrecognizedParamsError
 from shell_adventure_shared.puzzle import Puzzle
 import pickle
 
-class TestSupport:
+class TestPuzzle:
     def test_create_puzzle(self):
         puzzle = Puzzle("Solve this puzzle.", checker = lambda cwd, flag: False)
 
