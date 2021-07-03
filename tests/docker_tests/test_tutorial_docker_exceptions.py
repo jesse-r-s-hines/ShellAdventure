@@ -91,31 +91,6 @@ class TestTutorialDockerExceptions:
             )
         assert "UnrecognizedParamsError" in str(exc_info.value)
 
-    def test_bash_script_exception(self, working_dir):
-        with pytest.raises(UserCodeError, match="not-a-command: not found"):
-            tutorial = create_tutorial(working_dir,
-                setup_scripts = [
-                    (PurePath("script.sh"), r"""echo hello; not-a-command"""),
-                ],
-            )
-
-    def test_py_script_exception(self, tmp_path):
-        with pytest.raises(UserCodeError, match='Setup script "script.py" failed') as exc_info:
-            tutorial = create_tutorial(tmp_path, 
-                 setup_scripts = [
-                    (PurePath("script.py"), r"""raise TypeError('BOOM!')"""),
-                ],
-            )
-
-        expected = dedent("""
-            Setup script "script.py" failed:
-              Traceback (most recent call last):
-                File "script.py", line 1, in <module>
-                  raise TypeError('BOOM!')
-              TypeError: BOOM!
-        """).lstrip()
-        assert expected == str(exc_info.value)
-
     def test_generation_exception(self, tmp_path):
         with pytest.raises(UserCodeError, match = "Puzzle generation failed") as exc_info:
             tutorial = create_tutorial(tmp_path, 
@@ -126,7 +101,14 @@ class TestTutorialDockerExceptions:
                 puzzles = ["puzzles.puzzle"],
             )
 
-        assert "ValueError: BOOM!" in str(exc_info.value)
+        expected = dedent("""
+            Puzzle generation failed:
+              Traceback (most recent call last):
+                File "puzzles.py", line 3, in puzzle
+                  raise ValueError('BOOM!')
+              ValueError: BOOM!
+        """).lstrip()
+        assert expected == str(exc_info.value)
 
     def test_module_exception(self, tmp_path):
         with pytest.raises(UserCodeError, match = "Puzzle generation failed") as exc_info:
@@ -168,7 +150,14 @@ class TestTutorialDockerExceptions:
         with pytest.raises(UserCodeError, match = "Puzzle autograder failed") as exc_info:
             tutorial.solve_puzzle(puz_id)
 
-        assert "ValueError: BOOM!" in str(exc_info.value)
+        expected = dedent("""
+            Puzzle autograder failed:
+              Traceback (most recent call last):
+                File "puzzles.py", line 6, in checker
+                  raise ValueError("BOOM!")
+              ValueError: BOOM!
+        """).lstrip()
+        assert expected == str(exc_info.value)
 
     def test_format_user_exception(self, tmp_path):
         tutorial = create_tutorial(tmp_path,

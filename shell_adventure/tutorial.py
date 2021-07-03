@@ -35,19 +35,6 @@ class Tutorial:
     user: str
     """ This is the name of the user that the student is logged in as. If None, the USER of the container will be used. """
 
-    resources: Dict[Path, PurePosixPath]
-    """
-    Paths to resources that will be put into the container.
-    Maps host path to container path. Container path is relative to home.
-    You can copy whole directories and it will create parent directories.
-    """ 
-
-    setup_scripts: List[Path]
-    """
-    A list of paths to bash scripts and python scripts that will be run before before puzzle generation.
-    The scripts will be run as root.
-    """
-
     module_paths: List[Path]
     """ List of absolute paths to the puzzle generation modules. """
 
@@ -76,10 +63,7 @@ class Tutorial:
     config_schema: ClassVar[Schema] = yamale.make_schema(PKG_PATH / "config_schema.yaml")
 
     def __init__(self, config_file: PathLike):
-        """
-        Create a tutorial from a config_file.
-        Any resources the config file uses should be placed in the same directory as the config file.
-        """
+        """ Create a tutorial from a config_file. """
         self.config_file = Path(config_file).resolve()
         self.data_dir = self.config_file.parent
 
@@ -109,11 +93,6 @@ class Tutorial:
         self.module_paths = list(module_paths.values())
 
         self.puzzles = self._parse_puzzles(config.get("puzzles"))
-
-        self.setup_scripts =  [Path(self.data_dir, f) for f in config.get("setup_scripts", [])] # relative to config file
-
-        resources = config.get("resources", {})
-        self.resources = {Path(self.data_dir, src): PurePosixPath(dst) for src, dst in resources.items()} # dst will be interpreted as relative to home in the container.
 
         name_dictionary = config.get("name_dictionary", PKG_PATH / "resources/name_dictionary.txt")
         self.name_dictionary = Path(self.data_dir, name_dictionary) # relative to config file
@@ -217,8 +196,6 @@ class Tutorial:
         generated_puzzles = self._send(Message.SETUP, {
             "home": self.home,
             "user": self.user,
-            "resources": {dst: src.read_bytes() for src, dst in self.resources.items()},
-            "setup_scripts": [(PurePath(file), file.read_text()) for file in self.setup_scripts],
             "modules": {PurePath(file): file.read_text() for file in self.module_paths},
             "puzzles": [pt.generator for pt in tmp_tree],
             "name_dictionary": self.name_dictionary.read_text(),
@@ -239,7 +216,7 @@ class Tutorial:
 
     def stop(self):
         """
-        Stop the tutorial, clean up all resources
+        Stop the tutorial, clean up all resources.
         In general you should use a tutorial as a context manager instead to start/stop the tutorial, which will
         guarantee that the container gets cleaned up.
         """

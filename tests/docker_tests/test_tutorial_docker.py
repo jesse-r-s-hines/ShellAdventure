@@ -109,8 +109,10 @@ class TestTutorialDocker:
             puzzles = ["mypuzzles.user_puzzle"]
         )
 
-        assert File("studentFile").owner() == "student" # euid is student so files get created as student
-        assert File("rootFile").owner() == "root"
+        studentFile = File("studentFile") # euid is student so files get created as student
+        assert (studentFile.owner(), studentFile.group()) == ("student", "student")
+        rootFile = File("rootFile")
+        assert (rootFile.owner(), rootFile.group()) == ("root", "root")
 
         [puzzle] = list(tutorial.puzzles.values())
         assert tutorial.solve_puzzle(puzzle.id) == (True, "Correct!")
@@ -154,102 +156,27 @@ class TestTutorialDocker:
         # /proc has special files that sometimes throws errors when trying to get them via python. Test that they are handled properly.
         assert get_files_recursive("/proc") != []
 
-
-    def test_setup_scripts(self, working_dir):
+    def test_puzzle_generation_order(self, working_dir):
         tutorial = create_tutorial(working_dir,
-            modules = {PurePath("mypuzzles.py"): dedent(r"""
+            modules = {PurePath("puzzles.py"): dedent(r"""
                 from shell_adventure_docker import *
 
-                def puzzle():
-                    output = File("output.txt")
-                    output.write_text(output.read_text() + "generator\n")
+                def puz1():
+                    with File("log.txt").open("a") as f: f.write("puz1\n")
+                    return Puzzle(question = "", checker = lambda: False)
 
-                    return Puzzle(
-                        question = f"WRONG",
-                        checker = lambda: False,
-                    )
+                def puz2():
+                    with File("log.txt").open("a") as f: f.write("puz2\n")
+                    return Puzzle(question = "", checker = lambda: False)
+
+                def puz3():
+                    with File("log.txt").open("a") as f: f.write("puz3\n")
+                    return Puzzle(question = "", checker = lambda: False)
             """)},
-            puzzles = ["mypuzzles.puzzle"],
-            setup_scripts = [
-                (PurePath("script.sh"), r"""
-                    #!/bin/bash
-                    OUTPUT="$SHELL:$(pwd):$(whoami)"
-                    su student -c "echo '$OUTPUT' >> output.txt"
-                """.strip()),
-                (PurePath("path/to/script.sh"), r"""
-                    #!/bin/bash
-                    echo 'script2.sh' >> output.txt
-                """.strip()), # Duplicate names should still work (name is just for display purposes)
-                (PurePath("script.py"), dedent(r"""
-                    from shell_adventure_docker import *
-                    import os, getpass, pwd
-
-                    rand.paragraphs(3) # check that this is not null
-                    output = File("output.txt")
-                    effective_user = pwd.getpwuid(os.geteuid()).pw_name
-                    output.write_text(output.read_text() + f"python:{os.getcwd()}:{effective_user}:{getpass.getuser()}\n")
-                """)),
-                (PurePath("path/to/script.py"), dedent(r"""
-                    from shell_adventure_docker import *
-                    output = File("output.txt")
-                    output.write_text(output.read_text() + "script2.py\n")
-                """)),
-            ]
+            puzzles = ["puzzles.puz1", "puzzles.puz3", "puzzles.puz2"],
         )
 
-        output = working_dir / "output.txt"
-        assert output.read_text().splitlines() == [
-            f'/bin/bash:{working_dir}:root',
-            'script2.sh',
-            f'python:{working_dir}:student:root',
-            'script2.py',
-            'generator'
-        ]
-        assert (output.owner(), output.group()) == ("student", "student")
+        log = working_dir / "log.txt"
+        assert log.read_text().splitlines() == ['puz1', 'puz3', 'puz2']
  
-    def test_resources(self, working_dir):
-        tutorial = create_tutorial(working_dir,
-            modules = {PurePath("mypuzzles.py"): SIMPLE_PUZZLES},
-            puzzles = ["mypuzzles.move"],
-            resources = {
-                PurePosixPath("resource1.txt"): b"RESOURCE1",
-                PurePosixPath(f"{working_dir}/resource2.txt"): b"RESOURCE2",
-                PurePosixPath(f"/resource3.txt"): b"RESOURCE3", # File will be created in root, with student as owner
-            }
-        )
-        r1 = working_dir / "resource1.txt"
-        r2 = working_dir / "resource2.txt"
-        r3 = Path("/resource3.txt")
 
-        assert (r1.owner(), r1.group()) == ("student", "student")
-        assert r1.read_text() == "RESOURCE1"
-        assert (r2.owner(), r2.group()) == ("student", "student")
-        assert r2.read_text() == "RESOURCE2"
-        assert (r3.owner(), r3.group()) == ("student", "student")
-        assert r3.read_text() == "RESOURCE3"
-
-    def test_resources_different_user(self, working_dir):
-        tutorial = create_tutorial(working_dir,
-            user = "root",
-            modules = {PurePath("mypuzzles.py"): SIMPLE_PUZZLES},
-            puzzles = ["mypuzzles.move"],
-            resources = {
-                PurePosixPath("resource1.txt"): b"RESOURCE1", # Relative to home
-                PurePosixPath(working_dir, "resource2.txt"): b"RESOURCE2",
-            }
-        )
-
-        assert (working_dir / "resource1.txt").owner() == "root"
-        assert (working_dir / "resource1.txt").read_text() == "RESOURCE1"
-        assert (working_dir / "resource2.txt").owner() == "root"
-        assert (working_dir / "resource2.txt").read_text() == "RESOURCE2"
-
-    def test_resources_create_dirs(self, working_dir):
-        tutorial = create_tutorial(working_dir,
-            modules = {PurePath("mypuzzles.py"): SIMPLE_PUZZLES},
-            puzzles = ["mypuzzles.move"],
-            resources = {
-                PurePosixPath(f"{working_dir}/dir/resource.txt"): b"RESOURCE",
-            }
-        )
-        assert (working_dir / "dir/resource.txt").exists()

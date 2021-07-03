@@ -163,8 +163,6 @@ class TestIntegration:
                     - puzzles.py
                 puzzles:
                     - puzzles.puz:
-                resources:
-                    resource.txt: resource.txt
             """,
             "puzzles.py": dedent("""
                 from shell_adventure_docker import *
@@ -184,7 +182,6 @@ class TestIntegration:
                         checker = checker
                     )
             """),
-            "resource.txt": "resource!",
         })
         assert tutorial.home == PurePosixPath("/")
         assert tutorial.user == "root"
@@ -199,63 +196,6 @@ class TestIntegration:
             assert file_exists(tutorial, "/A.txt") # Generate the puzzles in root 
             code, owner = run_command(tutorial, "stat -c '%U' A.txt", workdir="/")
             assert owner == "root"
-
-            code, owner = run_command(tutorial, "stat -c '%U' resource.txt", workdir="/")
-            assert owner == "root"
-
-    def test_setup_and_resources(self, tmp_path):
-        tutorial = create_tutorial(tmp_path, {
-            "config.yaml": """
-                resources:
-                    resource1.txt: output.txt # Relative to home
-                    resource2.txt: /home/student/file2.txt
-                setup_scripts:
-                    - setup.sh
-                    - dir/setup.py
-                modules:
-                    - puzzles.py
-                puzzles:
-                    - puzzles.puzzle:
-            """,
-            "puzzles.py": dedent(r"""
-                from shell_adventure_docker import *
-
-                def puzzle():
-                    output = File("output.txt")
-                    output.write_text(output.read_text() + "generator\n")
-
-                    return Puzzle(
-                        question = f"WRONG",
-                        checker = lambda: False,
-                    )
-            """),
-            "setup.sh": r"""
-                #!/bin/bash
-                OUTPUT="$SHELL:$(pwd):$(whoami)"
-                echo $OUTPUT >> output.txt
-            """.strip(),
-            "dir/setup.py": dedent(r"""
-                from shell_adventure_docker import *
-                import os, getpass, pwd
-
-                rand.paragraphs(3) # check that this is not null
-                output = File("output.txt")
-                effective_user = pwd.getpwuid(os.geteuid()).pw_name
-                output.write_text(output.read_text() + f"python:{os.getcwd()}:{effective_user}:{getpass.getuser()}\n")
-            """),
-            "resource1.txt": "resource\n",
-            "resource2.txt": "2",
-        })
-
-        with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
-            exit_code, output = run_command(tutorial, "cat output.txt")
-            assert output.splitlines() == ['resource', '/bin/bash:/home/student:root', 'python:/home/student:student:root', 'generator']
-
-            exit_code, output = run_command(tutorial, "cat file2.txt")
-            assert output == "2"
-
-            code, owner = run_command(tutorial, "stat -c '%U' file2.txt")
-            assert owner == "student"
 
     def test_exception(self, tmp_path):
         # Test that exceptions in the container get raised in the Tutorial
@@ -290,8 +230,6 @@ class TestIntegration:
         tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
                 image: shell-adventure/tests:alpine
-                resources:
-                    resource.txt: resource.txt
                 modules:
                     - puzzles.py
                 puzzles:
@@ -315,7 +253,6 @@ class TestIntegration:
                         checker = lambda: getpass.getuser() == "root"
                     )
             """),
-            "resource.txt": "resource\n",
         })
 
         with tutorial:
@@ -325,9 +262,6 @@ class TestIntegration:
              # alpine's ps can't filter by pid, it just gives a list of all processes. We want the first (PID 1)
             assert output.splitlines()[0] == "bob"
             assert tutorial.get_student_cwd() == Path("/home/bob")
-
-            code, owner = run_command(tutorial, "stat -c '%U' /home/bob/resource.txt")
-            assert owner == "bob"
 
             puzzle = tutorial.get_all_puzzles()[0]
             assert tutorial.solve_puzzle(puzzle) == (True, "Correct!")

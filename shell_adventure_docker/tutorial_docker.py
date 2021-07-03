@@ -138,8 +138,8 @@ class TutorialDocker:
 
     ### Message actions, these functions can be called by sending a message over the connection
     
-    def setup(self, *, home: PathLike = None, user: str = None, resources: Dict[PurePosixPath, bytes], setup_scripts: List[Tuple[PurePath, str]],
-              modules: Dict[PurePath, str], puzzles: List[str], name_dictionary: str, content_sources: List[str]) -> List[Puzzle]:
+    def setup(self, *, home: PathLike = None, user: str = None, modules: Dict[PurePath, str], puzzles: List[str],
+              name_dictionary: str, content_sources: List[str]) -> List[Puzzle]:
         """
         Initializes the tutorial with the given settings. Generates the puzzles in the modules.
         The initialization is done separate from the constructor so that it can be done after the connection with the host is setup.
@@ -151,35 +151,6 @@ class TutorialDocker:
 
         self._set_home_and_user(home, user)
         self.modules = modules
-
-        # Copy resources
-        for dest, content in resources.items(): # Since I'm root no errors should be able to occur here
-            destPath = File(self.home, dest) # resource paths are relative to home.
-            destPath.parent.mkdir(parents = True, exist_ok = True)
-            destPath.write_bytes(content)
-            destPath.chown(self.user, self.user)
-
-        # So we can show errors in setup scripts
-        self.modules = {**self.modules, **{p: source for (p, source) in setup_scripts if p.suffix == ".py"}}
-        # Run setup scripts
-        with TemporaryDirectory("-shell-adventure-scripts") as dir:
-            for path, script in setup_scripts:
-                os.chdir(self.home) # Run scripts from home
-                os.umask(0o000)
-                if path.suffix == ".py":
-                    with change_user(self.user):
-                        try:
-                            TutorialDocker._create_module(path, script) # Execute the module
-                        except Exception as e:
-                            raise UserCodeError(f'Setup script "{path.name}" failed:', tb_str = self._format_user_exc(e))
-                else:
-                    file = File(dir, path.name) # Doesn't matter if a script overwrites another with the same name
-                    file.create(mode = 0o700, content = script) # Make script executable
-                    try:
-                        subprocess.run(str(file), stdout = subprocess.PIPE, stderr = subprocess.STDOUT, # combine stderr & stdout
-                                       shell = True, check = True) # throw error if fail # run scripts as root.
-                    except subprocess.CalledProcessError as e:
-                        raise UserCodeError(f'Setup script "{path.name}" failed. Output:\n{textwrap.indent(e.output.decode(), "  ")}')
 
         try: # Load modules
             modules_list = [TutorialDocker._create_module(path, code) for path, code in modules.items()]

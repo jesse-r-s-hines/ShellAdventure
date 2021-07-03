@@ -24,11 +24,6 @@ class TestTutorialCreation:
                 image: my-custom-image:latest
                 home: /home/user
                 user: user
-                resources:
-                    my_resource.txt: file1.txt
-                setup_scripts:
-                    - setup.py
-                    - setup.sh 
                 modules:
                     - path/to/puzzle1.py # Relative path
                     - {tmp_path / "puzzle2.py"} # Absolute path
@@ -43,9 +38,6 @@ class TestTutorialCreation:
             "puzzle2.py": SIMPLE_PUZZLES,
             "my_dictionary.txt": "a\nb\nc\n",
             "content.txt": "STUFF\n\nSTUFF\n\nMORE STUFF\n",
-            "setup.py": "File('A.txt').create()",
-            "setup.sh": "touch B.txt",
-            "my_resource.txt": "1",
         })
         assert tutorial.data_dir == tmp_path
         assert tutorial.image == "my-custom-image:latest"
@@ -54,8 +46,6 @@ class TestTutorialCreation:
         assert tutorial.name_dictionary == tmp_path / "my_dictionary.txt"
         assert tutorial.content_sources == [tmp_path / "content.txt"]
 
-        assert tutorial.resources == {tmp_path / "my_resource.txt": PurePosixPath("file1.txt")}
-        assert [s for s in tutorial.setup_scripts] == [tmp_path / "setup.py", tmp_path / "setup.sh"]
         assert [m for m in tutorial.module_paths] == [tmp_path / "path/to/puzzle1.py", tmp_path / "puzzle2.py"]
         assert [pt.generator for pt in tutorial.puzzles] == ["puzzle1.move", "puzzle2.move"]
 
@@ -84,25 +74,6 @@ class TestTutorialCreation:
         # Third Level
         assert [pt.generator for pt in tutorial.puzzles[0].dependents[0].dependents] == ["puzzle1.move"]
 
-    def test_puzzles_bad_format(self, tmp_path):
-        with pytest.raises(ConfigError) as exc_info:
-            tutorial = create_tutorial(tmp_path, {
-                "config.yaml": f"""
-                    modules:
-                        - puzzles.py
-                    puzzles:
-                        - move
-                        - 1ab.1ab
-                        - à.ñ # python allows unicode identifiers
-                """,
-                "puzzles.py": SIMPLE_PUZZLES,
-            })
-        message = str(exc_info.value)
-
-        assert "'move' is not a python identifier of format 'module.puzzle'" in message
-        assert "'1ab.1ab' is not a python identifier of format 'module.puzzle'" in message
-        assert "à.ñ" not in message # unicode is valid
-
     def test_missing_files(self, tmp_path):
         with pytest.raises(FileNotFoundError):
             tutorial = create_tutorial(tmp_path, {"config.yaml": SIMPLE_TUTORIAL}) # Don't make any puzzle files
@@ -130,8 +101,6 @@ class TestTutorialCreation:
                     restart_enabled: 20
                     puzzles:
                         puzzles.move:
-                    resources:
-                        1: resource
                 """,
                 "puzzles.py": SIMPLE_PUZZLES,
             })
@@ -141,7 +110,6 @@ class TestTutorialCreation:
         assert re.search("restart_enabled: .* is not a bool.", message)
         assert re.search("modules: Required field missing", message)
         assert re.search("puzzles: .* is not a list.", message)
-        assert re.search("resources: Key error", message)
 
     def test_validation_error_puzzles(self, tmp_path):
         with pytest.raises(ConfigError, match = "Length of .* is greater than 1"):
@@ -155,6 +123,25 @@ class TestTutorialCreation:
                 """,
                 "puzzles.py": SIMPLE_PUZZLES,
             })
+
+    def test_validation_error_puzzles_bad_format(self, tmp_path):
+        with pytest.raises(ConfigError) as exc_info:
+            tutorial = create_tutorial(tmp_path, {
+                "config.yaml": f"""
+                    modules:
+                        - puzzles.py
+                    puzzles:
+                        - move
+                        - 1ab.1ab
+                        - à.ñ # python allows unicode identifiers
+                """,
+                "puzzles.py": SIMPLE_PUZZLES,
+            })
+        message = str(exc_info.value)
+
+        assert "'move' is not a python identifier of format 'module.puzzle'" in message
+        assert "'1ab.1ab' is not a python identifier of format 'module.puzzle'" in message
+        assert "à.ñ" not in message # unicode is valid
 
     def test_config_parse_error(self, tmp_path):
         with pytest.raises(ConfigError, match = "block sequence entries are not allowed in this context"):
