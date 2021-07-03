@@ -72,9 +72,6 @@ class TestTutorial:
                             - puzzle1.move
                     - puzzle2.move
                     - puzzle3.move:
-                name_dictionary: "my_dictionary.txt"
-                content_sources:
-                    - content.txt
             """,
             "puzzle1.py": SIMPLE_PUZZLES, "puzzle2.py": SIMPLE_PUZZLES, "puzzle3.py": SIMPLE_PUZZLES,
         })
@@ -86,6 +83,25 @@ class TestTutorial:
 
         # Third Level
         assert [pt.generator for pt in tutorial.puzzles[0].dependents[0].dependents] == ["puzzle1.move"]
+
+    def test_puzzles_bad_format(self, tmp_path):
+        with pytest.raises(ConfigError) as exc_info:
+            tutorial = create_tutorial(tmp_path, {
+                "config.yaml": f"""
+                    modules:
+                        - puzzles.py
+                    puzzles:
+                        - move
+                        - 1ab.1ab
+                        - à.ñ # python allows unicode identifiers
+                """,
+                "puzzles.py": SIMPLE_PUZZLES,
+            })
+        message = str(exc_info.value)
+
+        assert "'move' is not a python identifier of format 'module.puzzle'" in message
+        assert "'1ab.1ab' is not a python identifier of format 'module.puzzle'" in message
+        assert "à.ñ" not in message # unicode is valid
 
     def test_missing_files(self, tmp_path):
         with pytest.raises(FileNotFoundError):
