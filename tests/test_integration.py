@@ -331,12 +331,12 @@ class TestIntegration:
             code, owner = tutorial.container.exec_run("stat -c '%U' /home/bob/resource.txt")
             assert owner.decode().strip() == "bob"
 
-            run_command(tutorial, "touch A.txt")
             puzzle = tutorial.get_all_puzzles()[0]
             assert tutorial.solve_puzzle(puzzle) == (True, "Correct!")
 
+            run_command(tutorial, "touch new.txt")
             tutorial.restart()
-            assert not file_exists(tutorial, "A.txt")
+            assert not file_exists(tutorial, "new.txt")
 
     def test_missing_deps(self, tmp_path):
         tutorial = create_tutorial(tmp_path, {
