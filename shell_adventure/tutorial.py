@@ -74,7 +74,7 @@ class Tutorial:
         except yamale.YamaleError as e:
             errors = "\n".join(e.results[0].errors)
             raise ConfigError(f'Validation error in "{config_file}":\n{indent(errors, "  ")}')
-        except yaml.YAMLError as e:
+        except (yaml.YAMLError, OSError) as e: # YAML fails to parse, or some filesystem error
             raise ConfigError(str(e))
 
         self.image = config.get("image", "shell-adventure:latest")
@@ -86,7 +86,6 @@ class Tutorial:
         for module in config.get("modules"):
             # Files are relative to the config file (if module is absolute, Path will use that, if relative it will join with first)
             module = Path(self.data_dir, module)
-            if not module.exists(): raise FileNotFoundError(f'Module "{module}" not found.') # TODO maybe throw ConfigError instead?
             if module.stem in module_paths: # Can't have the same name, even with different paths
                 raise ConfigError(f'Multiple puzzle modules with name "{module.stem}" found.') 
             module_paths[module.stem] = module
@@ -189,15 +188,22 @@ class Tutorial:
         """
         self._start_container(self.image)
         
+        try:
+            modules = {PurePath(file): file.read_text() for file in self.module_paths}
+            name_dictionary = self.name_dictionary.read_text()
+            content_sources = [file.read_text() for file in self.content_sources]
+        except OSError as e: # some filesystem error
+            raise ConfigError(str(e))
+
         tmp_tree = PuzzleTree("", dependents=self.puzzles) # Put puzzles under a dummy node so we can iterate  it.
 
         generated_puzzles = self._send(Message.SETUP, {
             "home": self.home,
             "user": self.user,
-            "modules": {PurePath(file): file.read_text() for file in self.module_paths},
+            "modules": modules,
             "puzzles": [pt.generator for pt in tmp_tree],
-            "name_dictionary": self.name_dictionary.read_text(),
-            "content_sources": [file.read_text() for file in self.content_sources],
+            "name_dictionary": name_dictionary,
+            "content_sources": content_sources,
         })
 
         # store the puzzles in the PuzzleTree (unflatten from preorder list)
@@ -263,10 +269,15 @@ class Tutorial:
             for puzzle in self.get_all_puzzles(): # Set the puzzle solved state
                 puzzle.solved = False
 
+            try:
+                modules = {PurePath(file): file.read_text() for file in self.module_paths}
+            except OSError as e: # some filesystem error
+                raise ConfigError(str(e))
+        
             self._send(Message.RESTORE, {
                 "home": self.home,
                 "user": self.user,
-                "modules": {PurePath(file): file.read_text() for file in self.module_paths},
+                "modules": modules,
                 "puzzles": [pt.puzzle for pt in PuzzleTree("", dependents = self.puzzles)], # Put puzzles under tree node so we can iterate
             })
 

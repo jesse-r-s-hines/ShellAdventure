@@ -7,7 +7,7 @@ import re
 from .helpers import *
 from shell_adventure_shared.tutorial_errors import *
 
-class TestTutorialCreation:
+class TestTutorialConfig:
     def test_simple_tutorial(self, tmp_path):
         # Create the files
         tutorial = create_tutorial(tmp_path, {
@@ -75,10 +75,19 @@ class TestTutorialCreation:
         assert [pt.generator for pt in tutorial.puzzles[0].dependents[0].dependents] == ["puzzle1.move"]
 
     def test_missing_files(self, tmp_path):
-        with pytest.raises(FileNotFoundError):
-            tutorial = create_tutorial(tmp_path, {"config.yaml": SIMPLE_TUTORIAL}) # Don't make any puzzle files
-        with pytest.raises(FileNotFoundError):
+        with pytest.raises(ConfigError, match = r"No such file or directory.*not_a_config_file\.yaml"):
             tutorial = Tutorial(tmp_path / "not_a_config_file.yaml")
+
+        tutorial = create_tutorial(tmp_path, {"config.yaml": SIMPLE_TUTORIAL}) # Don't make any puzzle files
+        with pytest.raises(ConfigError, match = r"No such file or directory.*puzzles\.py"):
+            with tutorial: pass # We have to try and launch the tutorial before modules are opened
+
+        tutorial = create_tutorial(tmp_path, {
+            "config.yaml": SIMPLE_TUTORIAL,
+            "mypuzzles.py/file": "", # make mypuzzles.py a directory
+        })
+        with pytest.raises(ConfigError, match = r"Is a directory.*puzzles\.py"):
+            with tutorial: pass
 
     def test_duplicate_module_names(self, tmp_path):
         with pytest.raises(ConfigError, match='Multiple puzzle modules with name "puzzle1" found'):

@@ -18,7 +18,7 @@ if __name__ == "__main__":
 
     try:
         tutorial = Tutorial(sys.argv[1])
-    except (FileNotFoundError, ConfigError) as e:
+    except ConfigError as e:
         print(e)
         exit(1)
     
@@ -26,7 +26,7 @@ if __name__ == "__main__":
         with tutorial: # Sets up the container with the tutorial inside, context manager will remove container
             tutorial.attach_to_shell()
             gui = GUI(tutorial, restart_callback = tutorial.attach_to_shell)
-    except ConfigError as e: # We can get config errors when the container starts as well
+    except ConfigError as e: # We can get config errors when starting the container as well
         print(e)
         exit(1)
     except UnhandledError as e: # Our code in the container broke
