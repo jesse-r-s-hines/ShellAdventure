@@ -81,7 +81,8 @@ class TutorialDocker:
         extra_params = extra_func_params(generator, list(args.keys()))
         if extra_params: # TODO give details of which puzzle exception was in
             raise UserCodeError(
-                f'Unrecognized param(s) {sentence_list(extra_params)} in puzzle generator. Expected {sentence_list(args.keys(), last_sep = " and/or ")}.'
+                f'Unrecognized param(s) {sentence_list(extra_params, quote = True)} in puzzle generator.' +
+                f' Expected {sentence_list(args.keys(), last_sep = " and/or ", quote = True)}.'
             )
         try:
             puzzle = self._call_user_func(generator, args)
@@ -191,7 +192,7 @@ class TutorialDocker:
             generators.update( TutorialDocker._get_generators_from_module(module) )
 
         unknown_puzzles = [p for p in puzzles if p not in generators]
-        if unknown_puzzles: raise ConfigError(f"Unknown puzzle generator(s) {sentence_list(unknown_puzzles)}")
+        if unknown_puzzles: raise ConfigError(f"Unknown puzzle generator(s) {sentence_list(unknown_puzzles, quote = True)}")
 
         # Generate the puzzles
         puzzle_list: List[Puzzle] = [self._generate_puzzle(generators[gen]) for gen in puzzles]

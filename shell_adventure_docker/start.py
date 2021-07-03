@@ -15,7 +15,7 @@ deps = {
 
 missing_deps = [pip for imp, pip in deps.items() if find_spec(imp) == None]
 if missing_deps:
-    print(f'Package(s) {sentence_list(missing_deps)} are not installed in the Docker image. Add the following line to your Dockerfile:')
+    print(f'Package(s) {sentence_list(missing_deps, quote = True)} are not installed in the Docker image. Add the following line to your Dockerfile:')
     print(f'  python3 -m pip --no-cache-dir install {", ".join(missing_deps)}')
     sys.exit(1)
 

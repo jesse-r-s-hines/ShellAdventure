@@ -22,7 +22,7 @@ class TestSupport:
         args = {"a": 1, "b": 2, }
 
         func = lambda c: True
-        with pytest.raises(UnrecognizedParamsError, match = re.escape('Unrecognized param(s) c. Expected a and/or b.')):
+        with pytest.raises(UnrecognizedParamsError, match = re.escape("Unrecognized param(s) 'c'. Expected 'a' and/or 'b'.")):
             call_with_args(func, args)
 
     def test_retry(self):
@@ -45,4 +45,7 @@ class TestSupport:
 
         assert sentence_list(["a", "b", "c"], sep = "+", last_sep = "=") == "a+b=c"
         assert sentence_list( (str(i) for i in range(3)) ) == "0, 1 and 2" # iterables work as well as list
+
+        assert sentence_list(['"', "'", "\\"], quote = True) == "'\"', \"'\" and '\\\\'"
+
 

@@ -8,7 +8,7 @@ from .helpers import *
 
 class TestTutorialDockerExceptions:
     def test_puzzle_not_found(self, working_dir):
-        with pytest.raises(ConfigError, match=re.escape("Unknown puzzle generator(s) mypuzzles.puzz_a, mypuzzles.puzz_b and mypuzzles.puzz_c")):
+        with pytest.raises(ConfigError, match=re.escape("Unknown puzzle generator(s) 'mypuzzles.puzz_a', 'mypuzzles.puzz_b' and 'mypuzzles.puzz_c'")):
             tutorial = create_tutorial(working_dir,
                 modules = {PurePath("mypuzzles.py"): SIMPLE_PUZZLES},
                 puzzles = ["mypuzzles.puzz_a", "mypuzzles.puzz_b", "mypuzzles.puzz_c"]
@@ -67,7 +67,7 @@ class TestTutorialDockerExceptions:
                     checker = lambda: True,
                 )
         """)
-        with pytest.raises(UserCodeError, match=r"Unrecognized param\(s\) not_a_param in puzzle generator"):
+        with pytest.raises(UserCodeError, match=r"Unrecognized param\(s\) 'not_a_param' in puzzle generator"):
             tutorial = create_tutorial(working_dir,
                 modules = {PurePath("mypuzzles.py"): puzzles},
                 puzzles = ["mypuzzles.puzzle"],
@@ -84,7 +84,7 @@ class TestTutorialDockerExceptions:
                 )
         """)
 
-        with pytest.raises(UserCodeError, match=r"Unrecognized param\(s\) not_a_param in checker function") as exc_info:
+        with pytest.raises(UserCodeError, match=r"Unrecognized param\(s\) 'not_a_param' in checker function") as exc_info:
             tutorial = create_tutorial(working_dir,
                 modules = {PurePath("mypuzzles.py"): puzzles},
                 puzzles = ["mypuzzles.puzzle"],

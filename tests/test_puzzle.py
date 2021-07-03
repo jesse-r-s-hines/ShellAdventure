@@ -12,7 +12,7 @@ class TestSupport:
         assert puzzle._checker_args == ["cwd", "flag"]
 
     def test_create_puzzle_invalid_args(self):
-        with pytest.raises(UnrecognizedParamsError, match = re.escape("Unrecognized param(s) blah")):
+        with pytest.raises(UnrecognizedParamsError, match = re.escape("Unrecognized param(s) 'blah'")):
             puzzle = Puzzle("Solve this puzzle.", checker = lambda blah: False)
 
     def test_create_puzzle_invalid_types(self):

@@ -67,8 +67,8 @@ class Puzzle:
         extra_params = extra_func_params(self.checker, Puzzle.allowed_checker_args)
         if extra_params:
             raise UnrecognizedParamsError(
-                f'Unrecognized param(s) {sentence_list(extra_params)} in checker function. ' +
-                f'Expected {sentence_list(Puzzle.allowed_checker_args, last_sep = " and/or ")}.',
+                f'Unrecognized param(s) {sentence_list(extra_params, quote = True)} in checker function.' +
+                f' Expected {sentence_list(Puzzle.allowed_checker_args, last_sep = " and/or ", quote = True)}.',
                 extra_params = extra_params
             )
 

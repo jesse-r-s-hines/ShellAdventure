@@ -4,6 +4,7 @@ This file is shared between the Docker side code and host.
 """
 
 from __future__ import annotations
+from re import T
 from typing import Iterable, Union, Callable,  Dict, Any, List
 import os, time, inspect
 from enum import Enum
@@ -54,7 +55,8 @@ def call_with_args(func: Callable[..., Any], args: Dict[str, Any]) -> Any:
     extra_params = extra_func_params(func, known_args)
     if extra_params:
         raise UnrecognizedParamsError(
-            f'Unrecognized param(s) {sentence_list(extra_params)}. Expected {sentence_list(known_args, last_sep = " and/or ")}.',
+            f'Unrecognized param(s) {sentence_list(extra_params, quote = True)}.' + 
+            f' Expected {sentence_list(known_args, last_sep = " and/or ", quote = True)}.',
             extra_params = extra_params
         )
 
@@ -86,13 +88,19 @@ def retry(func: Callable[[], Any], tries = 16, delay = 0.25) -> Any:
             time.sleep(delay)
     return func() # Last time just let the errors get raised.
 
-def sentence_list(arr: Iterable[str], sep: str = ", ", last_sep: str = " and "):
+def sentence_list(arr: Iterable[str], sep: str = ", ", last_sep: str = " and ", quote = False):
     """
-    Takes a list of strings, returns a string representing the list with the final seperator different. Eg.
+    Takes a list of strings, returns a string representing the list with the final seperator different. Optionally
+    quotes each of the items. Eg.
     >>> sentence_list(["a", "b", "c"])
     "a, b and c"
+    >>> sentence_list(["a", "b"], quote = True, last_sep = " or ")
+    "'a' or 'c'"
     """
     arr = list(arr)
+    if quote:
+        arr = [repr(s) for s in arr]
+
     if len(arr) == 0:
         return ""
     elif len(arr) == 1:
