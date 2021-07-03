@@ -111,7 +111,7 @@ class TestTutorial:
         with pytest.raises(ConfigError) as exc_info:
             tutorial = create_tutorial(tmp_path, {
                 "config.yaml": """
-                    undo: 20
+                    restart_enabled: 20
                     puzzles:
                         puzzles.move:
                     resources:
@@ -122,7 +122,7 @@ class TestTutorial:
         message = str(exc_info.value)
         
         assert re.search('Validation error in ".*/config.yaml"', message)
-        assert re.search("undo: .* is not a bool.", message)
+        assert re.search("restart_enabled: .* is not a bool.", message)
         assert re.search("modules: Required field missing", message)
         assert re.search("puzzles: .* is not a list.", message)
         assert re.search("resources: Key error", message)

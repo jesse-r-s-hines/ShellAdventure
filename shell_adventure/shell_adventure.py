@@ -25,7 +25,7 @@ if __name__ == "__main__":
     try:
         with tutorial: # Sets up the container with the tutorial inside, context manager will remove container
             tutorial.attach_to_shell()
-            gui = GUI(tutorial, undo_callback = tutorial.attach_to_shell )
+            gui = GUI(tutorial, restart_callback = tutorial.attach_to_shell)
     except ConfigError as e: # We can get config errors when the container starts as well
         print(e)
         exit(1)

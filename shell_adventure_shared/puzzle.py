@@ -76,7 +76,7 @@ class Puzzle:
         """
         We have to use dill to pickle lambdas. We won't unpickle it on the host, since we don't need to call it and there may
         be modules in the container that aren't on the host causing unpickle to fail. We do need to be able to send the pickled
-        lambda back to the container after an undo. If the checker fails to pickle, it will be left as None
+        lambda back to the container after a restart. If the checker fails to pickle, it will be left as None
         """
         data = self.__dict__.copy()
         if not isinstance(self.checker, bytes):
@@ -88,7 +88,7 @@ class Puzzle:
 
     def extract(self): # TODO I need to find a cleaner way of doing this
         """
-        We don't want to unpickle the checker on the host, but we need to be able to send it back to the container after a undo.
+        We don't want to unpickle the checker on the host, but we need to be able to send it back to the container after a restart.
         Calling extract() will unpickle the checker after we have received a puzzle from the host.
         """
         if isinstance(self.checker, bytes):

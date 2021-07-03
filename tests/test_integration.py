@@ -319,8 +319,6 @@ class TestIntegration:
         })
 
         with tutorial:
-            tutorial.commit()
-
             assert tutorial.home == None and tutorial.user == None # Will use defaults from the container
     
             exit_code, output = tutorial.container.exec_run("ps -o user=", user = "root")

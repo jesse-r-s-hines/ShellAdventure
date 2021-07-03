@@ -198,16 +198,16 @@ class TutorialDocker:
 
         self.puzzles = {p.id: p for p in puzzle_list}
 
-        # Reset rand after generation is complete. You can't use it during the tutorial since we don't restore it on undo
+        # Reset rand after generation is complete. You can't use it during the tutorial since we don't restore it on restart
         shell_adventure_docker.rand = None
 
         return puzzle_list
 
     def restore(self, home: PathLike, user: str, modules: Dict[PurePath, str], puzzles: List[Puzzle]):
         """
-        Restore the tutorial after we've loading a snapshot. This is for usage after an undo. Docker commit keeps all filesystem state, but
-        we have to restart the container and processes. We don't need to regenerate the puzzles, but we do need to resend the puzzle objects so
-        we can use the checkers.
+        Restore the tutorial after we've loading a snapshot. This is for usage after a restart. Docker commit keeps all filesystem state, but
+        we have to restart the container and processes. We don't need to regenerate the puzzles, but we do need to resend the puzzle objects
+        so we can use the checkers.
         """
         shell_adventure_docker._tutorial = self
 
@@ -286,7 +286,7 @@ class TutorialDocker:
         Sets up a connection between the tutorial inside the docker container and the driving application outside and
         listen for requests from the host.
         """ 
-        with Listener(support.conn_addr_to_container, authkey = support.conn_key) as listener:
+        with Listener(support.conn, authkey = support.conn_key) as listener:
             with listener.accept() as conn:
                 try:
                     # Receive the initial setup message.

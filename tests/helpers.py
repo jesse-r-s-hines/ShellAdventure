@@ -56,12 +56,8 @@ def create_tutorial(tmp_path, files: Dict[str, str]) -> Tutorial:
     return Tutorial(tmp_path / "config.yaml")
 
 def run_command(tutorial: Tutorial, command: Union[str, List[str]]):
-    """ Execute a command in a tutorial, make a commit after the command. """
-    # I tried using an actual bash session so we could test if the script was getting called
-    # but I couldn't get bash to run PROMPT_COMMAND when called via Popen. Using the bash `-i`
-    # flag doesn't work either.
+    """ Execute a command in a tutorial. """
     tutorial.container.exec_run(command)
-    tutorial.commit()
 
 def file_exists(tutorial: Tutorial, file: str): 
     """ Checks if a file exists in the container. """

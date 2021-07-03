@@ -1,8 +1,7 @@
 from __future__ import annotations
 from typing import Any, Generator, List, Tuple, Dict, ClassVar
-from multiprocessing.connection import Listener, Client, Connection
+from multiprocessing.connection import Client, Connection
 import docker, docker.errors, subprocess, os, pickle
-from threading import Thread
 from docker.models.images import Image
 from docker.models.containers import Container
 from pathlib import Path, PurePath, PurePosixPath;
@@ -70,11 +69,8 @@ class Tutorial:
     end_time: datetime
     """ Time the tutorial ended. """
 
-    undo_enabled: bool
-    """ Whether undo is enabled or not. """
-
-    undo_list: List[Snapshot]
-    """ A list of Snapshots that store the state after each command the student enters. """
+    restart_enabled: bool
+    """ Whether restart is enabled or not. """
 
     # Static fields
     config_schema: ClassVar[Schema] = yamale.make_schema(PKG_PATH / "config_schema.yaml")
@@ -124,17 +120,13 @@ class Tutorial:
 
         self.content_sources = [Path(self.data_dir, f) for f in config.get("content_sources", [])] # relative to config file
 
-        self.undo_enabled = config.get("undo", True) # PyYAML automatically converts to bool
-
+        self.restart_enabled = config.get("restart_enabled", True) # PyYAML automatically converts to bool
 
         self.container: Container = None
-        self._conn_to_container: Connection = None # Connection to send messages to docker container.
-        self._listener_thread: Thread = None # Thread running a Listener that will trigger the docker commits.
-                                             # The Docker container should send a signal after every bash command the student enters.
+        self._conn: Connection = None # Connection to send messages to docker container.
         self._logs_stream: Generator[bytes, None, None] = None # The stream that contains the docker side tutorial output.
         self._logs: str = ""
-
-        self.undo_list = []
+        self._snapshot: Image = None # A docker commit of the image state right after puzzle generation.
 
         self.start_time = None
         self.end_time = None
@@ -163,25 +155,11 @@ class Tutorial:
         return puzzle_trees
 
 
-    def _listen(self):
-        """
-        Listen for the docker container to tell us when a command has been entered.
-        Launch in a separate thread.
-        """
-        with Listener(support.conn_addr_from_container, authkey = support.conn_key) as listener:
-            while True:
-                with listener.accept() as conn:
-                    data = conn.recv()
-                    if data == Message.STOP:
-                        return
-                    elif data == Message.MAKE_COMMIT:
-                        self.commit()
-
     def _send(self, message: Message, *args) -> Any:
         """ Sends a message to the container, and returns the response. If the container sent an exception, raise it. """
-        self._conn_to_container.send( (message, *args) )
+        self._conn.send( (message, *args) )
         try:
-            response = self._conn_to_container.recv()
+            response = self._conn.recv()
         except pickle.PicklingError as e:
             raise e
         except: # The container died without sending any exception info (i.e. Ctrl-D out of bash session)
@@ -207,7 +185,7 @@ class Tutorial:
             _, self._logs_stream = self.container.exec_run(["python3", "/usr/local/shell_adventure_docker/start.py"],
                                                                       user = "root", stream = True)
             # retry the connection a few times since the container may take a bit to get started.
-            self._conn_to_container = retry(lambda: Client(support.conn_addr_to_container, authkey = support.conn_key), tries = 20, delay = 0.2)
+            self._conn = retry(lambda: Client(support.conn, authkey = support.conn_key), tries = 20, delay = 0.2)
         except (docker.errors.DockerException, ConnectionError) as e:
             raise ContainerStartupError(
                 f"Tutorial container failed to start:\n {str(e)}",
@@ -216,10 +194,10 @@ class Tutorial:
 
     def _stop_container(self):
         """ Stops the container and remove it and the connection to it. """
-        if self._conn_to_container != None:
-            try: self._conn_to_container.send( (Message.STOP,) )
+        if self._conn != None:
+            try: self._conn.send( (Message.STOP,) )
             except: pass
-            self._conn_to_container.close()
+            self._conn.close()
 
         if self.container:
             self.container.stop(timeout = 4) # Force the container to stop
@@ -252,10 +230,10 @@ class Tutorial:
             pt.puzzle = puzzle
 
         if any(map(lambda p: p.checker == None, generated_puzzles)): # Check if any puzzle checker failed to pickle
-            self.undo_enabled = False # TODO raise warning if undo is disabled because of pickling error
+            self.restart_enabled = False # TODO raise warning if restart is disabled because of pickling error
 
-        # self._listener_thread = Thread(target=self._listen)
-        # self._listener_thread.start()
+        if self.restart_enabled:
+            self._snapshot = self._commit()
 
         self.start_time = datetime.now()
 
@@ -268,15 +246,10 @@ class Tutorial:
         if not self.end_time: # Check that we haven't already stopped the container
             self.end_time = datetime.now()
 
-            if self._listener_thread:
-                with Client(support.conn_addr_from_container, authkey = support.conn_key) as conn:
-                    conn.send(Message.STOP)
-                    self._listener_thread.join()
-
             self._stop_container()
 
-            for snapshot in reversed(self.undo_list): # We can't delete an image that has images based on it so go backwards
-                docker_helper.client.images.remove(image = snapshot.image.id)
+            if self._snapshot:
+                docker_helper.client.images.remove(image = self._snapshot.id)
 
     def __enter__(self):
         try:
@@ -296,53 +269,29 @@ class Tutorial:
         return subprocess.Popen(["docker", "attach", self.container.id])
 
 
-    def commit(self):
-        """ Take a snapshot of the current state so we can use UNDO to get back to it. """
-        if self.undo_enabled:
-            image = self.container.commit("shell-adventure", f"undo-snapshot-{len(self.undo_list)}")
-            puzzles = {p.id: p.solved for p in self.get_all_puzzles()}
-            self.undo_list.append( Snapshot(image, puzzles) )
-
-    def _load_snapshot(self, index):
-        """ Loads a snapshot by its index in undo_list. Deletes all images ahead of the snapshot. """
-        if index == -1: return # Top of stack is current state
-        snapshot = self.undo_list[index]
-
-        self._stop_container()
-
-        for snap_to_del in reversed(self.undo_list[index + 1:]): # Remove snapshots ahead of this one
-            docker_helper.client.images.remove(image = snap_to_del.image.id)
-        self.undo_list = self.undo_list[:index + 1]
-
-        # Restart the tutorial. This will loose any running processes, and state in the tutorial. However, the only state we actually need
-        # is the puzzle list.
-        self._start_container(snapshot.image)
-
-        tmp_tree = PuzzleTree("", dependents=self.puzzles) # Put puzzles under a dummy node so we can iterate  it.
-        self._send(Message.RESTORE, {
-            "home": self.home,
-            "user": self.user,
-            "modules": {PurePath(file): file.read_text() for file in self.module_paths},
-            "puzzles": [pt.puzzle for pt in tmp_tree],
-        })
-
-        # Set the puzzle solved state
-        for puzzle, solved in zip(self.get_all_puzzles(), snapshot.puzzles_solved.values()): # The lists are in the same order
-            puzzle.solved = solved
-
-    def can_undo(self):
-        """ Returns true if can undo at least once, false otherwise. """
-        return len(self.undo_list) > 1 and self.undo_enabled
-
-    def undo(self):
-        """ Undo the last step the student entered. Does nothing if there is nothing to undo. """
-        if self.can_undo(): # The top image is current state
-            self._load_snapshot(-2) # Top of stack is current state
+    def _commit(self):
+        """ Return snapshot of the current state of the tutorial """
+        return self.container.commit("shell-adventure", f"snapshot-{datetime.now().timestamp()}")
 
     def restart(self):
-        """ Restart the tutorial to its initial state. Does not regenerate the puzzles. """
-        if self.can_undo():
-            self._load_snapshot(0)
+        """
+        Restart the tutorial and the container to its initial state if possible. Does not regenerate the puzzles,
+        so any random values in the puzzles will be the same after the restart.
+        """
+        if self._snapshot:
+            self._stop_container()
+
+            self._start_container(self._snapshot) # Restart the tutorial.
+
+            for puzzle in self.get_all_puzzles(): # Set the puzzle solved state
+                puzzle.solved = False
+
+            self._send(Message.RESTORE, {
+                "home": self.home,
+                "user": self.user,
+                "modules": {PurePath(file): file.read_text() for file in self.module_paths},
+                "puzzles": [pt.puzzle for pt in PuzzleTree("", dependents = self.puzzles)], # Put puzzles under tree node so we can iterate
+            })
 
 
     def get_current_puzzles(self) -> List[Puzzle]:
@@ -366,11 +315,6 @@ class Tutorial:
         """ Tries to solve the puzzle. Returns (success, feedback) and sets the Puzzle as solved if the checker succeeded. """
         (solved, feedback) = self._send(Message.SOLVE, puzzle.id, flag)
         puzzle.solved = solved
-
-        # Update latest snapshot
-        if len(self.undo_list) > 0:
-            self.undo_list[-1].puzzles_solved[puzzle.id] = solved
-
         return (solved, feedback)
 
     def get_student_cwd(self) -> PurePosixPath:
@@ -417,9 +361,3 @@ class PuzzleTree:
             for pt2 in pt:
                 yield pt2
 
-
-class Snapshot:
-    """ Represents a snapshot of the state of the tutorial, so we can restore it during undo. """
-    def __init__(self, image: Image, puzzles_solved: Dict[str, bool]):
-        self.image = image # Docker image
-        self.puzzles_solved = puzzles_solved # {puzzle_id: solved} # We need to undo solving a puzzle

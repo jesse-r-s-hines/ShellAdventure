@@ -8,7 +8,7 @@ setup_scripts: list(str(), required = False)
 resources: map(str(), key = str(), required = False)
 name_dictionary: str(required = False)
 content_sources: list(str(), required = False)
-undo: bool(required = False)
+restart_enabled: bool(required = False)
 
 --- # Includes
 # To make a pretty tree structure, puzzle is a str or single element dict containing a list of puzzles

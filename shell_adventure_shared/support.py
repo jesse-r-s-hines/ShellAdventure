@@ -1,7 +1,6 @@
 """
 Contains miscellaneous support classes, functions and constants
-This file is shared between the Docker side code and host. It will be copied into the container
-as part of the shell_adventure package.
+This file is shared between the Docker side code and host.
 """
 
 from __future__ import annotations
@@ -12,10 +11,8 @@ from enum import Enum
 PathLike = Union[str, os.PathLike]
 """Type for a string representing a path or a PathLike object."""
 
-conn_addr_to_container = ('localhost', 6550)
+conn = ('localhost', 6550)
 """The address that will be used to communicate from the host to the container. """
-conn_addr_from_container = ('localhost', 6551)
-"""The address that will be used to communicate from the container to the host. """
 conn_key = b'shell_adventure'
 """The authkey that will be used in communication between the Docker code and the host app. """
 
@@ -36,9 +33,7 @@ class Message(Enum):
     GET_FILES = 'GET_FILES'
     """ Get files under a folder. Usage (GET_FILES, folder) """
     RESTORE = 'RESTORE'
-    """ Restore from a snapshot after an UNDO. Like SETUP, but we don't regenerate the puzzles. Usage: (RESTORE, **kwargs) """
-    MAKE_COMMIT = 'MAKE_COMMIT'
-    """ Make a Docker commit of the container so we can undo a command. """
+    """ Restore from a snapshot after a restart. Like SETUP, but we don't regenerate the puzzles. Usage: (RESTORE, **kwargs) """
 
 
 def extra_func_params(func: Callable[..., Any], params: List[str]):

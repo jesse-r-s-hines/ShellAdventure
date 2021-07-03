@@ -8,14 +8,14 @@ from PIL import ImageTk, Image
 from .scrolled_frame import VerticalScrolledFrame
 from . import tutorial, PKG_PATH
 from shell_adventure_shared.puzzle import Puzzle
-import time
+
 class GUI(ThemedTk):
-    def __init__(self, tutorial: tutorial.Tutorial, undo_callback: Callable): # TODO find a better way to restart the bash session
+    def __init__(self, tutorial: tutorial.Tutorial, restart_callback: Callable): # TODO find a better way to restart the bash session
         """ Creates and launches the Shell Adventure GUI. Pass it the tutorial object. """
         super().__init__(theme="radiance")
 
         self.tutorial = tutorial
-        self.undo_callback = undo_callback
+        self.restart_callback = restart_callback
         self.student_cwd: PurePosixPath = None # The path to the student's current directory
         self.file_tree_root = PurePosixPath("/") # The root of the displayed file tree
 
@@ -40,8 +40,8 @@ class GUI(ThemedTk):
         self.file_tree = self._make_file_tree(self)
         self.file_tree.grid(row = 1, column = 0, sticky = "NSWE")
 
-        undo_frame, self.undo_button, self.restart_button = self._make_undo_frame(self)
-        undo_frame.grid(row = 2, column = 0, sticky = "NSWE")
+        button_frame, self.restart_button = self._make_button_frame(self)
+        button_frame.grid(row = 2, column = 0, sticky = "NSWE")
 
         self.puzzle_frame = self._make_puzzle_frame(self)
         self.puzzle_frame.grid(row = 3, column = 0, sticky = "NSWE")
@@ -66,7 +66,6 @@ class GUI(ThemedTk):
     def _get_icons(self) -> Dict[str, ImageTk.PhotoImage]:
         """ Returns a map of icons. """
         icon_files = { 
-            "undo": "undo.png",
             "restart": "restart.png",
             "file": "file.png",
             "file_symlink": "file_symlink.png",
@@ -115,23 +114,17 @@ class GUI(ThemedTk):
 
         return file_tree
 
-    def _make_undo_frame(self, master):
-        """ Returns a frame showing the undo and restart buttons and the undo and reset buttons themselves """
-        undo_frame = ttk.Frame(master)
+    def _make_button_frame(self, master):
+        """ Returns a frame showing the restart button and the restart buttons themselves """
+        button_frame = ttk.Frame(master)
 
-        restart_button = ttk.Button(undo_frame,
+        restart_button = ttk.Button(button_frame,
             text = "Restart", image = self.icons["restart"], compound = "left",
-            command = lambda: self.undo()
+            command = lambda: self.restart()
         )
         restart_button.grid(row = 0, column = 0)
 
-        undo_button = ttk.Button(undo_frame,
-            text = "Undo", image = self.icons["undo"], compound = "left",
-            command = lambda: self.restart()
-        )
-        undo_button.grid(row = 0, column = 1)
-
-        return (undo_frame, undo_button, restart_button)
+        return (button_frame, restart_button)
 
     def _make_puzzle_frame(self, master) -> VerticalScrolledFrame:
         """ Returns a frame container the puzzle list. """
@@ -244,8 +237,6 @@ class GUI(ThemedTk):
         self.load_folder("")
 
         self.score_label.set(f"Score: {self.tutorial.current_score()}/{self.tutorial.total_score()}")
-        self.undo_button["state"] = "enabled" if self.tutorial.can_undo() else "disabled"
-        self.restart_button["state"] = "enabled" if self.tutorial.can_undo() else "disabled"
 
     def solve_puzzle(self, puzzle: Puzzle):
         do_check = True
@@ -263,14 +254,9 @@ class GUI(ThemedTk):
                 if self.tutorial.is_finished(): # then quit the tutorial
                     self.destroy()
 
-    def undo(self):
-        self.tutorial.undo()
-        self.undo_callback()
-        self.update_puzzle_frame()
-
     def restart(self):
         self.tutorial.restart()
-        self.undo_callback()
+        self.restart_callback()
         self.update_puzzle_frame()
 
     def report_callback_exception(self, exc, val, tb):

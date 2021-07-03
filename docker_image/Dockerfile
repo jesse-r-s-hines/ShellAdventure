@@ -52,6 +52,4 @@ WORKDIR /home/student
 
 COPY .bashrc /home/student/.bashrc
 
-ENV PROMPT_COMMAND="python3 /usr/local/shell_adventure_docker/commit_container.py"
-
 CMD ["bash"]
