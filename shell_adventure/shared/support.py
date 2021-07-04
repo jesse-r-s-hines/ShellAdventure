@@ -1,40 +1,9 @@
-"""
-Contains miscellaneous support classes, functions and constants
-This file is shared between the Docker side code and host.
-"""
-
-from __future__ import annotations
+""" Miscellaneous support classes and functions """
 from typing import Iterable, Union, Callable,  Dict, Any, List
 import os, time, inspect
-from enum import Enum
 
 PathLike = Union[str, os.PathLike]
 """Type for a string representing a path or a PathLike object."""
-
-conn = ('localhost', 6550)
-"""The address that will be used to communicate from the host to the container. """
-conn_key = b'shell_adventure.api'
-"""The authkey that will be used in communication between the Docker code and the host app. """
-
-class Message(Enum):
-    """
-    Enum for various messages that can be sent between host and docker.
-    They will be sent as tuples (enum, *args), so that the message can have parameters.
-    """
-    
-    STOP = 'STOP'
-    """ Stop the tutorial. Usage: (STOP,) """
-    SETUP = 'SETUP'
-    """ Send settings and puzzle modules. Generate puzzles. Usage: (SETUP, **kwargs) """
-    SOLVE = 'SOLVE'
-    """ Solve a puzzle. Usage: (SOLVE, puzzle_id, [flag]) """
-    GET_STUDENT_CWD = 'GET_STUDENT_CWD'
-    """ Get the path to the students current directory. Usage (GET_STUDENT_CWD,) """
-    GET_FILES = 'GET_FILES'
-    """ Get files under a folder. Usage (GET_FILES, folder) """
-    RESTORE = 'RESTORE'
-    """ Restore from a snapshot after a restart. Like SETUP, but we don't regenerate the puzzles. Usage: (RESTORE, **kwargs) """
-
 
 def extra_func_params(func: Callable[..., Any], params: List[str]):
     """ Returns any params of func that aren't in params. You can use this to check if you can safely use call_with_args() """

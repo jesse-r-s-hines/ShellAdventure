@@ -10,8 +10,9 @@ from textwrap import indent
 import yaml, yamale
 from yamale.schema import Schema
 from . import docker_helper, PKG_PATH
-from shell_adventure.shared import support
-from shell_adventure.shared.support import PathLike, Message, retry
+from shell_adventure.shared import messages
+from shell_adventure.shared.messages import Message
+from shell_adventure.shared.support import PathLike, retry
 from shell_adventure.shared.tutorial_errors import *
 from shell_adventure.api.puzzle import Puzzle
 
@@ -164,7 +165,7 @@ class Tutorial:
             _, self._logs_stream = self.container.exec_run(["python3", "/usr/local/shell_adventure/docker_side/start.py"],
                                                                       user = "root", stream = True)
             # retry the connection a few times since the container may take a bit to get started.
-            self._conn = retry(lambda: Client(support.conn, authkey = support.conn_key), tries = 20, delay = 0.2)
+            self._conn = retry(lambda: Client(messages.conn, authkey = messages.conn_key), tries = 20, delay = 0.2)
         except (docker.errors.DockerException, ConnectionError) as e:
             raise ContainerStartupError(
                 f"Tutorial container failed to start:\n {str(e)}",

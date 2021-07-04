@@ -5,8 +5,9 @@ import subprocess, os, pwd, copy
 from multiprocessing.connection import Listener
 import importlib.util, inspect, traceback
 import shell_adventure # For access to globals
-from shell_adventure.shared import support
-from shell_adventure.shared.support import PathLike, Message, sentence_list, extra_func_params
+from shell_adventure.shared import messages
+from shell_adventure.shared.messages import Message
+from shell_adventure.shared.support import PathLike, sentence_list, call_with_args, extra_func_params
 from shell_adventure.shared.tutorial_errors import *
 from shell_adventure.api.puzzle import Puzzle, PuzzleTemplate
 from shell_adventure.api.file import File
@@ -71,7 +72,7 @@ class TutorialDocker:
         os.chdir(self.home) # Make sure templates are called with home as the cwd
         os.umask(0o000) # By default, python won't make any files writable by "other". This turns that off.
         with change_user(self.user):
-            return support.call_with_args(func, args)
+            return call_with_args(func, args)
             # TODO error checking
 
     def _generate_puzzle(self, template: PuzzleTemplate) -> Puzzle:
@@ -259,7 +260,7 @@ class TutorialDocker:
         Sets up a connection between the tutorial inside the docker container and the driving application outside and
         listen for requests from the host.
         """ 
-        with Listener(support.conn, authkey = support.conn_key) as listener:
+        with Listener(messages.conn, authkey = messages.conn_key) as listener:
             with listener.accept() as conn:
                 try:
                     # Receive the initial setup message.
