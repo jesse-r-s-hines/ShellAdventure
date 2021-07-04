@@ -21,7 +21,7 @@ def rand() -> RandomHelper:
     Has to be at the package level, and so that File methods can access it.
     """
     if not _tutorial or not _tutorial.rand:
-        raise RandomHelperException("You can only use randomization in Puzzle generators, not auto-graders")
+        raise RandomHelperException("You can only use randomization in Puzzle templates, not autograders")
     return _tutorial.rand
 
 __all__ = [

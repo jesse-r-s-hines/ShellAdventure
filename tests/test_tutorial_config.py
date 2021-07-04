@@ -47,7 +47,7 @@ class TestTutorialConfig:
         assert tutorial.content_sources == [tmp_path / "content.txt"]
 
         assert [m for m in tutorial.module_paths] == [tmp_path / "path/to/puzzle1.py", tmp_path / "puzzle2.py"]
-        assert [pt.generator for pt in tutorial.puzzles] == ["puzzle1.move", "puzzle2.move"]
+        assert [pt.template for pt in tutorial.puzzles] == ["puzzle1.move", "puzzle2.move"]
 
     def test_nested_puzzles(self, tmp_path):
         tutorial = create_tutorial(tmp_path, {
@@ -66,13 +66,13 @@ class TestTutorialConfig:
             "puzzle1.py": SIMPLE_PUZZLES, "puzzle2.py": SIMPLE_PUZZLES, "puzzle3.py": SIMPLE_PUZZLES,
         })
         # First level
-        assert [pt.generator for pt in tutorial.puzzles] == ["puzzle1.move", "puzzle2.move", "puzzle3.move"]
+        assert [pt.template for pt in tutorial.puzzles] == ["puzzle1.move", "puzzle2.move", "puzzle3.move"]
 
         # Second Level
-        assert [pt.generator for pt in tutorial.puzzles[0].dependents] == ["puzzle2.move"]
+        assert [pt.template for pt in tutorial.puzzles[0].dependents] == ["puzzle2.move"]
 
         # Third Level
-        assert [pt.generator for pt in tutorial.puzzles[0].dependents[0].dependents] == ["puzzle1.move"]
+        assert [pt.template for pt in tutorial.puzzles[0].dependents[0].dependents] == ["puzzle1.move"]
 
     def test_missing_files(self, tmp_path):
         with pytest.raises(ConfigError, match = r"No such file or directory.*not_a_config_file\.yaml"):

@@ -30,7 +30,7 @@ class Tutorial:
     # Config fields
 
     home: PurePosixPath
-    """ This is the folder in the container that puzzle generators and checkers will be run in. If None, the WORKDIR of the container will be used. """
+    """ This is the folder in the container that puzzle templates and checkers will be run in. If None, the WORKDIR of the container will be used. """
 
     user: str
     """ This is the name of the user that the student is logged in as. If None, the USER of the container will be used. """
@@ -124,11 +124,11 @@ class Tutorial:
         puzzle_trees = []
         for puz in puzzles:
             if isinstance(puz, str):
-                gen, deps = puz, []
+                template, deps = puz, []
             else: # It is a one element dictionary.
-                gen, deps = list(puz.items())[0]
+                template, deps = list(puz.items())[0]
                 if not deps: deps = []
-            puzzle_trees.append(PuzzleTree(gen, dependents = self._parse_puzzles(deps)))
+            puzzle_trees.append(PuzzleTree(template, dependents = self._parse_puzzles(deps)))
 
         return puzzle_trees
 
@@ -201,7 +201,7 @@ class Tutorial:
             "home": self.home,
             "user": self.user,
             "modules": modules,
-            "puzzles": [pt.generator for pt in tmp_tree],
+            "puzzles": [pt.template for pt in tmp_tree],
             "name_dictionary": name_dictionary,
             "content_sources": content_sources,
         })
@@ -337,8 +337,8 @@ class Tutorial:
 
 class PuzzleTree:
     """ A tree node so that puzzles can be unlocked after other puzzles are solved. """
-    def __init__(self, generator: str, puzzle: Puzzle = None, dependents: List[PuzzleTree] = None):
-        self.generator = generator
+    def __init__(self, template: str, puzzle: Puzzle = None, dependents: List[PuzzleTree] = None):
+        self.template = template
         self.puzzle = puzzle
         self.dependents = dependents if dependents else []
 

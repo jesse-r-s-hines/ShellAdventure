@@ -119,7 +119,7 @@ class TestIntegration:
             solved, feedback = tutorial.solve_puzzle(rand_puzzle)
             assert solved == True
 
-            with pytest.raises(UserCodeError, match = "You can only use randomization in Puzzle generators"):
+            with pytest.raises(UserCodeError, match = "You can only use randomization in Puzzle templates"):
                 tutorial.solve_puzzle(rand_not_in_checker)
 
     def test_user(self, tmp_path):

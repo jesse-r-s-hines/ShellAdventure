@@ -110,7 +110,7 @@ class TestRestart:
                 def unpicklable():
                     gen = (i for i in range(1, 10))
                     return Puzzle(
-                        question = f"Can't pickle generators",
+                        question = f"Can't pickle puzzle templates",
                         checker = lambda: gen == None,
                     )
             """)  

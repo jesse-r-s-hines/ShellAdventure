@@ -94,5 +94,5 @@ class Puzzle:
         if isinstance(self.checker, bytes):
             self.checker = dill.loads(self.checker)
 
-PuzzleGenerator = Callable[..., Puzzle]
+PuzzleTemplate = Callable[..., Puzzle]
 AutoGrader = Callable[..., Union[str,bool]]

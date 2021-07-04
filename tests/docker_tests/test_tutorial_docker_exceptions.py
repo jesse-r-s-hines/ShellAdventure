@@ -8,7 +8,7 @@ from .helpers import *
 
 class TestTutorialDockerExceptions:
     def test_puzzle_not_found(self, working_dir):
-        with pytest.raises(ConfigError, match=re.escape("Unknown puzzle generator(s) 'mypuzzles.puzz_a', 'mypuzzles.puzz_b' and 'mypuzzles.puzz_c'")):
+        with pytest.raises(ConfigError, match=re.escape("Unknown puzzle template(s) 'mypuzzles.puzz_a', 'mypuzzles.puzz_b' and 'mypuzzles.puzz_c'")):
             tutorial = create_tutorial(working_dir,
                 modules = {PurePath("mypuzzles.py"): SIMPLE_PUZZLES},
                 puzzles = ["mypuzzles.puzz_a", "mypuzzles.puzz_b", "mypuzzles.puzz_c"]
@@ -26,13 +26,13 @@ class TestTutorialDockerExceptions:
             )
 
 
-    def test_puzzle_generator_bad_return(self, working_dir):
+    def test_puzzle_template_bad_return(self, working_dir):
         puzzles = dedent("""
             def invalid():
                 return "a string"
         """)
 
-        with pytest.raises(UserCodeError, match="Puzzle generator did not return Puzzle"):
+        with pytest.raises(UserCodeError, match="Puzzle template did not return Puzzle"):
             tutorial = create_tutorial(working_dir,
                 modules = {PurePath("mypuzzles.py"): puzzles},
                 puzzles = ["mypuzzles.invalid"],
@@ -57,7 +57,7 @@ class TestTutorialDockerExceptions:
         with pytest.raises(UserCodeError, match="bool or str expected"):
             tutorial.solve_puzzle(puzzle.id)
 
-    def test_generator_unrecognized_params(self, working_dir):
+    def test_template_unrecognized_params(self, working_dir):
         puzzles = dedent("""
             from shell_adventure_docker import *
 
@@ -67,7 +67,7 @@ class TestTutorialDockerExceptions:
                     checker = lambda: True,
                 )
         """)
-        with pytest.raises(UserCodeError, match=r"Unrecognized param\(s\) 'not_a_param' in puzzle generator"):
+        with pytest.raises(UserCodeError, match=r"Unrecognized param\(s\) 'not_a_param' in puzzle template"):
             tutorial = create_tutorial(working_dir,
                 modules = {PurePath("mypuzzles.py"): puzzles},
                 puzzles = ["mypuzzles.puzzle"],
@@ -174,7 +174,7 @@ class TestTutorialDockerExceptions:
         )
 
         puz_id = list(tutorial.puzzles.keys())[0]
-        with pytest.raises(UserCodeError, match = "You can only use randomization in Puzzle generators"):
+        with pytest.raises(UserCodeError, match = "You can only use randomization in Puzzle templates"):
             tutorial.solve_puzzle(puz_id)
 
     def test_format_user_exception(self, tmp_path):

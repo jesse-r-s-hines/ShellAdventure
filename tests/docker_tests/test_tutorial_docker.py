@@ -44,10 +44,10 @@ class TestTutorialDocker:
         tutorial = create_tutorial(working_dir, modules = {}, puzzles = [])
         assert tutorial.puzzles == {}
 
-    def test_get_generators(self):
+    def test_get_templates(self):
         module = TutorialDocker._create_module(PurePath("mypuzzles.py"), SIMPLE_PUZZLES)
-        generators = TutorialDocker._get_generators_from_module(module)
-        assert list(generators.keys()) == ["mypuzzles.move"]
+        templates = TutorialDocker._get_templates_from_module(module)
+        assert list(templates.keys()) == ["mypuzzles.move"]
 
     def test_private_methods_arent_puzzles(self):
         puzzles = dedent("""
@@ -67,8 +67,8 @@ class TestTutorialDocker:
         """)
 
         module = TutorialDocker._create_module(PurePath("mypuzzles.py"), puzzles)
-        generators = TutorialDocker._get_generators_from_module(module)
-        assert list(generators.keys()) == ["mypuzzles.move"]
+        templates = TutorialDocker._get_templates_from_module(module)
+        assert list(templates.keys()) == ["mypuzzles.move"]
 
     def test_restore(self, working_dir):
         modules = {PurePath("mypuzzles.py"): SIMPLE_PUZZLES}

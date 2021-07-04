@@ -7,7 +7,7 @@ from multiprocessing.connection import Listener
 import importlib.util, inspect, traceback
 from shell_adventure_shared import support
 from shell_adventure_shared.support import PathLike, Message, sentence_list, extra_func_params
-from shell_adventure_shared.puzzle import Puzzle, PuzzleGenerator
+from shell_adventure_shared.puzzle import Puzzle, PuzzleTemplate
 from .file import File
 from .permissions import change_user, user_exists
 from .random_helper import RandomHelper
@@ -18,7 +18,7 @@ class TutorialDocker:
     """ Contains the information for a running tutorial docker side. """
 
     home: Path
-    """ This is the folder that puzzle generators and checkers will be run in. """
+    """ This is the folder that puzzle templates and checkers will be run in. """
 
     user: str
     """ This is the name of the user that the student is logged in as. """
@@ -57,43 +57,43 @@ class TutorialDocker:
         return module
 
     @staticmethod
-    def _get_generators_from_module(module: ModuleType) -> Dict[str, PuzzleGenerator]:
-        """ Extracts puzzle generator functions from a module as a map of {name: func} """
-        generators = {}
+    def _get_templates_from_module(module: ModuleType) -> Dict[str, PuzzleTemplate]:
+        """ Extracts puzzle template functions from a module as a map of {name: func} """
+        templates = {}
         for func_name, func in inspect.getmembers(module, inspect.isfunction):
             # Exclude imported functions, lambdas, and private functions
             if func.__module__ == module.__name__ and func.__name__ != "<lambda>" and not func_name.startswith("_"):
-                generators[f"{module.__name__}.{func_name}"] = func
+                templates[f"{module.__name__}.{func_name}"] = func
 
-        return generators
+        return templates
 
     def _call_user_func(self, func, args) -> Any:
-        """ For calling puzzle generators and checkers. Calls func with args, and sets the user, cwd, and umask. """
-        os.chdir(self.home) # Make sure generators are called with home as the cwd
+        """ For calling puzzle templates and checkers. Calls func with args, and sets the user, cwd, and umask. """
+        os.chdir(self.home) # Make sure templates are called with home as the cwd
         os.umask(0o000) # By default, python won't make any files writable by "other". This turns that off.
         with change_user(self.user):
             return support.call_with_args(func, args)
             # TODO error checking
 
-    def _generate_puzzle(self, generator: PuzzleGenerator) -> Puzzle:
-        """ Takes a puzzle generator and generates a puzzle from it. """
-        args = { # TODO add documentation for args you can take in generator function
+    def _generate_puzzle(self, template: PuzzleTemplate) -> Puzzle:
+        """ Takes a puzzle template and generates a puzzle from it. """
+        args = { # TODO add documentation for args you can take in template function
             "home": File(self.home), # can't use home() since the user is actually root. #TODO add docs that File.home() doesn't work as expected. 
             "root": File("/"),
         }
 
-        extra_params = extra_func_params(generator, list(args.keys()))
+        extra_params = extra_func_params(template, list(args.keys()))
         if extra_params: # TODO give details of which puzzle exception was in
             raise UserCodeError(
-                f'Unrecognized param(s) {sentence_list(extra_params, quote = True)} in puzzle generator.' +
+                f'Unrecognized param(s) {sentence_list(extra_params, quote = True)} in puzzle template.' +
                 f' Expected {sentence_list(args.keys(), last_sep = " and/or ", quote = True)}.'
             )
         try:
-            puzzle = self._call_user_func(generator, args)
+            puzzle = self._call_user_func(template, args)
         except Exception as e:
             raise UserCodeError(f'Puzzle generation failed:', tb_str = self._format_user_exc(e))
         if not isinstance(puzzle, Puzzle):
-            raise UserCodeError(f'Puzzle generator did not return Puzzle')
+            raise UserCodeError(f'Puzzle template did not return Puzzle')
 
         return puzzle
 
@@ -161,16 +161,16 @@ class TutorialDocker:
         except Exception as e:
             raise UserCodeError(f'Puzzle generation failed:', tb_str = self._format_user_exc(e))
     
-        # Get puzzle generators from the modules
-        generators: Dict[str, PuzzleGenerator] = {}
+        # Get puzzle templates from the modules
+        templates: Dict[str, PuzzleTemplate] = {}
         for module in modules_list: 
-            generators.update( TutorialDocker._get_generators_from_module(module) )
+            templates.update( TutorialDocker._get_templates_from_module(module) )
 
-        unknown_puzzles = [p for p in puzzles if p not in generators]
-        if unknown_puzzles: raise ConfigError(f"Unknown puzzle generator(s) {sentence_list(unknown_puzzles, quote = True)}")
+        unknown_puzzles = [p for p in puzzles if p not in templates]
+        if unknown_puzzles: raise ConfigError(f"Unknown puzzle template(s) {sentence_list(unknown_puzzles, quote = True)}")
 
         # Generate the puzzles
-        puzzle_list: List[Puzzle] = [self._generate_puzzle(generators[gen]) for gen in puzzles]
+        puzzle_list: List[Puzzle] = [self._generate_puzzle(templates[template]) for template in puzzles]
 
         self.puzzles = {p.id: p for p in puzzle_list}
 

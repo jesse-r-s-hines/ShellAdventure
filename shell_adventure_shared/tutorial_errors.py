@@ -72,7 +72,7 @@ class WrappedError(TutorialError):
         return (type(self), (self.message, self.tb_str))
 
 class UserCodeError(WrappedError):
-    """ Class for when user supplied code such as PuzzleGenerator's and AutoGrader's throw. """
+    """ Class for when user supplied code such as PuzzleTemplate's and AutoGrader's throw. """
 
 class UnhandledError(WrappedError):
     """
