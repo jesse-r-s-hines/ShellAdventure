@@ -1,6 +1,7 @@
 import pytest
 from shell_adventure.host_side.tutorial import Tutorial
 from shell_adventure.host_side import docker_helper
+from shell_adventure.shared.tutorial_errors import *
 from textwrap import dedent
 from .helpers import *
 
@@ -96,6 +97,17 @@ class TestRestart:
         assert len(containers_before) == len(containers_after)
 
     def test_restart_pickle_failure(self, tmp_path):
+        puzzles = dedent("""
+            from shell_adventure.api import *
+
+            def unpicklable():
+                gen = (i for i in range(1, 10))
+                return Puzzle(
+                    question = f"Unpickleable",
+                    checker = lambda: gen != None,
+                )
+        """)  
+
         tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
                 modules:
@@ -104,21 +116,24 @@ class TestRestart:
                     - puzzles.unpicklable
                 restart_enabled: true
             """,
-            "puzzles.py": dedent("""
-                from shell_adventure.api import *
-
-                def unpicklable():
-                    gen = (i for i in range(1, 10))
-                    return Puzzle(
-                        question = f"Can't pickle puzzle templates",
-                        checker = lambda: gen == None,
-                    )
-            """)  
+            "puzzles.py": puzzles,
         })
 
-        with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
-            puz = tutorial.get_all_puzzles()[0]
-            assert puz.checker == None
+        with pytest.raises(UserCodeError, match="Unpickleable autograder function"):
+            with tutorial: pass
 
+        tutorial = create_tutorial(tmp_path, {
+                "config.yaml": """
+                    modules:
+                        - puzzles.py
+                    puzzles:
+                        - puzzles.unpicklable
+                    restart_enabled: False
+                """,
+                "puzzles.py": puzzles,
+            })
+        with tutorial:
             assert tutorial.restart_enabled == False
-            assert tutorial._snapshot == None
+            [puz] = tutorial.get_all_puzzles()
+            assert tutorial.solve_puzzle(puz) == (True, "Correct!")
+

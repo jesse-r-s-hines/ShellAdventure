@@ -12,7 +12,7 @@ from yamale.schema import Schema
 from . import docker_helper, PKG_PATH
 from shell_adventure.shared import messages
 from shell_adventure.shared.messages import Message
-from shell_adventure.shared.support import PathLike, retry
+from shell_adventure.shared.support import PathLike, retry, sentence_list
 from shell_adventure.shared.tutorial_errors import *
 from shell_adventure.api.puzzle import Puzzle
 
@@ -203,7 +203,7 @@ class Tutorial:
 
         tmp_tree = PuzzleTree("", dependents=self.puzzles) # Put puzzles under a dummy node so we can iterate  it.
 
-        generated_puzzles = self._send(Message.SETUP, {
+        generated_puzzles: List[Puzzle] = self._send(Message.SETUP, {
             "home": self.home,
             "user": self.user,
             "modules": modules,
@@ -216,8 +216,15 @@ class Tutorial:
         for pt, puzzle in zip(tmp_tree, generated_puzzles):
             pt.puzzle = puzzle
 
-        if any(map(lambda p: p.checker == None, generated_puzzles)): # Check if any puzzle checker failed to pickle
-            self.restart_enabled = False # TODO raise warning if restart is disabled because of pickling error
+        if self.restart_enabled:
+            for puzzle in generated_puzzles:
+                if puzzle.checker == None: 
+                    raise UserCodeError(
+                        "Unpickleable autograder function. In order to use restart functionality, your autograder functions " +
+                        "must be pickleable using the dill module. Either set restart_enabled to False or remove the " +
+                        "unpickleable object. See https://dill.readthedocs.io/en/latest/index.html#major-features for what " +
+                        "objects could of caused this error."
+                    )
 
         if self.restart_enabled:
             self._snapshot = self._commit()
