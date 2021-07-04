@@ -1,14 +1,14 @@
 from typing import List
 import pytest
-from pathlib import PurePosixPath, Path, PurePath
-import shell_adventure_docker
-from shell_adventure_docker.tutorial_docker import TutorialDocker
-from shell_adventure_docker.file import File
-from shell_adventure_shared.puzzle import Puzzle
-from shell_adventure_docker.random_helper import RandomHelperException
+from pathlib import PurePath
+import shell_adventure.api
+from shell_adventure.docker_side.tutorial_docker import TutorialDocker
+from shell_adventure.docker_side.random_helper import RandomHelperException
+from shell_adventure.api.file import File
+from shell_adventure.api.puzzle import Puzzle
+from shell_adventure.shared.tutorial_errors import *
 import os, pickle
 from textwrap import dedent;
-from shell_adventure_shared.tutorial_errors import *
 from .helpers import *
 
 class TestTutorialDocker:
@@ -18,10 +18,10 @@ class TestTutorialDocker:
             puzzles = ["mypuzzles.move"],
         )
 
-        assert shell_adventure_docker._tutorial is tutorial # should be set
+        assert shell_adventure.api._tutorial is tutorial # should be set
         assert tutorial.rand == None # _random should be None after generation is complete
         with pytest.raises(RandomHelperException):
-            shell_adventure_docker.rand()
+            shell_adventure.api.rand()
 
         assert File.home() == working_dir # File.home() should use tutorial home
 
@@ -51,7 +51,7 @@ class TestTutorialDocker:
 
     def test_private_methods_arent_puzzles(self):
         puzzles = dedent("""
-            from shell_adventure_docker import *
+            from shell_adventure.api import *
             from os import system # Don't use the imported method as a puzzle.
 
             def _private_method():
@@ -95,7 +95,7 @@ class TestTutorialDocker:
         tutorial = create_tutorial(working_dir,
             user = "student",
             modules = {PurePath("mypuzzles.py"): dedent("""
-                from shell_adventure_docker import *
+                from shell_adventure.api import *
                 import getpass
 
                 def user_puzzle():
@@ -163,7 +163,7 @@ class TestTutorialDocker:
     def test_puzzle_generation_order(self, working_dir):
         tutorial = create_tutorial(working_dir,
             modules = {PurePath("puzzles.py"): dedent(r"""
-                from shell_adventure_docker import *
+                from shell_adventure.api import *
 
                 def puz1():
                     with File("log.txt").open("a") as f: f.write("puz1\n")

@@ -4,7 +4,7 @@ Script to start the tutorial. Runs as a script, not a module.
 import sys
 sys.path.insert(0, "/usr/local") # Add to path so we can reference our modules
 from importlib.util import find_spec
-from shell_adventure_shared.support import sentence_list
+from shell_adventure.shared.support import sentence_list
 
 # Check the the container has the python libraries we need.
 deps = {
@@ -20,7 +20,7 @@ if missing_deps:
     sys.exit(1)
 
 
-from shell_adventure_docker.tutorial_docker import TutorialDocker
+from shell_adventure.docker_side.tutorial_docker import TutorialDocker
 
 tutorial = TutorialDocker()
 tutorial.run()

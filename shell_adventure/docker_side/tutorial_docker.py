@@ -1,18 +1,17 @@
-from tempfile import TemporaryDirectory
 from typing import Callable, List, Tuple, Dict, Any, cast
 from types import ModuleType
 from pathlib import Path, PurePath, PurePosixPath;
-import subprocess, os, pwd, textwrap, copy
+import subprocess, os, pwd, copy
 from multiprocessing.connection import Listener
 import importlib.util, inspect, traceback
-from shell_adventure_shared import support
-from shell_adventure_shared.support import PathLike, Message, sentence_list, extra_func_params
-from shell_adventure_shared.puzzle import Puzzle, PuzzleTemplate
-from .file import File
-from .permissions import change_user, user_exists
+import shell_adventure # For access to globals
+from shell_adventure.shared import support
+from shell_adventure.shared.support import PathLike, Message, sentence_list, extra_func_params
+from shell_adventure.shared.tutorial_errors import *
+from shell_adventure.api.puzzle import Puzzle, PuzzleTemplate
+from shell_adventure.api.file import File
+from shell_adventure.api.permissions import change_user, user_exists
 from .random_helper import RandomHelper
-import shell_adventure_docker, shell_adventure_shared # For access to globals
-from shell_adventure_shared.tutorial_errors import *
 
 class TutorialDocker:
     """ Contains the information for a running tutorial docker side. """
@@ -107,8 +106,6 @@ class TutorialDocker:
         # This magically shows line info in tracebacks and errors. I think I got all cases, but its possible that something might break this
         # It would be simpler and more robust to just have puzzles on disk in the container, but that would let the student see them.
 
-        our_packages = {shell_adventure_docker.PKG_PATH, shell_adventure_shared.PKG_PATH}
-
         # See https://stackoverflow.com/questions/31949760/how-to-limit-python-traceback-to-specific-files
         frames = []
         for f in traceback.extract_tb(e.__traceback__):
@@ -118,7 +115,7 @@ class TutorialDocker:
                     filename = path, lineno = f.lineno, lookup_line = False, locals = None, name = f.name,
                     line = self.modules[PurePath(path)].splitlines()[f.lineno - 1],
                 ))
-            elif not our_packages.intersection(Path(f.filename).parents): # include library code in the traceback
+            elif shell_adventure.PKG_PATH not in Path(f.filename).parents: # include library code in the traceback
                 frames.append(f)
             # But don't include our code in the traceback, show only the user's code to keep traceback short
         
@@ -150,7 +147,7 @@ class TutorialDocker:
         Returns the generated puzzles as a list.
         """
         # Unfortunately we have to have some package level variables allow File methods to access the RandomHelper and TutorialDocker
-        shell_adventure_docker._tutorial = self
+        shell_adventure.api._tutorial = self
         self.rand = RandomHelper(name_dictionary, content_sources)
 
         self._set_home_and_user(home, user)
@@ -185,7 +182,7 @@ class TutorialDocker:
         we have to restart the container and processes. We don't need to regenerate the puzzles, but we do need to resend the puzzle objects
         so we can use the checkers.
         """
-        shell_adventure_docker._tutorial = self
+        shell_adventure.api._tutorial = self
 
         self._set_home_and_user(home, user)
         self.modules = modules

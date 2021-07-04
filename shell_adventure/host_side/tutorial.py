@@ -6,14 +6,15 @@ from docker.models.images import Image
 from docker.models.containers import Container
 from pathlib import Path, PurePath, PurePosixPath;
 from datetime import datetime, timedelta
-from . import docker_helper, PKG_PATH
-from shell_adventure_shared import support
-from shell_adventure_shared.support import PathLike, Message, retry
-from shell_adventure_shared.puzzle import Puzzle
 from textwrap import indent
 import yaml, yamale
 from yamale.schema import Schema
-from shell_adventure_shared.tutorial_errors import *
+from . import docker_helper, PKG_PATH
+from shell_adventure.shared import support
+from shell_adventure.shared.support import PathLike, Message, retry
+from shell_adventure.shared.tutorial_errors import *
+from shell_adventure.api.puzzle import Puzzle
+
 
 class Tutorial:
     """ Contains the information for a running tutorial. """
@@ -160,7 +161,7 @@ class Tutorial:
                 user = self.user,
                 working_dir = str(self.home) if self.home else None
             )
-            _, self._logs_stream = self.container.exec_run(["python3", "/usr/local/shell_adventure_docker/start.py"],
+            _, self._logs_stream = self.container.exec_run(["python3", "/usr/local/shell_adventure/docker_side/start.py"],
                                                                       user = "root", stream = True)
             # retry the connection a few times since the container may take a bit to get started.
             self._conn = retry(lambda: Client(support.conn, authkey = support.conn_key), tries = 20, delay = 0.2)

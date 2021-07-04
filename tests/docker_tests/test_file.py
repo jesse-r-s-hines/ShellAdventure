@@ -1,10 +1,10 @@
 import pytest
 import stat
-import shell_adventure_docker
-from shell_adventure_docker.file import File
-from shell_adventure_docker.permissions import Permissions, change_user
-from shell_adventure_docker.random_helper import RandomHelper
-from shell_adventure_docker.tutorial_docker import TutorialDocker
+from shell_adventure.api.file import File
+from shell_adventure.api.permissions import Permissions, change_user
+from shell_adventure.docker_side.random_helper import RandomHelper
+from shell_adventure.docker_side.tutorial_docker import TutorialDocker
+import shell_adventure.api
 
 class TestFile:
     def test_basic(self, working_dir):
@@ -172,21 +172,21 @@ class TestFile:
             working_dir = File(working_dir)
 
             # You have to have a tutorial object initialized for randomization to work.
-            shell_adventure_docker._tutorial = TutorialDocker()
-            shell_adventure_docker._tutorial.rand = RandomHelper("a\nb\nc")
+            shell_adventure.api._tutorial = TutorialDocker()
+            shell_adventure.api._tutorial.rand = RandomHelper("a\nb\nc")
 
             subfile = working_dir.random_folder(depth = 1)
             assert subfile.parent == working_dir
 
             new_folder = working_dir / "my_new_folder"
             new_folder.mark_shared()
-            assert new_folder in shell_adventure_docker.rand()._shared_folders
+            assert new_folder in shell_adventure.api.rand()._shared_folders
 
             new_file = working_dir.random_file("txt")
             assert new_file.parent == working_dir
             assert new_file.name in ["a.txt", "b.txt", "c.txt"]
         finally:
-            shell_adventure_docker._tutorial = None
+            shell_adventure.api._tutorial = None
 
     def test_home(self, umask000, working_dir):
         assert File.home() == File("/root") # No tutorial set up.

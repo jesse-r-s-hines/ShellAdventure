@@ -7,7 +7,7 @@ from docker.models.images import Image
 from docker.models.containers import Container
 import shell_adventure
 
-BASE_PATH = shell_adventure.PKG_PATH.parent
+BASE_PATH = shell_adventure.PKG_PATH
 client = docker.from_env()
 
 def launch(image: Union[str, Image], **container_options) -> Container:
@@ -18,12 +18,9 @@ def launch(image: Union[str, Image], **container_options) -> Container:
     Returns (container, volume). You can attach to the container to interact with the shell session inside.
     Make sure to clean up the container and volume when you are done with them.
     """
-    docker_path = '/usr/local'
-
     container_options = deepmerge.always_merger.merge(dict(
         volumes = {
-            BASE_PATH / "shell_adventure_docker": {'bind': f"{docker_path}/shell_adventure_docker", 'mode': 'ro'},
-            BASE_PATH / "shell_adventure_shared": {'bind': f"{docker_path}/shell_adventure_shared", 'mode': 'ro'},
+            shell_adventure.PKG_PATH: {'bind': f"/usr/local/shell_adventure", 'mode': 'ro'},
         },
         network_mode = "host",
         cap_add = [

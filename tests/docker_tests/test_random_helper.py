@@ -1,5 +1,5 @@
 import pytest
-from shell_adventure_docker.random_helper import RandomHelper, RandomHelperException
+from shell_adventure.docker_side.random_helper import RandomHelper, RandomHelperException
 
 CONTENT_1 = """
 Sentence a.  Sentence b.  Sentence c.

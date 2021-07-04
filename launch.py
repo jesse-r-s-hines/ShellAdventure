@@ -1,8 +1,8 @@
 import sys
 from textwrap import indent
-from shell_adventure.gui import GUI
-from shell_adventure.tutorial import Tutorial
-from shell_adventure_shared.tutorial_errors import *
+from shell_adventure.host_side.gui import GUI
+from shell_adventure.host_side.tutorial import Tutorial
+from shell_adventure.shared.tutorial_errors import *
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:

@@ -3,8 +3,7 @@ from typing import Union, List, Tuple
 from pathlib import PosixPath
 import shutil, subprocess
 from .permissions import Permissions, LinkedPermissions, change_user
-from .random_helper import RandomHelperException
-import shell_adventure_docker # For access to globals
+import shell_adventure.api # For access to globals
 
 class File(PosixPath):
     """
@@ -15,8 +14,8 @@ class File(PosixPath):
     @classmethod
     def home(cls):
         """ Return the home directory of the student. """
-        if shell_adventure_docker._tutorial: # Get home directory from tutorial
-            return shell_adventure_docker._tutorial.home
+        if shell_adventure.api._tutorial: # Get home directory from tutorial
+            return shell_adventure.api._tutorial.home
         else: # Default to PosixPath
             return PosixPath.home()
 
@@ -114,7 +113,7 @@ class File(PosixPath):
         in the Tutorial config. The file is not created on disk and is not marked as shared. You can pass an
         extension which will be added to the random name. Will not create a file with a name that already exists.
         """
-        return shell_adventure_docker.rand().file(self, ext = ext)
+        return shell_adventure.api.rand().file(self, ext = ext)
 
     def random_folder(self, depth: Union[int, Tuple[int, int]] = (1, 3), create_new_chance: float = 0.5) -> File:
         """
@@ -142,8 +141,8 @@ class File(PosixPath):
         # random_folder() doesn't create the file on disk. Use mkdir() with parents = True to make the folder.
         >>> folder.mkdir(parents = True) 
         """
-        return shell_adventure_docker.rand().folder(self, depth, create_new_chance)
+        return shell_adventure.api.rand().folder(self, depth, create_new_chance)
 
     def mark_shared(self):
         """ Marks the a File as shared. File should be a directory, though it does not have to exist yet. """
-        shell_adventure_docker.rand().mark_shared(self)
+        shell_adventure.api.rand().mark_shared(self)

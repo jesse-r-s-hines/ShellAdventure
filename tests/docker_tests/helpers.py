@@ -1,9 +1,9 @@
 from textwrap import dedent
 from pathlib import PurePath
-from shell_adventure_docker.tutorial_docker import TutorialDocker
+from shell_adventure.docker_side.tutorial_docker import TutorialDocker
 
 SIMPLE_PUZZLES = dedent("""
-    from shell_adventure_docker import *
+    from shell_adventure.api import *
 
     def move():
         file = File("A.txt")

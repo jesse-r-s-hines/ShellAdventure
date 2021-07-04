@@ -10,7 +10,7 @@ done
 source .venv/bin/activate
 
 echo "=========== mypy analysis ==========="
-mypy shell_adventure shell_adventure_docker shell_adventure_shared tests
+mypy shell_adventure tests
 
 set +e # Undo "set -e"
 

@@ -1,4 +1,4 @@
-from shell_adventure_docker import *
+from shell_adventure.api import *
 
 def move():
     src = File("A.txt")

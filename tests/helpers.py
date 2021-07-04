@@ -1,10 +1,10 @@
 
 from typing import Dict, Tuple, Union, List
 from textwrap import dedent
-from shell_adventure.tutorial import Tutorial
+from shell_adventure.host_side.tutorial import Tutorial
 
 SIMPLE_PUZZLES = dedent("""
-    from shell_adventure_docker import *
+    from shell_adventure.api import *
 
     def move():
         file = File("A.txt")

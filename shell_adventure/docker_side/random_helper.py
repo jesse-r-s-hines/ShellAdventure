@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import List, Tuple, Union
 import random, re, lorem
-from . import file as f
+from shell_adventure.api import file as f
 
 class RandomHelper:
     """ RandomHelper is a class that generates random names, contents, and file paths. """

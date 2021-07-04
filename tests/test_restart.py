@@ -1,6 +1,6 @@
 import pytest
-from shell_adventure.tutorial import Tutorial
-from shell_adventure import docker_helper
+from shell_adventure.host_side.tutorial import Tutorial
+from shell_adventure.host_side import docker_helper
 from textwrap import dedent
 from .helpers import *
 
@@ -15,7 +15,7 @@ class TestRestart:
                 restart_enabled: no
             """,
             "puzzles.py": dedent("""
-                from shell_adventure_docker import *
+                from shell_adventure.api import *
 
                 def puz(home):
                     src = home / "A.txt"
@@ -53,13 +53,13 @@ class TestRestart:
             """,
             "puzzles.py": SIMPLE_PUZZLES,
             "custom.py": dedent("""
-                import shell_adventure_docker
-                from shell_adventure_docker import *
+                import shell_adventure.api
+                from shell_adventure.api import *
 
                 def tutorial_is_set():
                     return Puzzle(
                         question = f"Home",
-                        checker = lambda: shell_adventure_docker._tutorial != None,
+                        checker = lambda: shell_adventure.api._tutorial != None,
                     )
             """),
         })
@@ -105,7 +105,7 @@ class TestRestart:
                 restart_enabled: true
             """,
             "puzzles.py": dedent("""
-                from shell_adventure_docker import *
+                from shell_adventure.api import *
 
                 def unpicklable():
                     gen = (i for i in range(1, 10))

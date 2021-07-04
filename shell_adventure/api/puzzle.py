@@ -5,7 +5,7 @@ The Puzzle class
 from __future__ import annotations
 from typing import Union, Callable, List, ClassVar
 import uuid, inspect, dill
-from shell_adventure_shared.support import extra_func_params, UnrecognizedParamsError, sentence_list
+from shell_adventure.shared.support import extra_func_params, UnrecognizedParamsError, sentence_list
 
 class Puzzle:
     """ Represents a single puzzle in the tutorial. """

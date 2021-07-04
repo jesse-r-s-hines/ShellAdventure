@@ -46,12 +46,10 @@ the puzzle question text and a callback that will autograde the puzzle.
 
 ## Running
 ```bash
-python3 -m shell_adventure.shell_adventure <config_file>
+python3 launch.py <config_file>
 ```
 This will launch the tutorial with the given configuration. It will generate any puzzles you specified and then place the student
 at `/home/student` in the docker container. The student will be shown the list of puzzles, and can try to solve them.
-
-(Launching it as a module, `python3 -m ...`, is important, *Shell Adventure* won't be able to run otherwise)
 
 ## Configuration
 The configuration file passed to *Shell Adventure* can contain the following options:
@@ -397,7 +395,7 @@ puzzles:
 
 Run:
 ```bash
-python3 -m shell_adventure.shell_adventure config.yaml
+python3 -m launch.py config.yaml
 ```
 
 # Running Tests

@@ -7,7 +7,7 @@ from ttkthemes import ThemedTk
 from PIL import ImageTk, Image
 from .scrolled_frame import VerticalScrolledFrame
 from . import tutorial, PKG_PATH
-from shell_adventure_shared.puzzle import Puzzle
+from shell_adventure.api.puzzle import Puzzle
 
 class GUI(ThemedTk):
     def __init__(self, tutorial: tutorial.Tutorial, restart_callback: Callable): # TODO find a better way to restart the bash session

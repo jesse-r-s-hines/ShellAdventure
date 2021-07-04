@@ -2,8 +2,7 @@ from pathlib import PurePath
 from _pytest.python_api import raises
 import pytest, re
 from textwrap import dedent, indent;
-from shell_adventure_shared.tutorial_errors import *
-from shell_adventure_shared import support
+from shell_adventure.shared.tutorial_errors import *
 from .helpers import *
 
 class TestTutorialDockerExceptions:
@@ -40,7 +39,7 @@ class TestTutorialDockerExceptions:
 
     def test_solve_puzzle_bad_return(self, working_dir):
         puzzles = dedent("""
-            from shell_adventure_docker import *
+            from shell_adventure.api import *
 
             def invalid():
                 return Puzzle(
@@ -59,7 +58,7 @@ class TestTutorialDockerExceptions:
 
     def test_template_unrecognized_params(self, working_dir):
         puzzles = dedent("""
-            from shell_adventure_docker import *
+            from shell_adventure.api import *
 
             def puzzle(not_a_param):
                 return Puzzle(
@@ -75,7 +74,7 @@ class TestTutorialDockerExceptions:
 
     def test_checker_unrecognized_params(self, working_dir):
         puzzles = dedent("""
-            from shell_adventure_docker import *
+            from shell_adventure.api import *
 
             def puzzle():
                 return Puzzle(
@@ -132,7 +131,7 @@ class TestTutorialDockerExceptions:
     def test_checker_exception(self, tmp_path):
         tutorial = create_tutorial(tmp_path, 
             modules = {PurePath("puzzles.py"): dedent(r"""
-                from shell_adventure_docker import *
+                from shell_adventure.api import *
 
                 def puzzle():
                     def checker():
@@ -162,7 +161,7 @@ class TestTutorialDockerExceptions:
     def test_checker_cant_call_rand(self, tmp_path):
         tutorial = create_tutorial(tmp_path, 
             modules = {PurePath("puzzles.py"): dedent(r"""
-                from shell_adventure_docker import *
+                from shell_adventure.api import *
 
                 def puzzle():
                     return Puzzle(
@@ -180,7 +179,7 @@ class TestTutorialDockerExceptions:
     def test_format_user_exception(self, tmp_path):
         tutorial = create_tutorial(tmp_path,
             modules = {PurePath("/path/to/puzzles.py"): dedent(r"""
-                from shell_adventure_docker import *
+                from shell_adventure.api import *
                 import lorem
 
                 def _fails():

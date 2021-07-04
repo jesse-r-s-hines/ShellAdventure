@@ -1,6 +1,6 @@
 import pytest
-from shell_adventure_docker.file import File
-from shell_adventure_docker.permissions import *
+from shell_adventure.api.file import File
+from shell_adventure.api.permissions import *
 import os, stat
 
 class TestPermissions:

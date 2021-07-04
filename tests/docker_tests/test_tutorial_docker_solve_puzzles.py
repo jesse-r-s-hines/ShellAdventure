@@ -1,6 +1,6 @@
 import pytest
-from shell_adventure_docker.tutorial_docker import TutorialDocker
-from shell_adventure_docker.file import File
+from shell_adventure.docker_side.tutorial_docker import TutorialDocker
+from shell_adventure.api.file import File
 from pathlib import PurePath
 import os
 from textwrap import dedent;
@@ -29,7 +29,7 @@ class TestTutorialDockerSolvePuzzles:
 
     def test_solve_puzzle_flag(self, working_dir):
         puzzle = dedent("""
-            from shell_adventure_docker import *
+            from shell_adventure.api import *
 
             def flag_puzzle():
                 return Puzzle(
@@ -49,7 +49,7 @@ class TestTutorialDockerSolvePuzzles:
 
     def test_solve_puzzle_twice(self, working_dir):
         module = dedent("""
-            from shell_adventure_docker import *
+            from shell_adventure.api import *
             def puz():
                 return Puzzle(question = f"Say OK", checker = lambda flag: flag == "OK")
         """)
@@ -70,7 +70,7 @@ class TestTutorialDockerSolvePuzzles:
 
     def test_puzzle_func_args(self, working_dir):
         puzzles = dedent(f"""
-            from shell_adventure_docker import *
+            from shell_adventure.api import *
 
             def puzzle(home, root):
                 assert home == File("{working_dir}")
@@ -92,7 +92,7 @@ class TestTutorialDockerSolvePuzzles:
 
     def test_checker_func_args(self, working_dir):
         puzzles = dedent("""
-            from shell_adventure_docker import *
+            from shell_adventure.api import *
 
             def puzzle(home):
                 def checker(cwd):
@@ -111,7 +111,7 @@ class TestTutorialDockerSolvePuzzles:
 
     def test_solve_puzzle_randomized(self, working_dir):
         puzzles = dedent("""
-            from shell_adventure_docker import *
+            from shell_adventure.api import *
 
             def move(home):
                 src = home.random_file("txt")

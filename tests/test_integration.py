@@ -1,12 +1,12 @@
 import pytest
-from shell_adventure.tutorial import Tutorial
-from shell_adventure import docker_helper
+from shell_adventure.host_side.tutorial import Tutorial
+from shell_adventure.host_side import docker_helper
+from shell_adventure.shared.tutorial_errors import *
 from textwrap import dedent
 from pathlib import Path, PurePosixPath
 import datetime, time
 import docker, docker.errors
 from .helpers import *
-from shell_adventure_shared.tutorial_errors import *
 
 class TestIntegration:
     def test_basic(self, tmp_path):
@@ -84,7 +84,7 @@ class TestIntegration:
             # Use default name generation.
             "content.txt": "STUFF1\n\nSTUFF2\n\nSTUFF3\n",
             "puzzles.py": dedent("""
-                from shell_adventure_docker import *
+                from shell_adventure.api import *
                 def random_puzzle(home):
                     src = home.random_file("txt")
                     src.write_text(rand().paragraphs(3))
@@ -131,7 +131,7 @@ class TestIntegration:
                     - puzzles.user_puzzle
             """,
             "puzzles.py": dedent("""
-                from shell_adventure_docker import *
+                from shell_adventure.api import *
                 import getpass
 
                 def user_puzzle():
@@ -171,7 +171,7 @@ class TestIntegration:
                     - puzzles.puz:
             """,
             "puzzles.py": dedent("""
-                from shell_adventure_docker import *
+                from shell_adventure.api import *
 
                 def puz(home):
                     src = home / "A.txt"
@@ -242,7 +242,7 @@ class TestIntegration:
                     - puzzles.user_puzzle:
             """,
             "puzzles.py": dedent("""
-                from shell_adventure_docker import *
+                from shell_adventure.api import *
                 import getpass
 
                 def user_puzzle():

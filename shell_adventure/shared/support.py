@@ -13,7 +13,7 @@ PathLike = Union[str, os.PathLike]
 
 conn = ('localhost', 6550)
 """The address that will be used to communicate from the host to the container. """
-conn_key = b'shell_adventure'
+conn_key = b'shell_adventure.api'
 """The authkey that will be used in communication between the Docker code and the host app. """
 
 class Message(Enum):

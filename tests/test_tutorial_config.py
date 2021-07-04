@@ -1,11 +1,11 @@
 from typing import *
 import pytest
-from shell_adventure.tutorial import Tutorial
+from shell_adventure.host_side.tutorial import Tutorial
 from textwrap import dedent;
 from pathlib import PurePosixPath
 import re
 from .helpers import *
-from shell_adventure_shared.tutorial_errors import *
+from shell_adventure.shared.tutorial_errors import *
 
 class TestTutorialConfig:
     def test_simple_tutorial(self, tmp_path):
