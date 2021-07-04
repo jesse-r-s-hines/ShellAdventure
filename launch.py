@@ -13,12 +13,11 @@ if __name__ == "__main__":
     except ConfigError as e:
         exit(e)
     
-    def exit_and_log(message, header: str = None, ):
-        """ Print error string and exit. Prints container logs and an optional header. """
-        if header:
-            print(f"\n\n{f' {header} '.center(60, '=')}\n")
+    def log_and_exit(header: str, message, show_logs: bool = True):
+        """ Print a header, error and exit. Optionally print container logs. """
+        print(f"\n\n{f' {header} '.center(60, '=')}\n")
         print(message)
-        if tutorial.logs():
+        if show_logs and tutorial.logs():
             print("Container Logs:\n" + indent(tutorial.logs(), "  "))
         exit(1)
 
@@ -26,13 +25,15 @@ if __name__ == "__main__":
         with tutorial: # Sets up the container with the tutorial inside, context manager will remove container
             tutorial.attach_to_shell()
             gui = GUI(tutorial, restart_callback = tutorial.attach_to_shell)
-    except ConfigError as e: # We can get config errors when starting the container as well
+    except (ConfigError, ContainerStartupError) as e: # Bash session hasn't started so we don't need to show header
         exit(e)
+    except ContainerError as e: # ContainerError has container logs already, so don't print them twice
+        log_and_exit("An error occurred", e, show_logs = False) 
     except UnhandledError as e: # Our code in the container broke
-        exit_and_log(format_exc(e), header = "An unhandled error occurred in the container")
+        log_and_exit("An unhandled error occurred in the container", format_exc(e))
     except TutorialError as e: # User caused errors or environment errors
-        exit_and_log(e, header = "An error occurred")
+        log_and_exit("An error occurred", e)
     except Exception as e: # Our code broke
-        exit_and_log(format_exc(e), header = "An unhandled error occurred")
+        log_and_exit("An unhandled error occurred", format_exc(e))
     finally:
         print() # Add newline so that the terminal's next program is on a line by itself properly.
