@@ -6,7 +6,7 @@ from textwrap import dedent
 from .helpers import *
 
 class TestRestart:
-    def test_restart_disabled(self, tmp_path):
+    def test_restart_disabled(self, tmp_path, check_containers):
         tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
                 modules:
@@ -41,7 +41,7 @@ class TestRestart:
             tutorial.restart()
             assert file_exists(tutorial, "new.txt") # restart should just do nothing
 
-    def test_restart_basic(self, tmp_path):
+    def test_restart_basic(self, tmp_path, check_containers):
         tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
                 modules:
@@ -65,10 +65,6 @@ class TestRestart:
             """),
         })
 
-        # Get the number of images before we made the tutorial
-        images_before = docker_helper.client.images.list(all = True)
-        containers_before = docker_helper.client.containers.list(all = True)
-
         with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
             [move1, move2, tut_is_set] = tutorial.get_all_puzzles()
 
@@ -90,13 +86,7 @@ class TestRestart:
 
             assert tutorial.solve_puzzle(tut_is_set) == (True, "Correct!") # _tutorial is still set
 
-        # Assert that we cleaned up our containers
-        images_after = docker_helper.client.images.list(all = True)
-        containers_after = docker_helper.client.containers.list(all = True)
-        assert len(images_before) == len(images_after)
-        assert len(containers_before) == len(containers_after)
-
-    def test_restart_pickle_failure(self, tmp_path):
+    def test_restart_pickle_failure(self, tmp_path, check_containers):
         puzzles = dedent("""
             from shell_adventure.api import *
 

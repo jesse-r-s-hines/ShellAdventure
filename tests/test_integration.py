@@ -9,7 +9,7 @@ import docker, docker.errors
 from .helpers import *
 
 class TestIntegration:
-    def test_basic(self, tmp_path):
+    def test_basic(self, tmp_path, check_containers):
         tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
                 modules:
@@ -70,7 +70,7 @@ class TestIntegration:
         with pytest.raises(docker.errors.NotFound):
             docker_helper.client.containers.get(tutorial.container.id)
 
-    def test_random(self, tmp_path):
+    def test_random(self, tmp_path, check_containers):
         tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
                 modules:
@@ -122,7 +122,7 @@ class TestIntegration:
             with pytest.raises(UserCodeError, match = "You can only use randomization in Puzzle templates"):
                 tutorial.solve_puzzle(rand_not_in_checker)
 
-    def test_user(self, tmp_path):
+    def test_user(self, tmp_path, check_containers):
         tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
                 modules:
@@ -160,7 +160,7 @@ class TestIntegration:
             solved, feedback = tutorial.solve_puzzle(puzzle)
             assert solved == True
     
-    def test_different_user(self, tmp_path):
+    def test_different_user(self, tmp_path, check_containers):
         tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
                 home: /
@@ -203,7 +203,7 @@ class TestIntegration:
             code, owner = run_command(tutorial, "stat -c '%U' A.txt", workdir="/")
             assert owner == "root"
 
-    def test_exception(self, tmp_path):
+    def test_exception(self, tmp_path, check_containers):
         # Test that exceptions in the container get raised in the Tutorial
         tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
@@ -232,7 +232,7 @@ class TestIntegration:
         """).lstrip()
         assert expected == str(exc_info.value)
 
-    def test_different_image(self, tmp_path):
+    def test_different_image(self, tmp_path, check_containers):
         tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
                 image: shell-adventure/tests:alpine
@@ -276,7 +276,7 @@ class TestIntegration:
             tutorial.restart()
             assert not file_exists(tutorial, "new.txt")
 
-    def test_missing_deps(self, tmp_path):
+    def test_missing_deps(self, tmp_path, check_containers):
         tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
                 image: shell-adventure/tests:missing-deps
@@ -294,7 +294,7 @@ class TestIntegration:
 
         assert "dill, python-lorem" in tutorial.logs()
 
-    def test_wrong_user(self, tmp_path):
+    def test_wrong_user(self, tmp_path, check_containers):
         # Test that exceptions in the container get raised in the Tutorial
         tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
@@ -311,7 +311,7 @@ class TestIntegration:
             with tutorial: 
                 pass # Just launch
     
-    def test_missing_image(self, tmp_path):
+    def test_missing_image(self, tmp_path, check_containers):
         # Test that exceptions in the container get raised in the Tutorial
         tutorial = create_tutorial(tmp_path, {
             "config.yaml": """

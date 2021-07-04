@@ -8,7 +8,7 @@ from .helpers import *
 from shell_adventure.shared.tutorial_errors import *
 
 class TestTutorialConfig:
-    def test_simple_tutorial(self, tmp_path):
+    def test_simple_tutorial(self, tmp_path, check_containers):
         # Create the files
         tutorial = create_tutorial(tmp_path, {
             "config.yaml": SIMPLE_TUTORIAL,
@@ -18,7 +18,7 @@ class TestTutorialConfig:
         assert tutorial.config_file == tmp_path / "config.yaml"
         assert str(tutorial.name_dictionary).endswith("resources/name_dictionary.txt")
 
-    def test_creation(self, tmp_path):
+    def test_creation(self, tmp_path, check_containers):
         tutorial = create_tutorial(tmp_path, {
             "config.yaml": f"""
                 image: my-custom-image:latest
@@ -49,7 +49,7 @@ class TestTutorialConfig:
         assert [m for m in tutorial.module_paths] == [tmp_path / "path/to/puzzle1.py", tmp_path / "puzzle2.py"]
         assert [pt.template for pt in tutorial.puzzles] == ["puzzle1.move", "puzzle2.move"]
 
-    def test_nested_puzzles(self, tmp_path):
+    def test_nested_puzzles(self, tmp_path, check_containers):
         tutorial = create_tutorial(tmp_path, {
             "config.yaml": f"""
                 modules:
@@ -74,7 +74,7 @@ class TestTutorialConfig:
         # Third Level
         assert [pt.template for pt in tutorial.puzzles[0].dependents[0].dependents] == ["puzzle1.move"]
 
-    def test_missing_files(self, tmp_path):
+    def test_missing_files(self, tmp_path, check_containers):
         with pytest.raises(ConfigError, match = r"No such file or directory.*not_a_config_file\.yaml"):
             tutorial = Tutorial(tmp_path / "not_a_config_file.yaml")
 
@@ -89,7 +89,7 @@ class TestTutorialConfig:
         with pytest.raises(ConfigError, match = r"Is a directory.*puzzles\.py"):
             with tutorial: pass
 
-    def test_duplicate_module_names(self, tmp_path):
+    def test_duplicate_module_names(self, tmp_path, check_containers):
         with pytest.raises(ConfigError, match='Multiple puzzle modules with name "puzzle1" found'):
             tutorial = create_tutorial(tmp_path, {
                 "config.yaml": """
@@ -103,7 +103,7 @@ class TestTutorialConfig:
                 "path/to/puzzle1.py": SIMPLE_PUZZLES,
             }) 
 
-    def test_validation_error(self, tmp_path):
+    def test_validation_error(self, tmp_path, check_containers):
         with pytest.raises(ConfigError) as exc_info:
             tutorial = create_tutorial(tmp_path, {
                 "config.yaml": """
@@ -120,7 +120,7 @@ class TestTutorialConfig:
         assert re.search("modules: Required field missing", message)
         assert re.search("puzzles: .* is not a list.", message)
 
-    def test_validation_error_puzzles(self, tmp_path):
+    def test_validation_error_puzzles(self, tmp_path, check_containers):
         with pytest.raises(ConfigError, match = "Length of .* is greater than 1"):
             tutorial = create_tutorial(tmp_path, {
                 "config.yaml": f"""
@@ -133,7 +133,7 @@ class TestTutorialConfig:
                 "puzzles.py": SIMPLE_PUZZLES,
             })
 
-    def test_validation_error_puzzles_bad_format(self, tmp_path):
+    def test_validation_error_puzzles_bad_format(self, tmp_path, check_containers):
         with pytest.raises(ConfigError) as exc_info:
             tutorial = create_tutorial(tmp_path, {
                 "config.yaml": f"""
@@ -152,7 +152,7 @@ class TestTutorialConfig:
         assert "'1ab.1ab' is not a python identifier of format 'module.puzzle'" in message
         assert "à.ñ" not in message # unicode is valid
 
-    def test_config_parse_error(self, tmp_path):
+    def test_config_parse_error(self, tmp_path, check_containers):
         with pytest.raises(ConfigError, match = "block sequence entries are not allowed in this context"):
             tutorial = create_tutorial(tmp_path, {
                 "config.yaml": """
@@ -161,6 +161,6 @@ class TestTutorialConfig:
                 "puzzles.py": SIMPLE_PUZZLES,
             })
 
-    def test_empty_config(self, tmp_path):
+    def test_empty_config(self, tmp_path, check_containers):
         with pytest.raises(ConfigError):
             tutorial = create_tutorial(tmp_path, {"config.yaml": "", "mypuzzles.py": SIMPLE_PUZZLES})
