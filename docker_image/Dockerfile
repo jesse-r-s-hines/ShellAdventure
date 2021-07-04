@@ -50,6 +50,6 @@ RUN useradd -ms /bin/bash student && \
 USER student
 WORKDIR /home/student
 
-COPY .bashrc /home/student/.bashrc
+COPY --chown=student .bashrc /home/student/.bashrc
 
 CMD ["bash"]
