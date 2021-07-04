@@ -7,15 +7,16 @@ args = sys.argv[1:]
 test_dir = tests.docker_tests.__path__[0] #type: ignore
 docker_test_dir = "/usr/local/shell_adventure_docker_tests"
 
-container = docker_helper.launch("shell-adventure/tests:main",
-    volumes = {
-        test_dir: {'bind': docker_test_dir, 'mode': 'ro'},
-    },
-    working_dir = "/home/student",
-)
+try:
+    container = docker_helper.launch("shell-adventure/tests:main",
+        volumes = {
+            test_dir: {'bind': docker_test_dir, 'mode': 'ro'},
+        },
+        working_dir = "/home/student",
+    )
 
-# Disable pytest cache, since writing in a volume while root causes problems
-command = ["docker", "exec", "-it", "--user", "root",  "--workdir", docker_test_dir,  container.id, "pytest", "-p", "no:cacheprovider", *args]
-os.system(" ".join(map(shlex.quote, command)))
-container.stop(timeout = 0)
-container.remove()
+    # Disable pytest cache, since writing in a volume while root causes problems
+    command = ["docker", "exec", "-it", "--user", "root",  "--workdir", docker_test_dir,  container.id, "pytest", "-p", "no:cacheprovider", *args]
+    os.system(" ".join(map(shlex.quote, command)))
+finally:
+    container.stop(timeout = 0)
