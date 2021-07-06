@@ -24,18 +24,19 @@ class Tutorial:
     """ The path to the config file for this tutorial """
 
     data_dir: Path
-    """ This is the path where tutorial files such as puzzles have been placed. """
+    """ The folder that the config_file is in. Paths in the config_file are relative to here. """
+
+    # Config fields
 
     image: str
     """ The name or id of the Docker image to run the container in. Defaults to "shell-adventure:latest" """
 
-    # Config fields
-
-    home: PurePosixPath
-    """ This is the folder in the container that puzzle templates and checkers will be run in. If None, the WORKDIR of the container will be used. """
-
-    user: str
-    """ This is the name of the user that the student is logged in as. If None, the USER of the container will be used. """
+    container_options: Dict[str, Any]
+    """
+    Any options you want to pass to the container. These options are passed directly to the docker-py `create()` method.
+    See https://docker-py.readthedocs.io/en/stable/containers.html#docker.models.containers.ContainerCollection.create
+    for details on the options you can pass. Most commonly used are `user` and `working_dir`.
+    """
 
     module_paths: List[Path]
     """ List of absolute paths to the puzzle generation modules. """
@@ -81,8 +82,8 @@ class Tutorial:
 
         self.image = config.get("image", "shell-adventure:latest")
 
-        self.home = PurePosixPath(config["home"]) if "home" in config else None # If None, we'll use default home of image
-        self.user = config.get("user", None) # If None we'll use default user of image
+        container_options = config.get("container_options", {})
+        self.container_options = {str(k): v for k, v in container_options.items()} # Force keys to str
 
         module_paths: Dict[str, Path] = {}
         for module in config.get("modules"):
@@ -158,17 +159,18 @@ class Tutorial:
     def _start_container(self, image: str):
         """ Starts the container and connects to it. """
         try:
-            self.container = docker_helper.launch(image,
-                user = self.user,
-                working_dir = str(self.home) if self.home else None
-            )
+            self.container = docker_helper.launch(image, **self.container_options)
+        except Exception as e: # If container_options causes an error just raise a ContainerStartupError
+           raise ContainerStartupError(f"Tutorial container failed to start:\n{indent(str(e), '  ')}")
+
+        try:
             _, self._logs_stream = self.container.exec_run(["python3", "/usr/local/shell_adventure/docker_side/start.py"],
                                                                       user = "root", stream = True)
             # retry the connection a few times since the container may take a bit to get started.
             self._conn = retry(lambda: Client(messages.conn, authkey = messages.conn_key), tries = 20, delay = 0.2)
         except (docker.errors.DockerException, ConnectionError) as e:
             raise ContainerStartupError(
-                f"Tutorial container failed to start:\n {str(e)}",
+                f"Failed to connect to container:\n{indent(str(e), '  ')}",
                 container_logs = self.logs()
             )
 
@@ -204,8 +206,6 @@ class Tutorial:
         tmp_tree = PuzzleTree("", dependents=self.puzzles) # Put puzzles under a dummy node so we can iterate  it.
 
         generated_puzzles: List[Puzzle] = self._send(Message.SETUP, {
-            "home": self.home,
-            "user": self.user,
             "modules": modules,
             "puzzles": [pt.template for pt in tmp_tree],
             "name_dictionary": name_dictionary,
@@ -288,8 +288,6 @@ class Tutorial:
                 raise ConfigError(str(e))
         
             self._send(Message.RESTORE, {
-                "home": self.home,
-                "user": self.user,
                 "modules": modules,
                 "puzzles": [pt.puzzle for pt in PuzzleTree("", dependents = self.puzzles)], # Put puzzles under tree node so we can iterate
             })

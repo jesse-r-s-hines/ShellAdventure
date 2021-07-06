@@ -22,8 +22,10 @@ class TestTutorialConfig:
         tutorial = create_tutorial(tmp_path, {
             "config.yaml": f"""
                 image: my-custom-image:latest
-                home: /home/user
-                user: user
+                container_options:
+                    working_dir: /home/user
+                    user: user
+                    name: mytutorial
                 modules:
                     - path/to/puzzle1.py # Relative path
                     - {tmp_path / "puzzle2.py"} # Absolute path
@@ -41,8 +43,11 @@ class TestTutorialConfig:
         })
         assert tutorial.data_dir == tmp_path
         assert tutorial.image == "my-custom-image:latest"
-        assert tutorial.home == PurePosixPath("/home/user")
-        assert tutorial.user == "user"
+        assert tutorial.container_options == {
+            "working_dir": "/home/user",
+            "user": "user",
+            "name": "mytutorial",
+        }
         assert tutorial.name_dictionary == tmp_path / "my_dictionary.txt"
         assert tutorial.content_sources == [tmp_path / "content.txt"]
 
@@ -164,3 +169,36 @@ class TestTutorialConfig:
     def test_empty_config(self, tmp_path, check_containers):
         with pytest.raises(ConfigError):
             tutorial = create_tutorial(tmp_path, {"config.yaml": "", "mypuzzles.py": SIMPLE_PUZZLES})
+
+    def test_container_options_unrecognized_keys(self, tmp_path, check_containers):
+        tutorial = create_tutorial(tmp_path, {
+            "config.yaml": f"""
+                container_options:
+                    1: 1 # Not a string key
+                modules:
+                    - puzzles.py
+                puzzles:
+                    - puzzles.move
+            """,
+            "puzzles.py": SIMPLE_PUZZLES,
+        })
+
+        with pytest.raises(ContainerStartupError, match = "unexpected keyword argument '1'"):
+            with tutorial: pass
+
+    def test_container_options_wrong_type(self, tmp_path, check_containers):
+        tutorial = create_tutorial(tmp_path, {
+            "config.yaml": f"""
+                container_options:
+                    command: 1 # Not string
+                modules:
+                    - puzzles.py
+                puzzles:
+                    - puzzles.move
+            """,
+            "puzzles.py": SIMPLE_PUZZLES,
+        })
+
+        # Will just print the API error since docker-py doesn't seem to type check the command
+        with pytest.raises(ContainerStartupError, match = "cannot unmarshal number into .*Cmd of type string"):
+            with tutorial: pass

@@ -18,10 +18,10 @@ class TutorialDocker:
     """ Contains the information for a running tutorial docker side. """
 
     home: Path
-    """ This is the folder that puzzle templates and checkers will be run in. """
+    """ This is the folder that puzzle templates and checkers will be run in. Default is the pwd of the bash session. """
 
     user: str
-    """ This is the name of the user that the student is logged in as. """
+    """ This is the name of the user that the student is logged in as. Default is the user of the bash session. """
 
     modules: Dict[PurePath, str]
     """ Map of the puzzle modules, filename mapped to file contents. """
@@ -143,9 +143,9 @@ class TutorialDocker:
     def setup(self, *, home: PathLike = None, user: str = None, modules: Dict[PurePath, str], puzzles: List[str],
               name_dictionary: str, content_sources: List[str]) -> List[Puzzle]:
         """
-        Initializes the tutorial with the given settings. Generates the puzzles in the modules.
-        The initialization is done separate from the constructor so that it can be done after the connection with the host is setup.
-        Returns the generated puzzles as a list.
+        Initializes the tutorial with the given settings. Generates the puzzles in the modules. The
+        initialization is done separate from the constructor so that it can be done after the connection
+        with the host is setup. Returns the generated puzzles as a list.
         """
         # Unfortunately we have to have some package level variables allow File methods to access the RandomHelper and TutorialDocker
         shell_adventure.api._tutorial = self
@@ -177,7 +177,7 @@ class TutorialDocker:
 
         return puzzle_list
 
-    def restore(self, home: PathLike, user: str, modules: Dict[PurePath, str], puzzles: List[Puzzle]):
+    def restore(self, *, home: PathLike = None, user: str = None, modules: Dict[PurePath, str], puzzles: List[Puzzle]):
         """
         Restore the tutorial after we've loading a snapshot. This is for usage after a restart. Docker commit keeps all filesystem state, but
         we have to restart the container and processes. We don't need to regenerate the puzzles, but we do need to resend the puzzle objects

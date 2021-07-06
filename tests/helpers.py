@@ -57,10 +57,6 @@ def create_tutorial(tmp_path, files: Dict[str, str]) -> Tutorial:
 
 def run_command(tutorial: Tutorial, cmd: Union[str, List[str]],  **kwargs) -> Tuple[int, str]:
     """ Execute a command in a tutorial, return the exit code and output """
-    kwargs = {
-        "workdir": str(tutorial.home) if tutorial.home else None,
-        **kwargs,
-    }
     exit_code, output = tutorial.container.exec_run(cmd, **kwargs)
     return (exit_code, output.decode().strip())
 

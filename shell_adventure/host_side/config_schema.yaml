@@ -1,7 +1,6 @@
 # This is the schema for the Shell Adventure config file. It is used by [Yamale](https://pypi.org/project/yamale) to validate the config file.
 image: str(required = False)
-home: str(required = False)
-user: str(required = False)
+container_options: include("container_options", strict = False, required = False)
 modules: list(str())
 puzzles: list(include('puzzle'), min = 1)
 name_dictionary: str(required = False)
@@ -12,3 +11,13 @@ restart_enabled: bool(required = False)
 puzzle_identifier: regex(r"^[^\d\W]\w*\.[^\d\W]\w*$", name = "python identifier of format 'module.puzzle'")
 # To make a pretty tree structure, puzzle is a str or single element dict containing a list of puzzles
 puzzle: any(include('puzzle_identifier'), map(list(include('puzzle'), required = False), key = include('puzzle_identifier'), min = 1, max = 1))
+
+container_options:
+  # container_options are passed to docker-py create() method
+  # see https://docker-py.readthedocs.io/en/stable/containers.html#docker.models.containers.ContainerCollection.create
+  user: str(required = False)
+  working_dir: str(required = False)
+  # Validate these to make sure the user values get merged with our values instead of overriding them
+  volumes: map(required = False)
+  cap_add: list(required = False)
+  # Other options will be allowed and passed to docker-py if you include with `strict = False`

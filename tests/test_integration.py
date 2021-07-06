@@ -163,8 +163,9 @@ class TestIntegration:
     def test_different_user(self, tmp_path, check_containers):
         tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
-                home: /
-                user: root
+                container_options:
+                    working_dir: /
+                    user: root
                 modules:
                     - puzzles.py
                 puzzles:
@@ -189,8 +190,6 @@ class TestIntegration:
                     )
             """),
         })
-        assert tutorial.home == PurePosixPath("/")
-        assert tutorial.user == "root"
 
         # If user isn't root, trying to add file to root will fail
         with tutorial:
@@ -199,7 +198,7 @@ class TestIntegration:
             assert output == "root"
             assert tutorial.get_student_cwd() == Path("/")
 
-            assert file_exists(tutorial, "/A.txt") # Generate the puzzles in root 
+            assert file_exists(tutorial, "/A.txt") # The puzzles are generated in root 
             code, owner = run_command(tutorial, "stat -c '%U' A.txt", workdir="/")
             assert owner == "root"
 
@@ -232,6 +231,39 @@ class TestIntegration:
         """).lstrip()
         assert expected == str(exc_info.value)
 
+    def test_container_options(self, tmp_path, check_containers):
+        tutorial = create_tutorial(tmp_path, {
+            "config.yaml": f"""
+                container_options:
+                    command: sh
+                    environment:
+                        MYVAR: 10
+                    volumes:
+                        {tmp_path / "volume.txt"}:
+                            bind: "/home/student/volume.txt"
+                            mode: ro
+                modules:
+                    - puzzles.py
+                puzzles:
+                    - puzzles.move
+            """,
+            "puzzles.py": SIMPLE_PUZZLES,
+            "volume.txt": "Hey a volume!",
+        })
+
+        with tutorial:
+            # assert that sh was run instead of bash
+            exit_code, process = run_command(tutorial, "ps -o comm= 1", user = "root")
+            assert process == "sh"
+
+            # Env was set
+            exit_code, output = run_command(tutorial, ["sh", "-c", 'echo $MYVAR'])
+            assert output == "10"
+
+            # volume exists (and didn't delete our volumes)
+            exit_code, output = run_command(tutorial, "cat volume.txt")
+            assert output == "Hey a volume!"
+
     def test_different_image(self, tmp_path, check_containers):
         tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
@@ -261,9 +293,7 @@ class TestIntegration:
             """),
         })
 
-        with tutorial:
-            assert tutorial.home == None and tutorial.user == None # Will use defaults from the container
-    
+        with tutorial:   
             exit_code, output = run_command(tutorial, "ps -o user=", user = "root")
              # alpine's ps can't filter by pid, it just gives a list of all processes. We want the first (PID 1)
             assert output.splitlines()[0] == "bob"
@@ -298,7 +328,8 @@ class TestIntegration:
         # Test that exceptions in the container get raised in the Tutorial
         tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
-                user: not-a-user
+                container_options:
+                    user: not-a-user
                 modules:
                     - puzzles.py
                 puzzles:
