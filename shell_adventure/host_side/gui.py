@@ -54,13 +54,6 @@ class GUI(ThemedTk):
 
         self.start_timer_loop()
 
-        if self.student_cwd != self.file_tree_root: # can't really display pointer to root.
-            self.file_tree.see(str(self.student_cwd)) # type: ignore # open all parents and scroll to (parents should already be open)
-
-        # for file in [*self.student_cwd.parents, self.student_cwd]:
-        #     self.file_tree.item(str(file), open = True) # open it
-        #     self.load_folder(str(file_id), open_new = file_was_open or open_new) # trigger update on the subfolder
-
         self.mainloop()
 
     def _get_icons(self) -> Dict[str, ImageTk.PhotoImage]:
@@ -233,8 +226,13 @@ class GUI(ThemedTk):
 
     def update_gui(self):
         """ Updates the file tree, score, etc to match the current state of the tutorial. """
+        old_cwd = self.student_cwd
         self.student_cwd = self.tutorial.get_student_cwd()
         self.load_folder("")
+
+        if self.student_cwd != old_cwd: # Jump to cwd if we've changed it
+            node = str(self.student_cwd) if self.student_cwd != self.file_tree_root else "" # root node is named "" instead of "/"
+            self.file_tree.see(node) # type: ignore # open all parents and scroll to (parents should already be open)
 
         self.score_label.set(f"Score: {self.tutorial.current_score()}/{self.tutorial.total_score()}")
 
