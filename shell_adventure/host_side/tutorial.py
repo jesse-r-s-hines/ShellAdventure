@@ -161,7 +161,7 @@ class Tutorial:
         try:
             self.container = docker_helper.launch(image, **self.container_options)
         except Exception as e: # If container_options causes an error just raise a ContainerStartupError
-           raise ContainerStartupError(f"Tutorial container failed to start:\n{indent(str(e), '  ')}")
+           raise ContainerStartupError(f"Tutorial container failed to start:\n{indent(str(e), '  ')}") #https://github.com/docker/docker-py/issues/2860
 
         try:
             _, self._logs_stream = self.container.exec_run(["python3", "/usr/local/shell_adventure/docker_side/start.py"],
@@ -183,7 +183,7 @@ class Tutorial:
 
         if self.container:
             try: # Force the container to stop (then it will get autoremoved)
-                self.container.stop(timeout = 4) # throws NotFound if container already stopped
+                self.container.stop(timeout = 2) # throws NotFound if container already stopped
                 # Wait until the container is removed (sometimes it takes a second for the docker api to do so)
                 self.container.wait(condition = "removed") # will throw NotFound if already removed
             except docker.errors.NotFound: # Container was already removed
@@ -260,7 +260,6 @@ class Tutorial:
 
     def attach_to_shell(self) -> subprocess.Popen:
         """ Attaches to the shell session in the container, making it show in the terminal. Returns the process. """
-        # docker exec the unix exec bash built-in which lets us change the name of the process
         os.system('cls' if os.name == 'nt' else 'clear') # clear the terminal
         return subprocess.Popen(["docker", "attach", self.container.id])
 
