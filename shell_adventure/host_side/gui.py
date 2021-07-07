@@ -37,8 +37,10 @@ class GUI(ThemedTk):
         status_bar = self._make_status_bar(self)
         status_bar.pack(side = tk.TOP, fill = tk.BOTH)
 
-        self.file_tree = self._make_file_tree(self)
-        self.file_tree.pack(side = tk.TOP, expand = True, fill = tk.BOTH)
+        self.file_tree = None
+        if self.tutorial.show_tree:
+            self.file_tree = self._make_file_tree(self)
+            self.file_tree.pack(side = tk.TOP, expand = True, fill = tk.BOTH)
 
         button_frame, self.restart_button = self._make_button_frame(self)
         button_frame.pack(side = tk.TOP, fill = tk.BOTH)
@@ -226,13 +228,15 @@ class GUI(ThemedTk):
 
     def update_gui(self):
         """ Updates the file tree, score, etc to match the current state of the tutorial. """
-        old_cwd = self.student_cwd
-        self.student_cwd = self.tutorial.get_student_cwd()
-        self.load_folder("")
+        if self.file_tree:
+            old_cwd = self.student_cwd
+            self.student_cwd = self.tutorial.get_student_cwd()
+            self.load_folder("")
 
-        if self.student_cwd != old_cwd: # Jump to cwd if we've changed it
-            node = str(self.student_cwd) if self.student_cwd != self.file_tree_root else "" # root node is named "" instead of "/"
-            self.file_tree.see(node) # type: ignore # open all parents and scroll to (parents should already be open)
+            if self.student_cwd != old_cwd: # Jump to cwd if we've changed it
+                # root node is named "" instead of "/"
+                node = str(self.student_cwd) if self.student_cwd != self.file_tree_root else ""
+                self.file_tree.see(node) # type: ignore # open all parents and scroll to (parents should already be open)
 
         self.score_label.set(f"Score: {self.tutorial.current_score()}/{self.tutorial.total_score()}")
 

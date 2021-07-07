@@ -6,6 +6,7 @@ puzzles: list(include('puzzle'), min = 1)
 name_dictionary: str(required = False)
 content_sources: list(str(), required = False)
 restart_enabled: bool(required = False)
+show_tree: bool(required = False)
 
 --- # Includes
 puzzle_identifier: regex(r"^[^\d\W]\w*\.[^\d\W]\w*$", name = "python identifier of format 'module.puzzle'")

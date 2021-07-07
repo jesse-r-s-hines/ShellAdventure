@@ -50,6 +50,12 @@ class Tutorial:
     puzzles: List[PuzzleTree]
     """ The tree of puzzles in this tutorial. """
 
+    restart_enabled: bool
+    """ Whether restart is enabled or not. """
+
+    show_tree: bool
+    """ Whether to show the file tree in the GUI or not. """
+
     # Other fields
     container: Container
     """ The docker container that the student is in. """
@@ -58,9 +64,6 @@ class Tutorial:
     """ Time the tutorial started. """
     end_time: datetime
     """ Time the tutorial ended. """
-
-    restart_enabled: bool
-    """ Whether restart is enabled or not. """
 
     # Static fields
     config_schema: ClassVar[Schema] = yamale.make_schema(PKG_PATH / "config_schema.yaml")
@@ -102,6 +105,7 @@ class Tutorial:
         self.content_sources = [Path(self.data_dir, f) for f in config.get("content_sources", [])] # relative to config file
 
         self.restart_enabled = config.get("restart_enabled", True) # PyYAML automatically converts to bool
+        self.show_tree = config.get("show_tree", True)
 
         self.container: Container = None
         self._conn: Connection = None # Connection to send messages to docker container.
