@@ -35,7 +35,7 @@ class VerticalScrolledFrame(ttk.Frame):
         self.interior_id = self.canvas.create_window(0, 0, window=self.interior,
                                            anchor=tk.NW)
 
-        self.interior.bind('<Configure>', lambda e: self._configure_interior())
+        self.interior.bind('<Configure>', self._configure_interior)
         self.canvas.bind('<Configure>', self._configure_canvas)
         self.canvas.bind('<Enter>', self._bind_to_mousewheel)
         self.canvas.bind('<Leave>', self._unbind_from_mousewheel)
@@ -44,7 +44,7 @@ class VerticalScrolledFrame(ttk.Frame):
         # track changes to the canvas and frame width and sync them,
         # also updating the scrollbar
 
-    def _configure_interior(self):
+    def _configure_interior(self, event):
         # update the scrollbars to match the size of the inner frame
         size = (self.interior.winfo_reqwidth(), self.interior.winfo_reqheight())
         self.canvas.config(scrollregion="0 0 %s %s" % size)
@@ -54,28 +54,18 @@ class VerticalScrolledFrame(ttk.Frame):
         #     # update the canvas's width to fit the inner frame
         #     self.canvas.config(width=self.interior.winfo_reqwidth())
 
-        # This seems to make the canvas shrink to fit if the content is smaller than requested hight.
-        # But you still have to back the VerticalScroll with expand = False. I'm not sure how to fix it
-        # so that it will expand.
-        # if self.interior.winfo_reqheight() < self.canvas.winfo_height():
-        #     self.canvas.config(height = self.interior.winfo_reqheight())
-        # elif self.canvas.winfo_height() != self.winfo_height():
-        #     self.canvas.config(height = self.winfo_height())
-
+        # This seems to make the canvas shrink to fit if the content is smaller than requested height.
+        # If there isn't room on the window for the canvas to have the full height of the frame, the 
+        # geometry manager will force it to be smaller, and the scrollbar will kick in.
+        if self.interior.winfo_reqheight() != self.canvas.winfo_height():
+            self.canvas.config(height = self.interior.winfo_reqheight())
 
     def _configure_canvas(self, event):
-        if self.interior.winfo_reqwidth() != event.width:
+        if self.interior.winfo_reqwidth() != self.winfo_width():
             # update the inner frame's width to fill the canvas
             # Jesse: Changing this to from `self.winfo_width` to `event.width` seems to fix a minor
-            #   spacing issue where the scrollbar was covering part of the buttons.
+            #   spacing issue where the scrollbar was covering part of the buttons
             self.canvas.itemconfigure(self.interior_id, width=event.width)
-
-        if self.interior.winfo_reqheight() < event.height:
-            self.canvas.itemconfigure(self.interior_id, height=event.width)
-        else:
-            self.canvas.itemconfigure(self.interior_id, height = None)
-
-        self._configure_interior()
 
     # This can now handle either windows or linux platforms
     def _on_mousewheel(self, event, scroll=None):

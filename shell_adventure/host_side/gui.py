@@ -35,16 +35,16 @@ class GUI(ThemedTk):
         self.rowconfigure(3, weight = 0)
 
         status_bar = self._make_status_bar(self)
-        status_bar.grid(row = 0, column = 0, sticky = "WE")
+        status_bar.pack(side = tk.TOP, fill = tk.BOTH)
 
         self.file_tree = self._make_file_tree(self)
-        self.file_tree.grid(row = 1, column = 0, sticky = "NSWE")
+        self.file_tree.pack(side = tk.TOP, expand = True, fill = tk.BOTH)
 
         button_frame, self.restart_button = self._make_button_frame(self)
-        button_frame.grid(row = 2, column = 0, sticky = "NSWE")
+        button_frame.pack(side = tk.TOP, fill = tk.BOTH)
 
         self.puzzle_frame = self._make_puzzle_frame(self)
-        self.puzzle_frame.grid(row = 3, column = 0, sticky = "NSWE")
+        self.puzzle_frame.pack(side = tk.BOTTOM, expand = False, fill = tk.BOTH)
         self.update_puzzle_frame()
 
         def update_loop(): # TODO make this trigger after every command instead of on a loop
