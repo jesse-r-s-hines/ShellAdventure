@@ -42,8 +42,11 @@ class GUI(ThemedTk):
             self.file_tree = self._make_file_tree(self)
             self.file_tree.pack(side = tk.TOP, expand = True, fill = tk.BOTH)
 
-        button_frame, self.restart_button = self._make_button_frame(self)
-        button_frame.pack(side = tk.TOP, fill = tk.BOTH)
+        button_frame = self._make_button_frame(self)
+        # Set this to expand if file_tree is turned off. We need to have something that will expand
+        # or we'll end up with weird looking un-rendered space. Expanding the scroll_frame canvas causes
+        # issues, so lets just make the button frame expand to fill the extra space.
+        button_frame.pack(side = tk.TOP, expand = not self.file_tree, fill = tk.BOTH)
 
         scroll_frame, self.puzzle_frame = self._make_puzzle_frame(self)
         scroll_frame.pack(side = tk.BOTTOM, expand = False, fill = tk.BOTH)
@@ -110,18 +113,19 @@ class GUI(ThemedTk):
         return file_tree
 
     def _make_button_frame(self, master):
-        """ Returns a frame showing the restart button and the restart buttons themselves """
+        """ Returns a frame showing the restart button """
         button_frame = ttk.Frame(master)
 
-        restart_button = ttk.Button(button_frame,
-            text = "Restart", image = self.icons["restart"], compound = "left",
-            command = lambda: self.restart()
-        )
-        restart_button.grid(row = 0, column = 0)
+        if self.tutorial.restart_enabled:
+            restart_button = ttk.Button(button_frame,
+                text = "Restart", image = self.icons["restart"], compound = "left",
+                command = lambda: self.restart()
+            )
+            restart_button.grid(row = 0, column = 0)
 
-        return (button_frame, restart_button)
+        return button_frame
 
-    def _make_puzzle_frame(self, master) -> Tuple[VerticalScrolledFrame, Frame]:
+    def _make_puzzle_frame(self, master) -> Tuple[VerticalScrolledFrame, ttk.LabelFrame]:
         """ Returns a scrollable frame and the frame the puzzles will be on."""
         # map puzzles to their question label and button. By default, Python will use object identity for dict keys, which is what we want.
         scroll_frame = VerticalScrolledFrame(master)
@@ -163,6 +167,15 @@ class GUI(ThemedTk):
             button.bind('<Return>', lambda e, p=puzzle: self.solve_puzzle(p)) # type: ignore
             button.grid(row = i, column = 1, padx = 5, sticky="S")
 
+    def _tree_node_to_path(self, iid: str):
+        """ Returns the path in the container that corresponds to the given Treeview node. """
+        return PurePosixPath(iid if iid else self.file_tree_root)
+
+    def _path_to_tree_node(self, path: PurePosixPath):
+        """ Returns the Treeview node id that represents the path in the container. """
+        return str(self.student_cwd) if self.student_cwd != self.file_tree_root else ""
+
+
     def _add_tree_tag(self, iid, tag):
         """ Adds a tag to the given item in the Treeview. """
         old_tags = list(self.file_tree.item(iid, option = "tags"))
@@ -180,8 +193,8 @@ class GUI(ThemedTk):
         old_files = self.file_tree.get_children(folder)
         old_files = {file: self.file_tree.item(file, option = "open") for file in old_files}
 
-        # get new children, convert "" to the folder that is the root of the file tree
-        new_files = self.tutorial.get_files(PurePosixPath(folder if folder else self.file_tree_root))
+        # get new children
+        new_files = self.tutorial.get_files(self._tree_node_to_path(folder))
         new_files.sort()
        
         # Update the Treeview
@@ -234,9 +247,8 @@ class GUI(ThemedTk):
             self.load_folder("")
 
             if self.student_cwd != old_cwd: # Jump to cwd if we've changed it
-                # root node is named "" instead of "/"
-                node = str(self.student_cwd) if self.student_cwd != self.file_tree_root else ""
-                self.file_tree.see(node) # type: ignore # open all parents and scroll to (parents should already be open)
+                # open all parents and scroll to (parents should already be open)
+                self.file_tree.see(self._path_to_tree_node(self.student_cwd)) # type: ignore
 
         self.score_label.set(f"Score: {self.tutorial.current_score()}/{self.tutorial.total_score()}")
 
