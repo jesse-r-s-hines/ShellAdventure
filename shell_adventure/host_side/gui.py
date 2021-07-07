@@ -1,7 +1,7 @@
 from typing import Callable, Tuple, Dict
 from pathlib import PurePosixPath
 import tkinter as tk
-from tkinter import StringVar, ttk, font, messagebox
+from tkinter import Frame, StringVar, ttk, font, messagebox
 import tkinter.simpledialog as simpledialog
 from ttkthemes import ThemedTk
 from PIL import ImageTk, Image
@@ -43,8 +43,8 @@ class GUI(ThemedTk):
         button_frame, self.restart_button = self._make_button_frame(self)
         button_frame.pack(side = tk.TOP, fill = tk.BOTH)
 
-        self.puzzle_frame = self._make_puzzle_frame(self)
-        self.puzzle_frame.pack(side = tk.BOTTOM, expand = False, fill = tk.BOTH)
+        scroll_frame, self.puzzle_frame = self._make_puzzle_frame(self)
+        scroll_frame.pack(side = tk.BOTTOM, expand = False, fill = tk.BOTH)
         self.update_puzzle_frame()
 
         def update_loop(): # TODO make this trigger after every command instead of on a loop
@@ -126,14 +126,18 @@ class GUI(ThemedTk):
 
         return (button_frame, restart_button)
 
-    def _make_puzzle_frame(self, master) -> VerticalScrolledFrame:
-        """ Returns a frame container the puzzle list. """
+    def _make_puzzle_frame(self, master) -> Tuple[VerticalScrolledFrame, Frame]:
+        """ Returns a scrollable frame and the frame the puzzles will be on."""
         # map puzzles to their question label and button. By default, Python will use object identity for dict keys, which is what we want.
-        puzzle_frame = VerticalScrolledFrame(master)
-        puzzle_frame.interior.columnconfigure(0, weight = 1)
-        puzzle_frame.interior.rowconfigure(0, weight = 1)
+        scroll_frame = VerticalScrolledFrame(master)
+        scroll_frame.interior.columnconfigure(0, weight = 1)
+        scroll_frame.interior.rowconfigure(0, weight = 1)
 
-        return puzzle_frame
+        puzzle_frame = ttk.LabelFrame(scroll_frame.interior, text = 'Puzzles:')
+        puzzle_frame.grid(column = 0, row = 0, sticky = 'WENS')
+        puzzle_frame.columnconfigure(0, weight = 1)
+
+        return scroll_frame, puzzle_frame
 
     def start_timer_loop(self):
         """ Starts a loop which will update the timer every second. """
@@ -149,18 +153,14 @@ class GUI(ThemedTk):
 
     def update_puzzle_frame(self):
         """ Remakes the puzzle list. """
-        for widget in self.puzzle_frame.interior.winfo_children(): # Should only contain one element
+        for widget in self.puzzle_frame.winfo_children(): # Should only contain one element
             widget.destroy()
 
-        frame = ttk.LabelFrame(self.puzzle_frame.interior, text = 'Puzzles:')
-        frame.grid(column = 0, row = 0, sticky = 'WENS')
-        frame.columnconfigure(0, weight = 1)
-
         for i, puzzle in enumerate(self.tutorial.get_current_puzzles()):
-            label = WrappingLabel(frame, text = f"{i+1}. {puzzle.question}", wraplength=50)
+            label = WrappingLabel(self.puzzle_frame, text = f"{i+1}. {puzzle.question}", wraplength=50)
             label.grid(row = i, column = 0, padx = 5, pady = 5, sticky="EWNS")
 
-            button = ttk.Button(frame,
+            button = ttk.Button(self.puzzle_frame,
                 text = "Solved" if puzzle.solved else "Solve",
                 command = lambda p=puzzle: self.solve_puzzle(p), # type: ignore
                 state = "disabled" if puzzle.solved else "enabled"
