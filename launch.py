@@ -1,6 +1,6 @@
 import sys
 from textwrap import indent
-from shell_adventure.host_side.gui import GUI
+from shell_adventure.gui.main import ShellAdventureGUI
 from shell_adventure.host_side.tutorial import Tutorial
 from shell_adventure.shared.tutorial_errors import *
 
@@ -24,7 +24,7 @@ if __name__ == "__main__":
     try:
         with tutorial: # Sets up the container with the tutorial inside, context manager will remove container
             tutorial.attach_to_shell()
-            gui = GUI(tutorial, restart_callback = tutorial.attach_to_shell)
+            gui = ShellAdventureGUI(tutorial, restart_callback = tutorial.attach_to_shell)
     except (ConfigError, ContainerStartupError) as e: # Bash session hasn't started so we don't need to show header
         exit(e)
     except ContainerError as e: # ContainerError has container logs already, so don't print them twice

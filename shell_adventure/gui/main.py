@@ -1,16 +1,17 @@
 from typing import Callable, Tuple, Dict
 from pathlib import PurePosixPath
 import tkinter as tk
-from tkinter import Frame, StringVar, ttk, font, messagebox
+from tkinter import StringVar, ttk, font, messagebox
 import tkinter.simpledialog as simpledialog
 from ttkthemes import ThemedTk
 from PIL import ImageTk, Image
 from .gui_widgets import WrappingLabel, SelectableMessage, popup_box
 from .scrolled_frame import VerticalScrolledFrame
-from . import tutorial, PKG_PATH
+from shell_adventure.host_side import tutorial
 from shell_adventure.api.puzzle import Puzzle
+from . import PKG_PATH
 
-class GUI(ThemedTk):
+class ShellAdventureGUI(ThemedTk):
     def __init__(self, tutorial: tutorial.Tutorial, restart_callback: Callable): # TODO find a better way to restart the bash session
         """ Creates and launches the Shell Adventure GUI. Pass it the tutorial object. """
         super().__init__(theme="radiance")
