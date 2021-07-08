@@ -5,6 +5,7 @@ from tkinter import Frame, StringVar, ttk, font, messagebox
 import tkinter.simpledialog as simpledialog
 from ttkthemes import ThemedTk
 from PIL import ImageTk, Image
+from .gui_widgets import WrappingLabel, SelectableMessage, popup_box
 from .scrolled_frame import VerticalScrolledFrame
 from . import tutorial, PKG_PATH
 from shell_adventure.api.puzzle import Puzzle
@@ -63,12 +64,13 @@ class GUI(ThemedTk):
 
     def _get_icons(self) -> Dict[str, ImageTk.PhotoImage]:
         """ Returns a map of icons. """
-        icon_files = { 
+        icon_files = { # TODO
             "restart": "restart.png",
             "file": "file.png",
             "file_symlink": "file_symlink.png",
             "folder": "folder.png",
             "folder_symlink": "folder_symlink.png",
+            "info": "info.png",
         }
         icons = {} # fetch icons files. We have to save to a field or tkinter will lose the images somehow.
         for key, file in icon_files.items():
@@ -121,7 +123,24 @@ class GUI(ThemedTk):
                 text = "Restart", image = self.icons["restart"], compound = "left",
                 command = lambda: self.restart()
             )
-            restart_button.grid(row = 0, column = 0)
+            restart_button.pack(side = tk.LEFT)
+
+        about = (
+            'Welcome to the Shell Adventure command line tutorial! Complete the list of puzzles by entering commands in '
+            'the detached terminal window and then clicking "Solve" when you think you\'ve completed the puzzle.\n'
+            '\n'
+            'Visit [GitHub](https://github.com/JesseHines0/ShellAdventure) for more documentation or to contribute!\n'
+            '\n'
+            'Credits:\n'
+            '    Icons from [icons8](https://icons8.com)'
+        )
+
+        about_button = ttk.Button(button_frame,
+            text = "About", image = self.icons["info"], compound = "left",
+            # command = lambda: messagebox.showinfo("About", about)
+            command = lambda: popup_box("About", about)
+        )
+        about_button.pack(side = tk.LEFT)
 
         return button_frame
 
@@ -278,9 +297,3 @@ class GUI(ThemedTk):
         self.destroy()
         # Raising the exception so that we can handle it in the launch script 
         raise val
-
-class WrappingLabel(ttk.Label):
-    """Label that automatically adjusts the wrap to the size"""
-    def __init__(self, master=None, **kwargs):
-        super().__init__(master, borderwidth = 0, **kwargs) # borderwidth = 0 fixes "chopping off" of pieces of letters at the edges
-        self.bind('<Configure>', lambda e: self.config(wraplength = e.width))
