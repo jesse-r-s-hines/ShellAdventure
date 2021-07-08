@@ -65,18 +65,10 @@ class ShellAdventureGUI(ThemedTk):
 
     def _get_icons(self) -> Dict[str, ImageTk.PhotoImage]:
         """ Returns a map of icons. """
-        icon_files = { # TODO
-            "restart": "restart.png",
-            "file": "file.png",
-            "file_symlink": "file_symlink.png",
-            "folder": "folder.png",
-            "folder_symlink": "folder_symlink.png",
-            "info": "info.png",
-        }
-        icons = {} # fetch icons files. We have to save to a field or tkinter will lose the images somehow.
-        for key, file in icon_files.items():
-            img = Image.open(PKG_PATH / "icons" / file).resize((16, 16), Image.ANTIALIAS)
-            icons[key] = ImageTk.PhotoImage(img)
+        icons = {} # We have to save the icons or tkinter will let the image get garbage collected
+        for file in (PKG_PATH / "icons").glob("*.png"):
+            img = Image.open(file).resize((16, 16), Image.ANTIALIAS)
+            icons[file.stem] = ImageTk.PhotoImage(img)
         return icons
 
     def _get_file_icons(self) -> Dict[Tuple[bool, bool], ImageTk.PhotoImage]:
