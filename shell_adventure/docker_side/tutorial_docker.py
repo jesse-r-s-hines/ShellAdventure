@@ -73,12 +73,11 @@ class TutorialDocker:
         os.umask(0o000) # By default, python won't make any files writable by "other". This turns that off.
         with change_user(self.user):
             return call_with_args(func, args)
-            # TODO error checking
 
     def _generate_puzzle(self, template: PuzzleTemplate) -> Puzzle:
         """ Takes a puzzle template and generates a puzzle from it. """
-        args = { # TODO add documentation for args you can take in template function
-            "home": File(self.home), # can't use home() since the user is actually root. #TODO add docs that File.home() doesn't work as expected. 
+        args = {
+            "home": File(self.home), # can't use home() since the user is actually root. 
             "root": File("/"),
         }
 

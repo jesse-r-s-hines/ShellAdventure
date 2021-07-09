@@ -12,7 +12,7 @@ from shell_adventure.api.puzzle import Puzzle
 from . import PKG_PATH
 
 class ShellAdventureGUI(ThemedTk):
-    def __init__(self, tutorial: tutorial.Tutorial, restart_callback: Callable): # TODO find a better way to restart the bash session
+    def __init__(self, tutorial: tutorial.Tutorial, restart_callback: Callable):
         """ Creates and launches the Shell Adventure GUI. Pass it the tutorial object. """
         super().__init__(theme="radiance")
 
@@ -54,7 +54,7 @@ class ShellAdventureGUI(ThemedTk):
         scroll_frame.pack(side = tk.BOTTOM, expand = False, fill = tk.BOTH)
         self.update_puzzle_frame()
 
-        def update_loop(): # TODO make this trigger after every command instead of on a loop
+        def update_loop():
             self.update_gui()
             self.after(250, update_loop)
         update_loop()
