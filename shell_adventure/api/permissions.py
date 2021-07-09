@@ -44,6 +44,13 @@ class Permissions:
     Currently doesn't include special permission bits such as the sticky bit.
     """
 
+    user: PermissionsGroup
+    """ User permission bits """
+    group: PermissionsGroup
+    """ Group permission bits """
+    others: PermissionsGroup
+    """ Others permission bits """
+
     def __init__(self, mode: int = None, *, user: str = "", group: str = "", others: str = ""):
         """
         Create a permissions object. You can create one from an octal int, or by specifying user, group, and others
@@ -95,6 +102,10 @@ class LinkedPermissions(Permissions):
 
 class PermissionsGroup:
     """ Plain old data structure, contains read, write, and execute bools. """
+
+    read: bool
+    write: bool
+    execute: bool
 
     def __init__(self, read: bool, write: bool, execute: bool):
         self.read = read
