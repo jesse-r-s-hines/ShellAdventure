@@ -228,7 +228,7 @@ class TestIntegration:
         
         # Shouldn't include our code in the traceback, and traceback should show the real path on the host
         expected = dedent(f"""
-            Puzzle generation failed:
+            Puzzle generation failed for template puzzles.puzzle:
               Traceback (most recent call last):
                 File "{tmp_path}/puzzles.py", line 3, in puzzle
                   raise ValueError('BOOM!')

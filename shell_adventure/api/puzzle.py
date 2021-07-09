@@ -62,6 +62,7 @@ class Puzzle:
         self.checker = checker # type: ignore # MyPy fusses about "Cannot assign to a method"
         self.solved = False
         self.id = str(uuid.uuid4())
+        self._template: str = None # This is the puzzle template used to create the puzzle. Will be populated after creation.
 
         self._checker_args = inspect.getfullargspec(self.checker).args # args of the checker function.
         extra_params = extra_func_params(self.checker, Puzzle.allowed_checker_args)

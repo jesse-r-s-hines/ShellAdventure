@@ -74,7 +74,7 @@ class TutorialDocker:
         with change_user(self.user):
             return call_with_args(func, args)
 
-    def _generate_puzzle(self, template: PuzzleTemplate) -> Puzzle:
+    def _generate_puzzle(self, template: PuzzleTemplate, template_name: str) -> Puzzle:
         """ Takes a puzzle template and generates a puzzle from it. """
         args = {
             "home": File(self.home), # can't use home() since the user is actually root. 
@@ -82,18 +82,22 @@ class TutorialDocker:
         }
 
         extra_params = extra_func_params(template, list(args.keys()))
-        if extra_params: # TODO give details of which puzzle exception was in
+        if extra_params:
             raise UserCodeError(
-                f'Unrecognized param(s) {sentence_list(extra_params, quote = True)} in puzzle template.' +
+                f'Unrecognized param(s) {sentence_list(extra_params, quote = True)} in puzzle template {template_name}.'
                 f' Expected {sentence_list(args.keys(), last_sep = " and/or ", quote = True)}.'
             )
         try:
             puzzle = self._call_user_func(template, args)
         except Exception as e:
-            raise UserCodeError(f'Puzzle generation failed:', tb_str = self._format_user_exc(e))
+            raise UserCodeError(
+                f'Puzzle generation failed for template {template_name}:', 
+                tb_str = self._format_user_exc(e)
+            )
         if not isinstance(puzzle, Puzzle):
-            raise UserCodeError(f'Puzzle template did not return Puzzle')
+            raise UserCodeError(f'Puzzle template {template_name} did not return a Puzzle')
 
+        puzzle._template = template_name
         return puzzle
 
     def _format_user_exc(self, e: Exception) -> str:
@@ -167,7 +171,7 @@ class TutorialDocker:
         if unknown_puzzles: raise ConfigError(f"Unknown puzzle template(s) {sentence_list(unknown_puzzles, quote = True)}")
 
         # Generate the puzzles
-        puzzle_list: List[Puzzle] = [self._generate_puzzle(templates[template]) for template in puzzles]
+        puzzle_list: List[Puzzle] = [self._generate_puzzle(templates[template], template) for template in puzzles]
 
         self.puzzles = {p.id: p for p in puzzle_list}
 
@@ -205,7 +209,10 @@ class TutorialDocker:
         try:
             checker_result = self._call_user_func(cast(Callable, puzzle.checker), args)
         except Exception as e:
-            raise UserCodeError(f'Puzzle autograder failed:', tb_str = self._format_user_exc(e)) # TODO give more info on which puzzle failed
+            raise UserCodeError(
+                f'Puzzle autograder for template {puzzle._template} failed:',
+                tb_str = self._format_user_exc(e)
+            )
 
         solved = False
         if checker_result == True:
@@ -216,7 +223,10 @@ class TutorialDocker:
         elif isinstance(checker_result, str):
             feedback = checker_result
         else:
-            raise UserCodeError(f'Checker function for puzzle "{puzzle.question}" returned {type(checker_result).__name__}, bool or str expected.')
+            type_name = type(checker_result).__name__
+            raise UserCodeError(
+                f'Autograder for puzzle template {puzzle._template} returned {type_name}, expected bool or str.'
+            )
 
         puzzle.solved = solved
         return (solved, feedback)

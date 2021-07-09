@@ -31,7 +31,7 @@ class TestTutorialDockerExceptions:
                 return "a string"
         """)
 
-        with pytest.raises(UserCodeError, match="Puzzle template did not return Puzzle"):
+        with pytest.raises(UserCodeError, match="Puzzle template mypuzzles.invalid did not return a Puzzle"):
             tutorial = create_tutorial(working_dir,
                 modules = {PurePath("mypuzzles.py"): puzzles},
                 puzzles = ["mypuzzles.invalid"],
@@ -53,7 +53,7 @@ class TestTutorialDockerExceptions:
         )
         [puzzle] = list(tutorial.puzzles.values())
 
-        with pytest.raises(UserCodeError, match="bool or str expected"):
+        with pytest.raises(UserCodeError, match="mypuzzles.invalid returned int, expected bool or str"):
             tutorial.solve_puzzle(puzzle.id)
 
     def test_template_unrecognized_params(self, working_dir):
@@ -66,7 +66,9 @@ class TestTutorialDockerExceptions:
                     checker = lambda: True,
                 )
         """)
-        with pytest.raises(UserCodeError, match=r"Unrecognized param\(s\) 'not_a_param' in puzzle template"):
+        with pytest.raises(UserCodeError,
+            match = r"Unrecognized param\(s\) 'not_a_param' in puzzle template mypuzzles.puzzle"
+        ):
             tutorial = create_tutorial(working_dir,
                 modules = {PurePath("mypuzzles.py"): puzzles},
                 puzzles = ["mypuzzles.puzzle"],
@@ -101,7 +103,7 @@ class TestTutorialDockerExceptions:
             )
 
         expected = dedent("""
-            Puzzle generation failed:
+            Puzzle generation failed for template puzzles.puzzle:
               Traceback (most recent call last):
                 File "puzzles.py", line 3, in puzzle
                   raise ValueError('BOOM!')
@@ -146,11 +148,11 @@ class TestTutorialDockerExceptions:
         )
 
         puz_id = list(tutorial.puzzles.keys())[0]
-        with pytest.raises(UserCodeError, match = "Puzzle autograder failed") as exc_info:
+        with pytest.raises(UserCodeError, match = "Puzzle autograder .* failed") as exc_info:
             tutorial.solve_puzzle(puz_id)
 
         expected = dedent("""
-            Puzzle autograder failed:
+            Puzzle autograder for template puzzles.puzzle failed:
               Traceback (most recent call last):
                 File "puzzles.py", line 6, in checker
                   raise ValueError("BOOM!")
@@ -203,7 +205,7 @@ class TestTutorialDockerExceptions:
 
         # Shouldn't include our code. Should include library code.
         expected = dedent("""
-          Puzzle autograder failed:
+          Puzzle autograder for template puzzles.throws failed:
             Traceback (most recent call last):
               File "/path/to/puzzles.py", line 10, in checker
                 _fails()
