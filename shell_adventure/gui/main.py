@@ -8,7 +8,7 @@ from PIL import ImageTk, Image
 from .gui_widgets import WrappingLabel, SelectableMessage, popup_box
 from .scrolled_frame import VerticalScrolledFrame
 from shell_adventure.host_side import tutorial
-from shell_adventure.api.puzzle import Puzzle
+from shell_adventure.shared.puzzle_data import PuzzleData
 from . import PKG_PATH
 
 class ShellAdventureGUI(ThemedTk):
@@ -264,10 +264,10 @@ class ShellAdventureGUI(ThemedTk):
 
         self.score_label.set(f"Score: {self.tutorial.current_score()}/{self.tutorial.total_score()}")
 
-    def solve_puzzle(self, puzzle: Puzzle):
+    def solve_puzzle(self, puzzle: PuzzleData):
         do_check = True
         flag = None
-        if "flag" in puzzle._checker_args:
+        if "flag" in puzzle.checker_args:
             flag = simpledialog.askstring("Input", puzzle.question, parent = self)
             if flag == None: do_check = False # If you "cancel" don't run autograder
 

@@ -20,6 +20,7 @@ class TestTutorialDocker:
 
         [puzzle] = list(tutorial.puzzles.values())
         assert puzzle.question == "Rename A.txt to B.txt"
+        assert puzzle.template == "mypuzzles.move"
         assert (working_dir / "A.txt").exists()
 
     def test_lifecycle(self, working_dir):

@@ -1,21 +1,21 @@
 from __future__ import annotations
-from typing import Any, Generator, List, Tuple, Dict, ClassVar
+from typing import Any, Generator, Iterator, List, Tuple, Dict, ClassVar
 from multiprocessing.connection import Client, Connection
 import docker, docker.errors, subprocess, os, pickle
 from docker.models.images import Image
 from docker.models.containers import Container
 from pathlib import Path, PurePath, PurePosixPath;
 from datetime import datetime, timedelta
+from itertools import chain
 from textwrap import indent
 import yaml, yamale
 from yamale.schema import Schema
 from . import docker_helper, PKG_PATH
 from shell_adventure.shared import messages
 from shell_adventure.shared.messages import Message
-from shell_adventure.shared.support import PathLike, retry, sentence_list
+from shell_adventure.shared.support import PathLike, retry, sentence_list, Tree
+from shell_adventure.shared.puzzle_data import PuzzleData
 from shell_adventure.shared.tutorial_errors import *
-from shell_adventure.api.puzzle import Puzzle
-
 
 class Tutorial:
     """ Contains the information for a running tutorial. """
@@ -47,8 +47,8 @@ class Tutorial:
     content_sources: List[Path]
     """ A list of files that will be used to generate text content in files. """
 
-    puzzles: List[PuzzleTree]
-    """ The tree of puzzles in this tutorial. """
+    puzzle_templates: List[Tree[str]]
+    """ The tree of puzzles templates to use in this tutorial. """
 
     restart_enabled: bool
     """ Whether restart is enabled or not. """
@@ -59,6 +59,9 @@ class Tutorial:
     # Other fields
     container: Container
     """ The docker container that the student is in. """
+
+    puzzles: List[Tree[PuzzleData]]
+    """ The tree of generated PuzzleData for this tutorial. """
     
     start_time: datetime
     """ Time the tutorial started. """
@@ -97,7 +100,7 @@ class Tutorial:
             module_paths[module.stem] = module
         self.module_paths = list(module_paths.values())
 
-        self.puzzles = self._parse_puzzles(config.get("puzzles"))
+        self.puzzle_templates = self._parse_puzzles(config.get("puzzles"))
 
         name_dictionary = config.get("name_dictionary", PKG_PATH / "resources/name_dictionary.txt")
         self.name_dictionary = Path(self.data_dir, name_dictionary) # relative to config file
@@ -113,12 +116,14 @@ class Tutorial:
         self._logs: str = ""
         self._snapshot: Image = None # A docker commit of the image state right after puzzle generation.
 
+        self.puzzles = [] # Populated after _start()
+
         self.start_time = None
         self.end_time = None
 
-    def _parse_puzzles(self, puzzles):
+    def _parse_puzzles(self, puzzles) -> List[Tree[str]]:
         """
-        Converts YAML output of puzzles into a PuzzleTree.
+        Converts YAML output of puzzles into a tree of puzzles.
         ```yaml
         - puzzles.a:
           - puzzles.b:
@@ -128,14 +133,14 @@ class Tutorial:
               - puzzles.f
         ```
         """
-        puzzle_trees = []
+        puzzle_trees: List[Tree[str]] = []
         for puz in puzzles:
             if isinstance(puz, str):
                 template, deps = puz, []
             else: # It is a one element dictionary.
                 template, deps = list(puz.items())[0]
                 if not deps: deps = []
-            puzzle_trees.append(PuzzleTree(template, dependents = self._parse_puzzles(deps)))
+            puzzle_trees.append(Tree(template, children = self._parse_puzzles(deps)))
 
         return puzzle_trees
 
@@ -207,18 +212,18 @@ class Tutorial:
         except OSError as e: # some filesystem error
             raise ConfigError(str(e))
 
-        tmp_tree = PuzzleTree("", dependents=self.puzzles) # Put puzzles under a dummy node so we can iterate  it.
-
-        generated_puzzles: List[Puzzle] = self._send(Message.SETUP, {
+        generated_puzzles: List[PuzzleData] = self._send(Message.SETUP, {
             "modules": modules,
-            "puzzles": [pt.template for pt in tmp_tree],
+            "puzzles": list(chain(*self.puzzle_templates)),
             "name_dictionary": name_dictionary,
             "content_sources": content_sources,
         })
 
-        # store the puzzles in the PuzzleTree (unflatten from preorder list)
-        for pt, puzzle in zip(tmp_tree, generated_puzzles):
-            pt.puzzle = puzzle
+        # Convert list of puzzles into tree of same structure as self.puzzle_templates
+        def make_puzzles(templates: Tree[str], puzz_iter: Iterator[PuzzleData]) -> Tree[PuzzleData]:
+            return Tree(next(puzz_iter), [make_puzzles(child, puzz_iter) for child in templates.children])
+        generated_iter = iter(generated_puzzles)
+        self.puzzles = [make_puzzles(tree, generated_iter) for tree in self.puzzle_templates]
 
         if self.restart_enabled:
             for puzzle in generated_puzzles:
@@ -292,28 +297,25 @@ class Tutorial:
         
             self._send(Message.RESTORE, {
                 "modules": modules,
-                "puzzles": [pt.puzzle for pt in PuzzleTree("", dependents = self.puzzles)], # Put puzzles under tree node so we can iterate
+                "puzzles": self.get_all_puzzles(),
             })
 
 
-    def get_current_puzzles(self) -> List[Puzzle]:
+    def get_current_puzzles(self) -> List[PuzzleData]:
         """ Returns a list of the currently unlocked puzzles. """
-        def get_puzzles(pt_list: List[PuzzleTree]):
-            rtrn = []
-            for pt in pt_list:
-                rtrn.append(pt.puzzle)
-                if pt.puzzle.solved:
-                    rtrn.extend(get_puzzles(pt.dependents))
-            return rtrn
+        def get_puzzles(node_list: List[Tree[PuzzleData]]):
+            for node in node_list:
+                yield node.data
+                if node.data.solved:
+                    yield from get_puzzles(node.children)
 
-        return get_puzzles(self.puzzles)
+        return list(get_puzzles(self.puzzles))
 
-    def get_all_puzzles(self) -> List[Puzzle]:
-        """ Returns a list of all puzzles. (In preorder sequence)"""
-        tmp_tree = PuzzleTree("", dependents=self.puzzles) # So we can iterate over it.
-        return [pt.puzzle for pt in tmp_tree]
+    def get_all_puzzles(self) -> List[PuzzleData]:
+        """ Returns a list of all puzzles (In preorder sequence)."""
+        return list(chain(*self.puzzles))
 
-    def solve_puzzle(self, puzzle: Puzzle, flag: str = None) -> Tuple[bool, str]:
+    def solve_puzzle(self, puzzle: PuzzleData, flag: str = None) -> Tuple[bool, str]:
         """ Tries to solve the puzzle. Returns (success, feedback) and sets the Puzzle as solved if the checker succeeded. """
         (solved, feedback) = self._send(Message.SOLVE, puzzle.id, flag)
         puzzle.solved = solved
@@ -347,19 +349,4 @@ class Tutorial:
     def is_finished(self) -> bool:
         """ Return true if all the puzzles in the tutorial all solved. """
         return all((puz.solved for puz in self.get_all_puzzles()))
-
-
-class PuzzleTree:
-    """ A tree node so that puzzles can be unlocked after other puzzles are solved. """
-    def __init__(self, template: str, puzzle: Puzzle = None, dependents: List[PuzzleTree] = None):
-        self.template = template
-        self.puzzle = puzzle
-        self.dependents = dependents if dependents else []
-
-    def __iter__(self) -> Generator[PuzzleTree, None, None]:
-        """ Iterates over the puzzle tree (preorder) """
-        for pt in self.dependents:
-            yield pt
-            for pt2 in pt:
-                yield pt2
 

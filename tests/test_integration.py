@@ -1,5 +1,4 @@
 import pytest
-from shell_adventure.host_side.tutorial import Tutorial
 from shell_adventure.host_side import docker_helper
 from shell_adventure.shared.tutorial_errors import *
 from textwrap import dedent
@@ -25,9 +24,8 @@ class TestIntegration:
             assert docker_helper.client.containers.get(tutorial.container.id) != None
 
             # Puzzles were generated
-            for pt in tutorial.puzzles:
-                for pt2 in pt:
-                    assert pt2.puzzle != None
+            assert tutorial.puzzles[0].data.template == "puzzles.move"
+            assert tutorial.puzzles[0][0].data.template == "puzzles.move2"
 
             assert [p.question for p in tutorial.get_current_puzzles()] == ["Rename A.txt to B.txt"]
             assert [p.question for p in tutorial.get_all_puzzles()] == ["Rename A.txt to B.txt", "Rename C.txt to D.txt"]
@@ -379,3 +377,35 @@ class TestIntegration:
             with tutorial:
                 tutorial.container.kill()
                 tutorial.get_student_cwd()
+
+    def test_nested_puzzles(self, tmp_path, check_containers):
+        tutorial = create_tutorial(tmp_path, {
+            "config.yaml": f"""
+                modules:
+                    - puzz1.py
+                    - puzz2.py
+                    - puzz3.py
+                    - puzz4.py
+                    - puzz5.py
+                    - puzz6.py
+                puzzles:
+                    - puzz1.move:
+                        - puzz2.move:
+                            - puzz3.move
+                    - puzz4.move
+                    - puzz5.move:
+                        - puzz6.move
+            """,
+            **{f"puzz{i}.py": SIMPLE_PUZZLES for i in range(1, 7)},
+        })
+
+        with tutorial:
+            # First level
+            assert [n.data.template for n in tutorial.puzzles] == ["puzz1.move", "puzz4.move", "puzz5.move"]
+
+            # Second Level
+            assert [n.data.template for n in tutorial.puzzles[0].children] == ["puzz2.move"]
+            assert [n.data.template for n in tutorial.puzzles[2].children] == ["puzz6.move"]
+
+            # Third Level
+            assert [n.data.template for n in tutorial.puzzles[0][0].children] == ["puzz3.move"]

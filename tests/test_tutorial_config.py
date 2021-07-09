@@ -2,7 +2,6 @@ from typing import *
 import pytest
 from shell_adventure.host_side.tutorial import Tutorial
 from textwrap import dedent;
-from pathlib import PurePosixPath
 import re
 from .helpers import *
 from shell_adventure.shared.tutorial_errors import *
@@ -52,32 +51,37 @@ class TestTutorialConfig:
         assert tutorial.content_sources == [tmp_path / "content.txt"]
 
         assert [m for m in tutorial.module_paths] == [tmp_path / "path/to/puzzle1.py", tmp_path / "puzzle2.py"]
-        assert [pt.template for pt in tutorial.puzzles] == ["puzzle1.move", "puzzle2.move"]
+        assert [n.data for n in tutorial.puzzle_templates] == ["puzzle1.move", "puzzle2.move"]
 
     def test_nested_puzzles(self, tmp_path, check_containers):
         tutorial = create_tutorial(tmp_path, {
             "config.yaml": f"""
                 modules:
-                    - puzzle1.py
-                    - puzzle2.py
-                    - puzzle3.py
+                    - puzz1.py
+                    - puzz2.py
+                    - puzz3.py
+                    - puzz4.py
+                    - puzz5.py
+                    - puzz6.py
                 puzzles:
-                    - puzzle1.move:
-                        - puzzle2.move:
-                            - puzzle1.move
-                    - puzzle2.move
-                    - puzzle3.move:
+                    - puzz1.move:
+                        - puzz2.move:
+                            - puzz3.move
+                    - puzz4.move
+                    - puzz5.move:
+                        - puzz6.move
             """,
-            "puzzle1.py": SIMPLE_PUZZLES, "puzzle2.py": SIMPLE_PUZZLES, "puzzle3.py": SIMPLE_PUZZLES,
+            **{f"puzz{i}.py": SIMPLE_PUZZLES for i in range(1, 7)},
         })
         # First level
-        assert [pt.template for pt in tutorial.puzzles] == ["puzzle1.move", "puzzle2.move", "puzzle3.move"]
+        assert [n.data for n in tutorial.puzzle_templates] == ["puzz1.move", "puzz4.move", "puzz5.move"]
 
         # Second Level
-        assert [pt.template for pt in tutorial.puzzles[0].dependents] == ["puzzle2.move"]
+        assert [n.data for n in tutorial.puzzle_templates[0].children] == ["puzz2.move"]
+        assert [n.data for n in tutorial.puzzle_templates[2].children] == ["puzz6.move"]
 
         # Third Level
-        assert [pt.template for pt in tutorial.puzzles[0].dependents[0].dependents] == ["puzzle1.move"]
+        assert [n.data for n in tutorial.puzzle_templates[0][0].children] == ["puzz3.move"]
 
     def test_missing_files(self, tmp_path, check_containers):
         with pytest.raises(ConfigError, match = r"No such file or directory.*not_a_config_file\.yaml"):
