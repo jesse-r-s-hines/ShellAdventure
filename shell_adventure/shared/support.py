@@ -1,5 +1,6 @@
 """ Miscellaneous support classes and functions """
-from typing import Iterable, Union, Callable,  Dict, Any, List
+from __future__ import annotations
+from typing import Iterable, Union, Callable,  Dict, Any, List, TypeVar, Generic, Generator
 import os, time, inspect
 
 PathLike = Union[str, os.PathLike]
@@ -76,4 +77,21 @@ def sentence_list(arr: Iterable[str], sep: str = ", ", last_sep: str = " and ", 
     else:
         return sep.join(arr[:-1]) + last_sep + arr[-1]
 
-    
+T = TypeVar('T')
+class Tree(Generic[T]):
+    """ Simple generic tree class """
+    data: T
+    children: List[Tree[T]]
+
+    def __init__(self, data: T, children: List[Tree[T]] = None):
+        self.data = data
+        self.children = children if children else []
+
+    def __getitem__(self, index: int):
+        return self.children[index]
+
+    def __iter__(self) -> Generator[T, None, None]:
+        """ Iterates over the puzzle dependency tree in preorder """
+        yield self.data
+        for child in self.children:
+            yield from child

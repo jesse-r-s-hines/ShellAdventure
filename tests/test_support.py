@@ -1,6 +1,6 @@
 import pytest, re
 from shell_adventure.shared import support
-from shell_adventure.shared.support import call_with_args, sentence_list, UnrecognizedParamsError
+from shell_adventure.shared.support import call_with_args, sentence_list, UnrecognizedParamsError, Tree
 
 class TestSupport:
     def test_call_with_args(self):
@@ -48,4 +48,12 @@ class TestSupport:
 
         assert sentence_list(['"', "'", "\\"], quote = True) == "'\"', \"'\" and '\\\\'"
 
+    def test_tree(self):
+        tree: Tree[int] = Tree(1, [
+            Tree(2, [Tree(3), Tree(4)]),
+            Tree(5),
+        ])
 
+        assert tree.data == 1
+        assert len(tree.children) == 2
+        assert list(tree) == [1, 2, 3, 4, 5]
