@@ -4,7 +4,7 @@ set -e # Exit script if any command fails
 docker build -t shell-adventure docker_image 1> /dev/null # Only print errors
 for dockerfile in tests/docker_images/Dockerfile.tests.*; do # Build all Dockerfiles in tests/docker_images
     tag=${dockerfile##*.} # Removes all but last extension of dockerfile
-    docker build -t shell-adventure/tests:$tag --file $dockerfile docker_image 1> /dev/null
+    docker build -t shell-adventure/tests:$tag --file $dockerfile tests/docker_images 1> /dev/null
 done
 
 source .venv/bin/activate
