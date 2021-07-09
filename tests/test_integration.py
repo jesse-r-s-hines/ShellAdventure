@@ -35,6 +35,11 @@ class TestIntegration:
             assert tutorial.total_score() == 5
             assert tutorial.current_score() == 0
 
+            home = PurePosixPath("/home/student")
+            expected = [".profile", ".bash_logout", ".bashrc", "A.txt", "C.txt"]
+            files = tutorial.get_files(home)
+            assert set(files) == {(False, False, home / f) for f in expected}
+
             run_command(tutorial, "mv A.txt B.txt")
 
             move_puzzle = tutorial.get_current_puzzles()[0]
@@ -358,3 +363,19 @@ class TestIntegration:
         with pytest.raises(ContainerStartupError, match = "Not Found .* not-a-docker-image"):
             with tutorial: 
                 pass # Just launch
+
+    def test_container_dies(self, tmp_path, check_containers):
+        tutorial = create_tutorial(tmp_path, {
+            "config.yaml": """
+                modules:
+                    - puzzles.py
+                puzzles:
+                    - puzzles.move:
+            """,
+            "puzzles.py": SIMPLE_PUZZLES
+        })
+
+        with pytest.raises(ContainerStoppedError):
+            with tutorial:
+                tutorial.container.kill()
+                tutorial.get_student_cwd()

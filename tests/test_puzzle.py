@@ -60,3 +60,11 @@ class TestPuzzle:
         # Calling extract twice does nothing
         new_puzzle2.extract()
         assert isinstance(new_puzzle2.checker, Callable)
+
+    def test_pickle_error(self):
+        gen = (i for i in range(10))
+        old_puzzle = Puzzle("Solve this puzzle.", checker = lambda: gen)
+
+        # generators aren't pickleable, so checker will just be None
+        new_puzzle: Puzzle = pickle.loads(pickle.dumps(old_puzzle))
+        assert new_puzzle.checker == None

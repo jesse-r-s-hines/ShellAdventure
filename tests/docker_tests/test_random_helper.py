@@ -92,6 +92,7 @@ class TestRandomHelper:
         random = RandomHelper("a\nb\nc\nd\ne")
 
         file = random.folder(tmp_path)
+        assert file in random._shared_folders
         assert tmp_path in file.parents
         assert not file.exists()
 
@@ -101,15 +102,22 @@ class TestRandomHelper:
         assert file.parents[1] not in random._shared_folders
 
     def test_random_folder(self, tmp_path):
-        random = RandomHelper("a\nb\n")
+        random = RandomHelper("a\nb\nc\n")
 
-        file1 = random.folder(tmp_path, depth = 1)
-        assert file1.parent == tmp_path
-        assert file1.name in ["a", "b"]
+        folder1 = random.folder(tmp_path, depth = 1)
+        assert folder1.parent == tmp_path
+        assert folder1.name in ["a", "b", "c"]
+        assert not folder1.exists()
 
-        file2 = random.folder(file1, depth = 1, create_new_chance=0)
-        assert file2.parent == file1
-        assert file2.name in ["a", "b"]
+        # folder1 is empty so even with create_new_chance = 0 it will create a new path.
+        folder2 = random.folder(folder1, depth = 1, create_new_chance = 0)
+        assert folder2.parent == folder1
+        assert folder2.name in ["a", "b", "c"]
+        assert not folder2.exists()
+
+        # will always choose folder1
+        folder3 = random.folder(tmp_path, depth = 1, create_new_chance = 0)
+        assert folder3 == folder1
 
     def test_random_folder_already_exists(self, tmp_path):
         random = RandomHelper("a\nb\n")

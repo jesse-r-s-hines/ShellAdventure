@@ -47,6 +47,34 @@ class TestTutorialDockerSolvePuzzles:
         assert tutorial.solve_puzzle(puzzle.id, "not ok") == (False, "Incorrect!")
         assert tutorial.solve_puzzle(puzzle.id, "OK") == (True, "Correct!")
 
+    def test_solve_puzzle_feedback(self, working_dir):
+        puzzle = dedent("""
+            from shell_adventure.api import *
+
+            def move():
+                src = File("A.txt").create(content = "A")
+                def checker():
+                    if not src.exists() and File("B.txt").exists():
+                        return True
+                    else:
+                        return "Try mv"
+
+                return Puzzle(
+                    question = f"Rename A.txt to B.txt",
+                    checker = checker
+                )
+
+        """)
+        tutorial = create_tutorial(working_dir,
+            modules = {PurePath("mypuzzles.py"): puzzle},
+            puzzles = ["mypuzzles.move"],
+        )
+        [puzzle] = list(tutorial.puzzles.values())
+
+        assert tutorial.solve_puzzle(puzzle.id) == (False, "Try mv")
+        os.system("mv A.txt B.txt")
+        assert tutorial.solve_puzzle(puzzle.id) == (True, "Correct!")
+
     def test_solve_puzzle_twice(self, working_dir):
         module = dedent("""
             from shell_adventure.api import *

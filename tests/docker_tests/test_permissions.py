@@ -90,6 +90,9 @@ class TestPermissions:
         assert p2 != 0o666
         assert (p2 != 0o744) == False
 
+        with pytest.raises(NotImplementedError):
+            p1 == "hello"
+
     def test_permission_throws_errors(self, umask000, working_dir):
         with pytest.raises(ValueError):
             p = Permissions(user = "z")

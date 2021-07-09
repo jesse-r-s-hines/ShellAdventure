@@ -88,7 +88,7 @@ class RandomHelper:
         
         for i in range(depth):
             choices = [subfolder for subfolder in self._shared_folders if subfolder.parent == folder]
-            if len(choices) == 0 or random.uniform(0, 1) <= create_new_chance: # Create new shared folder
+            if len(choices) == 0 or random.uniform(0, 1) < create_new_chance: # Create new shared folder
                 folder = self.file(folder) # create random file under folder
                 self.mark_shared(folder)
             else:
