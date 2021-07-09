@@ -16,10 +16,16 @@ set +e # Undo "set -e"
 
 echo -e "\n\n"
 echo "Tests in Docker container"
+# Also makes a ".coverage" report in cwd
 .venv/bin/python3.7 -m tests.run_docker_tests $@
+
 
 echo -e "\n\n"
 echo "Main tests"
-.venv/bin/python3.7 -m pytest $@
+# Merge coverage report with report from container
+.venv/bin/python3.7 -m pytest --cov --cov-report= --cov-append $@
 
-# See https://docs.pytest.org/en/documentation-restructure/how-to/usage.html#possible-exit-codes for meaning of pytest exit codes
+# Output html report
+# Coverage reports are somewhat incomplete as we don't have a good way to track the code that gets run in the container
+# during integration tests, since the container is launched and closed during the test.
+coverage html
