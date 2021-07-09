@@ -3,6 +3,14 @@ from typing import Dict, Tuple, Union, List
 from textwrap import dedent
 from shell_adventure.host_side.tutorial import Tutorial
 
+__all__ = [
+    "SIMPLE_PUZZLES",
+    "SIMPLE_TUTORIAL",
+    "create_tutorial",
+    "run_command",
+    "file_exists",
+]
+
 SIMPLE_PUZZLES = dedent("""
     from shell_adventure.api import *
 

@@ -2,6 +2,11 @@ from textwrap import dedent
 from pathlib import PurePath
 from shell_adventure.docker_side.tutorial_docker import TutorialDocker
 
+__all__ = [
+    "SIMPLE_PUZZLES",
+    "create_tutorial",
+]
+
 SIMPLE_PUZZLES = dedent("""
     from shell_adventure.api import *
 
