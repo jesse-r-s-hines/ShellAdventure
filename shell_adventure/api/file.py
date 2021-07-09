@@ -110,8 +110,9 @@ class File(PosixPath):
     def random_file(self, ext = None) -> File:
         """
         Creates a File with a random name under self. The source for random names comes from the `name_dictionary` option
-        in the Tutorial config. The file is not created on disk and is not marked as shared. You can pass an
-        extension which will be added to the random name. Will not create a file with a name that already exists.
+        in the Tutorial config. The file is not created on disk and is not marked as shared. To create the file on disk
+        call `create()` or `mkdir()` on the file returned by `random_file()`. You can pass an extension which will be added
+        to the random name. Will not create a file with a name that already exists.
         """
         return shell_adventure.api.rand().file(self, ext = ext)
 
@@ -123,10 +124,13 @@ class File(PosixPath):
         folders that are "shared". Folders are only "shared" if they were created via `random_folder()` or explicitly
         marked shared via `mark_shared()`.
         
-        Since folders created by `random_folder()` can be "reused" in other calls to `folder()` you should not modify
-        the parent folders in puzzles. This way, folders created by puzzles won't intefere with one another,
-        but multiple puzzles can still be created in the same directory.
-
+        Folders created by `random_folder()` can be "reused" in other calls to `folder()`, so you should not modify
+        the folders in puzzles. This way, folders created by puzzles won't interfere with one another,
+        but multiple puzzles can still be created in the same directory. If you need a folder at a random location
+        that won't have any other puzzles put in it you should explicitly create a folder under the one returned by
+        `random_folder()` with something like
+        >>> home.random_folder().random_file().mkdir()
+        
         depth: Either an int or a (min, max) tuple. The returned file will have a depth under parent within
               the given range (inclusive)
         create_new_chance: float in [0, 1]. The percentage chance that a new folder will be created even if
