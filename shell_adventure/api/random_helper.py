@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import List, Tuple, Union
 import random, re, lorem
-from shell_adventure.api import file as f
+from .file import File
 
 class RandomHelper:
     """ RandomHelper is a class that generates random names, contents, and file paths. """
@@ -34,7 +34,7 @@ class RandomHelper:
 
         # A list of shared folders. random.folder() can use existing folders if they are shared.
         # It would be more efficient to store these as tree.
-        self._shared_folders: List[f.File] = []
+        self._shared_folders: List[File] = []
 
 
     def name(self):
@@ -68,11 +68,11 @@ class RandomHelper:
         else:
             return lorem.get_paragraph(count = count, sep = "\n\n") + "\n"
 
-    def file(self, parent: f.File, ext = None) -> f.File:
+    def file(self, parent: File, ext = None) -> File:
         """ Creates a File with a random name. See File.rand_file() for more details. """
         parent = parent.resolve()
         ext = "" if ext == None else f".{ext}"
-        new_file = f.File("/") # garanteed to exist.
+        new_file = File("/") # garanteed to exist.
 
         # check if file already exists. This can happen if a hardcoded name happens to match the random one.
         while new_file.exists():
@@ -80,7 +80,7 @@ class RandomHelper:
 
         return new_file
 
-    def folder(self, parent: f.File, depth: Union[int, Tuple[int, int]] = (1, 3), create_new_chance: float = 0.5) -> f.File:
+    def folder(self, parent: File, depth: Union[int, Tuple[int, int]] = (1, 3), create_new_chance: float = 0.5) -> File:
         """ Makes a File to a random folder under parent. See File.random_folder() for more details. """
 
         if isinstance(depth, tuple): depth = random.randint(depth[0], depth[1])
@@ -96,7 +96,7 @@ class RandomHelper:
 
         return folder
 
-    def mark_shared(self, folder: f.File):
+    def mark_shared(self, folder: File):
         """ Marks a folder as shared. The folder does not have to exist yet. """
         if folder.exists() and not folder.is_dir():
             raise RandomHelperException(f"Can't mark {folder} as shared, it already exists as a f. Can only mark folders as shared.")

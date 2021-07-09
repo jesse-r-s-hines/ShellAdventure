@@ -9,10 +9,11 @@ from shell_adventure.shared import messages
 from shell_adventure.shared.messages import Message
 from shell_adventure.shared.support import PathLike, sentence_list, call_with_args, extra_func_params
 from shell_adventure.shared.tutorial_errors import *
+import shell_adventure.api
 from shell_adventure.api.puzzle import Puzzle, PuzzleTemplate
 from shell_adventure.api.file import File
 from shell_adventure.api.permissions import change_user, user_exists
-from .random_helper import RandomHelper
+from shell_adventure.api.random_helper import RandomHelper
 
 class TutorialDocker:
     """ Contains the information for a running tutorial docker side. """
@@ -44,6 +45,12 @@ class TutorialDocker:
         self.puzzles = {}
         self.shell_pid: int = 1 # The shell is the main process of the container which is always 1
         self.rand = None
+
+    def __del__(self):
+        # Clear the globals when the tutorial is deleted.
+        # Only really matters for tests since the tutorial normally runs for the lifetime of the container
+        shell_adventure.api._home = None
+        shell_adventure.api._rand = None
 
     @staticmethod
     def _create_module(path: PurePath, code: str) -> ModuleType:
@@ -130,8 +137,13 @@ class TutorialDocker:
         lines = traceback.format_list(frames) + traceback.format_exception_only(type(e), e)
         return "Traceback (most recent call last):\n" + "".join(lines)
 
-    def _set_home_and_user(self, home: PathLike = None, user: str = None):
-        """ Sets home and user, or if they are None default to home and user of the shell session. Checks if home and user are valid. """
+    def _common_setup(self, home: PathLike = None, user: str = None, rand: RandomHelper = None):
+        """
+        Does some shared setup between setup and restore methods.
+        Sets home, user, and rand. If home and user are None they default to home and user of the
+        shell session. Checks if home and user are valid. And initializes the global variables needed
+        for the api to work.
+        """
         self.home = Path(home if home else self.student_cwd()).resolve()
         # see https://stackoverflow.com/questions/5327707/how-could-i-get-the-user-name-from-a-process-id-in-python-on-linux
         self.user = user if user else pwd.getpwuid(Path(f"/proc/{self.shell_pid}").stat().st_uid).pw_name
@@ -139,6 +151,13 @@ class TutorialDocker:
         if not self.home.exists() or not self.home.is_dir():
             raise ConfigError(f'"{self.home}" doesn\'t exist or isn\'t a directory')
         if not user_exists(self.user): raise ConfigError(f'"{self.user}" doesn\'t exist')
+
+        self.rand = rand
+
+        # Unfortunately we have to have some package level variables to allow File methods to access
+        # the RandomHelper and student home
+        shell_adventure.api._home = File(self.home)
+        shell_adventure.api._rand = self.rand
 
 
     ### Message actions, these functions can be called by sending a message over the connection
@@ -151,10 +170,8 @@ class TutorialDocker:
         with the host is setup. Returns the generated puzzles as a list.
         """
         # Unfortunately we have to have some package level variables allow File methods to access the RandomHelper and TutorialDocker
-        shell_adventure.api._tutorial = self
-        self.rand = RandomHelper(name_dictionary, content_sources)
-
-        self._set_home_and_user(home, user)
+        rand = RandomHelper(name_dictionary, content_sources)
+        self._common_setup(home, user, rand)
         self.modules = modules
 
         try: # Load modules
@@ -176,7 +193,7 @@ class TutorialDocker:
         self.puzzles = {p.id: p for p in puzzle_list}
 
         # Reset rand after generation is complete. You can't use it during the tutorial since we don't restore it on restart
-        self.rand = None
+        shell_adventure.api._rand = None
 
         return puzzle_list
 
@@ -186,9 +203,7 @@ class TutorialDocker:
         we have to restart the container and processes. We don't need to regenerate the puzzles, but we do need to resend the puzzle objects
         so we can use the checkers.
         """
-        shell_adventure.api._tutorial = self
-
-        self._set_home_and_user(home, user)
+        self._common_setup(home, user)
         self.modules = modules
 
         self.puzzles = {p.id: p for p in puzzles}

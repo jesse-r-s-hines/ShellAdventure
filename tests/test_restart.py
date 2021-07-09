@@ -50,23 +50,25 @@ class TestRestart:
                 puzzles:
                     - puzzles.move
                     - puzzles.move2
-                    - custom.tutorial_is_set
+                    - custom.globals_set
             """,
             "puzzles.py": SIMPLE_PUZZLES,
             "custom.py": dedent("""
                 import shell_adventure.api
                 from shell_adventure.api import *
 
-                def tutorial_is_set():
-                    return Puzzle(
-                        question = f"Home",
-                        checker = lambda: shell_adventure.api._tutorial != None,
-                    )
+                def globals_set():
+                    def checker():
+                        assert shell_adventure.api._home != None
+                        assert File.home() == File("/home/student")
+                        assert shell_adventure.api._rand == None
+                        return True
+                    return Puzzle(question = f"Home", checker = checker)
             """),
         })
 
         with tutorial: # start context manager, calls Tutorial.start() and Tutorial.stop()
-            [move1, move2, tut_is_set] = tutorial.get_all_puzzles()
+            [move1, move2, globals_set] = tutorial.get_all_puzzles()
 
             run_command(tutorial, "mv A.txt B.txt\n")
             assert tutorial.solve_puzzle(move1) == (True, "Correct!")
@@ -74,7 +76,7 @@ class TestRestart:
             run_command(tutorial, "mv C.txt D.txt\n")
             assert tutorial.solve_puzzle(move2) == (True, "Correct!")
 
-            assert tutorial.solve_puzzle(tut_is_set) == (True, "Correct!") # _tutorial is set
+            assert tutorial.solve_puzzle(globals_set) == (True, "Correct!") # _home is set
 
             tutorial.restart()
             assert all(p.solved == False for p in tutorial.get_all_puzzles()) # all puzzles unsolved again
@@ -84,7 +86,7 @@ class TestRestart:
             run_command(tutorial, "mv C.txt D.txt\n")
             assert tutorial.solve_puzzle(move2) == (True, "Correct!")
 
-            assert tutorial.solve_puzzle(tut_is_set) == (True, "Correct!") # _tutorial is still set
+            assert tutorial.solve_puzzle(globals_set) == (True, "Correct!") # _home is still set
 
     def test_restart_pickle_failure(self, tmp_path, check_containers):
         puzzles = dedent("""

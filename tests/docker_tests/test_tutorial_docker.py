@@ -3,7 +3,7 @@ import pytest
 from pathlib import PurePath
 import shell_adventure.api
 from shell_adventure.docker_side.tutorial_docker import TutorialDocker
-from shell_adventure.docker_side.random_helper import RandomHelperException
+from shell_adventure.api.random_helper import RandomHelperException
 from shell_adventure.api.file import File
 from shell_adventure.api.puzzle import Puzzle
 from shell_adventure.shared.tutorial_errors import *
@@ -18,16 +18,32 @@ class TestTutorialDocker:
             puzzles = ["mypuzzles.move"],
         )
 
-        assert shell_adventure.api._tutorial is tutorial # should be set
-        assert tutorial.rand == None # _random should be None after generation is complete
-        with pytest.raises(RandomHelperException):
-            shell_adventure.api.rand()
-
-        assert File.home() == working_dir # File.home() should use tutorial home
-
         [puzzle] = list(tutorial.puzzles.values())
         assert puzzle.question == "Rename A.txt to B.txt"
         assert (working_dir / "A.txt").exists()
+
+    def test_lifecycle(self, working_dir):
+        tutorial = TutorialDocker()
+
+        assert shell_adventure.api._home == None
+        assert shell_adventure.api._rand == None
+
+        tutorial.setup(
+            home = working_dir,
+            user = None, # Default to container's user
+            modules = {PurePath("puzzles.py"): SIMPLE_PUZZLES},
+            puzzles = ["puzzles.move"],
+            name_dictionary = "apple\nbanana\n",
+            content_sources = [],
+        )
+
+        # Sets _rand back after puzzle generation to avoid issues with restore and pickling the rand
+        assert shell_adventure.api._home == working_dir
+        assert shell_adventure.api._rand == None
+
+        with pytest.raises(RandomHelperException):
+            shell_adventure.api.rand()
+        assert File.home() == working_dir # File.home() should use tutorial home
 
     def test_multiple_modules(self, working_dir):
         tutorial = create_tutorial(working_dir,

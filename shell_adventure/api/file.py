@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Union, List, Tuple
+from typing import Union, List, Tuple, ClassVar
 from pathlib import PosixPath
 import shutil, subprocess
 from .permissions import Permissions, LinkedPermissions, change_user
@@ -14,8 +14,8 @@ class File(PosixPath):
     @classmethod
     def home(cls):
         """ Return the home directory of the student. """
-        if shell_adventure.api._tutorial: # Get home directory from tutorial
-            return shell_adventure.api._tutorial.home
+        if shell_adventure.api._home: # Get home directory from tutorial
+            return shell_adventure.api._home
         else: # Default to PosixPath
             return PosixPath.home()
 
