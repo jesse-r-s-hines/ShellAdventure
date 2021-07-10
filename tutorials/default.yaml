@@ -1,7 +1,21 @@
 modules:
   - default.py
 puzzles:
-  - default.move:
-    - default.copy
+  - default.cd
+  - default.move
+  - default.move # You can include randomized puzzles more than once
+  - default.copy:
+    - default.copy_folder # This puzzle will only show up after default.copy is solved
+  - default.rm:
+    - default.rm_folder
+  - default.create_files
   - default.cat
-  - default.random_puzzle
+  - default.grep
+  - default.chown:
+    - default.chmod
+    - default.chmod_executable
+
+
+
+
+
