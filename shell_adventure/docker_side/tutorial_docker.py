@@ -136,6 +136,19 @@ class TutorialDocker:
         lines = traceback.format_list(frames) + traceback.format_exception_only(type(e), e)
         return "Traceback (most recent call last):\n" + "".join(lines)
 
+    def _dill_checker(self, puzzle: PuzzleData) -> PuzzleData:
+        """ Returns a packed version of the puzzle. Throws detailed error if pickling fails. """
+        try:
+            return puzzle.checker_dilled()
+        except Exception as e: # Quite a few things can go wrong, RecursionError, PickleError, TypeError...
+            raise UserCodeError(
+                f"Unpickleable autograder function in '{puzzle.template}'. In order to use restart functionality, your "
+                 "autograder functions must be serializable using the dill module. Either set restart_enabled to False "
+                 "or remove the unpickleable object. See https://dill.readthedocs.io/en/latest/index.html#major-features "
+                 "for what objects dill can serialize. The error dill threw was:\n\n" +
+                 "".join(traceback.format_exception_only(type(e), e)),
+            )
+
     def _common_setup(self, home: PathLike = None, user: str = None, rand: RandomHelper = None):
         """
         Does some shared setup between setup and restore methods.
@@ -162,7 +175,7 @@ class TutorialDocker:
     ### Message actions, these functions can be called by sending a message over the connection
     
     def setup(self, *, home: PathLike = None, user: str = None, modules: Dict[PurePath, str], puzzles: List[str],
-              name_dictionary: str, content_sources: List[str]) -> List[PuzzleData]:
+              name_dictionary: str, content_sources: List[str], send_checkers: bool) -> List[PuzzleData]:
         """
         Initializes the tutorial with the given settings. Generates the puzzles in the modules. The
         initialization is done separate from the constructor so that it can be done after the connection
@@ -193,6 +206,12 @@ class TutorialDocker:
         # Reset rand after generation is complete. You can't use it during the tutorial since we don't restore it on restart
         shell_adventure.api._rand = None
 
+        if send_checkers:
+            # Pickle the checkers before sending. Throw detailed error if dill fails
+            puzzle_list = [self._dill_checker(puzz) for puzz in puzzle_list]
+        else: # Just strip out the checkers if we don't need to send them. We only need to send the checker if restart is enabled.
+            puzzle_list = [p.checker_stripped() for p in puzzle_list]
+
         return puzzle_list
 
     def restore(self, *, home: PathLike = None, user: str = None, modules: Dict[PurePath, str], puzzles: List[PuzzleData]):
@@ -204,8 +223,8 @@ class TutorialDocker:
         self._common_setup(home, user)
         self.modules = modules
 
-        self.puzzles = {p.id: p for p in puzzles}
-        for puz in self.puzzles.values(): puz.extract() # Convert the pickled checker back into a function
+        # Convert the pickled checker back into a function
+        self.puzzles = {p.id: p.checker_undilled() for p in puzzles}
 
     def solve_puzzle(self, puzzle_id: str, flag: str = None) -> Tuple[bool, str]:
         """

@@ -35,6 +35,7 @@ def create_tutorial(working_dir, **setup) -> TutorialDocker:
         "puzzles": ["puzzles.move"],
         "name_dictionary": "apple\nbanana\n",
         "content_sources": [],
+        "send_checkers": True,
     }
     setup = {**default_setup, **setup} # merge
 

@@ -1,5 +1,4 @@
 from pathlib import PurePath
-from _pytest.python_api import raises
 import pytest, re
 from textwrap import dedent, indent;
 from shell_adventure.shared.tutorial_errors import *
@@ -217,3 +216,21 @@ class TestTutorialDockerExceptions:
         """).lstrip()
         assert expected == str(exc_info.value)
 
+    def test_unpickleable_checker(self, tmp_path):
+        with pytest.raises(UserCodeError, match = "Unpickleable autograder function in 'puzzles.unpickleable'") as exc_info:
+            tutorial = create_tutorial(tmp_path,
+                modules = {PurePath("puzzles.py"): dedent(r"""
+                    from shell_adventure.api import *
+
+                    def unpickleable():
+                        gen = (i for i in range(1, 10))
+                        return Puzzle(
+                            question = f"Unpickleable",
+                            checker = lambda: gen != None,
+                        )
+                """)},
+                puzzles = ["puzzles.unpickleable"],
+                send_checkers = True,
+            )
+
+        assert re.search("TypeError: cannot pickle 'generator' object", str(exc_info.value))

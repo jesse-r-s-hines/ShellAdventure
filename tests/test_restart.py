@@ -111,7 +111,7 @@ class TestRestart:
             "puzzles.py": puzzles,
         })
 
-        with pytest.raises(UserCodeError, match="Unpickleable autograder function"):
+        with pytest.raises(UserCodeError, match="Unpickleable autograder function in 'puzzles.unpicklable'"):
             with tutorial: pass
 
         tutorial = create_tutorial(tmp_path, {

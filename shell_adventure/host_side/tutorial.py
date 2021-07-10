@@ -217,6 +217,8 @@ class Tutorial:
             "puzzles": list(chain(*self.puzzle_templates)),
             "name_dictionary": name_dictionary,
             "content_sources": content_sources,
+             # If restart is enabled, we need the checkers. Otherwise don't try to dill them and risk pickle errors
+            "send_checkers": self.restart_enabled,
         })
 
         # Convert list of puzzles into tree of same structure as self.puzzle_templates
@@ -224,16 +226,6 @@ class Tutorial:
             return Tree(next(puzz_iter), [make_puzzles(child, puzz_iter) for child in templates.children])
         generated_iter = iter(generated_puzzles)
         self.puzzles = [make_puzzles(tree, generated_iter) for tree in self.puzzle_templates]
-
-        if self.restart_enabled:
-            for puzzle in generated_puzzles:
-                if puzzle.checker == None: 
-                    raise UserCodeError(
-                        "Unpickleable autograder function. In order to use restart functionality, your autograder functions " +
-                        "must be pickleable using the dill module. Either set restart_enabled to False or remove the " +
-                        "unpickleable object. See https://dill.readthedocs.io/en/latest/index.html#major-features for what " +
-                        "objects could of caused this error."
-                    )
 
         if self.restart_enabled:
             self._snapshot = self._commit()

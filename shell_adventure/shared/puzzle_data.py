@@ -1,7 +1,7 @@
 
 from __future__ import annotations
 from typing import Union, List
-import uuid, inspect, dill
+import uuid, inspect, dill, copy
 from shell_adventure.api.puzzle import Puzzle, PuzzleTemplate, AutoGrader
 
 class PuzzleData:
@@ -43,24 +43,37 @@ class PuzzleData:
         self.template = template
         self.solved = False
 
-    def __getstate__(self):
+    def checker_dilled(self):
         """
-        We have to use dill to pickle lambdas. We won't unpickle it on the host, since we don't need to call it and there may
-        be modules in the container that aren't on the host causing unpickle to fail. We do need to be able to send the pickled
-        lambda back to the container after a restart. If the checker fails to pickle, it will be left as None
-        """
-        data = self.__dict__.copy()
-        if not isinstance(self.checker, bytes):
-            try:
-                data["checker"] = dill.dumps(self.checker, recurse = True)
-            except: # If pickling fails, checker is set to None
-                data["checker"] = None
-        return data
+        We have to use dill to pickle lambdas so we can restore the checker functions after a restart. We won't unpickle it on
+        the host, since we don't need to call it and there may be modules in the container that aren't on the host causing
+        unpickle to fail. We do need to be able to send the pickled lambda back to the container after a restart.
 
-    def extract(self):
+        Before sending a PuzzleData to the host, convert it with checker_dilled(). Then after a restart when the host sends the
+        container the PuzzleData's, use checker_undilled() to restore the checkers.
+
+        This function returns a new PuzzleData with checker function serialized with dill. Will throw if the checker is
+        unpickleable. Just returns a new PuzzleData if the checker is already pickled
         """
-        We don't want to unpickle the checker on the host, but we need to be able to send it back to the container after a restart.
-        Calling extract() will unpickle the checker after we have received a puzzle from the host.
+        new = copy.copy(self)
+        if not isinstance(self.checker, bytes):
+            new.checker = dill.dumps(self.checker, recurse = True)
+        return new
+
+    def checker_undilled(self):
         """
+        Returns a new PuzzleData with the checker function unpickled. Throws if the checker function can't be unpickled. 
+        Just returns a new PuzzleData if the checker is already unpickled.
+        """
+        new = copy.copy(self)
         if isinstance(self.checker, bytes):
-            self.checker = dill.loads(self.checker)
+            new.checker = dill.loads(self.checker)
+        return new
+
+    def checker_stripped(self):
+        """
+        Returns a new PuzzleData with the checker set to None.
+        """
+        new = copy.copy(self)
+        new.checker = None
+        return new

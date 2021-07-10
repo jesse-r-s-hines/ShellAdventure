@@ -5,7 +5,7 @@ import shell_adventure.api
 from shell_adventure.docker_side.tutorial_docker import TutorialDocker
 from shell_adventure.api.random_helper import RandomHelperException
 from shell_adventure.api.file import File
-from shell_adventure.api.puzzle import Puzzle
+from shell_adventure.shared.puzzle_data import PuzzleData
 from shell_adventure.shared.tutorial_errors import *
 import os, pickle
 from textwrap import dedent;
@@ -36,6 +36,7 @@ class TestTutorialDocker:
             puzzles = ["puzzles.move"],
             name_dictionary = "apple\nbanana\n",
             content_sources = [],
+            send_checkers = True
         )
 
         # Sets _rand back after puzzle generation to avoid issues with restore and pickling the rand
@@ -93,8 +94,9 @@ class TestTutorialDocker:
             modules = modules,
             puzzles = ["mypuzzles.move"]
         )
-        puzzles: List[Puzzle] = list(tutorial.puzzles.values())
-        puzzles = pickle.loads(pickle.dumps(puzzles)) # Emulate sending/receiving the puzzles
+        puzzles: List[PuzzleData] = list(tutorial.puzzles.values())
+        # Emulate sending/receiving the puzzles
+        puzzles = [p.checker_dilled().checker_undilled() for p in puzzles]
         puz = puzzles[0].id
 
         tutorial = TutorialDocker()
