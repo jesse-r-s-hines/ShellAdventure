@@ -11,6 +11,7 @@ __all__ = [
     "UserCodeError",
     "UnhandledError",
     "format_exc",
+    "format_exc_only",
 ]
 
 class TutorialError(Exception):
@@ -86,3 +87,7 @@ def format_exc(e: Exception) -> str:
     lines = traceback.format_exception(type(e), e, e.__traceback__)
     return "".join(lines)
 
+def format_exc_only(e: Exception) -> str:
+    """ Formats an exception without the traceback. Wrapper for traceback.format_exception_only. """
+    lines = traceback.format_exception_only(type(e), e)
+    return "".join(lines)

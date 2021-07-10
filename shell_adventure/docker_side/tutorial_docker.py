@@ -145,8 +145,7 @@ class TutorialDocker:
                 f"Unpickleable autograder function in '{puzzle.template}'. In order to use restart functionality, your "
                  "autograder functions must be serializable using the dill module. Either set restart_enabled to False "
                  "or remove the unpickleable object. See https://dill.readthedocs.io/en/latest/index.html#major-features "
-                 "for what objects dill can serialize. The error dill threw was:\n\n" +
-                 "".join(traceback.format_exception_only(type(e), e)),
+                 "for what objects dill can serialize. The error dill threw was:\n\n" + format_exc_only(e)
             )
 
     def _common_setup(self, home: PathLike = None, user: str = None, rand: RandomHelper = None):
