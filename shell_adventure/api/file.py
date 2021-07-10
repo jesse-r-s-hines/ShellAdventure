@@ -35,18 +35,20 @@ class File(PosixPath):
         """ Returns the absolute path to this file as a string. """
         return str(self.resolve())
 
-    def create(self, *, mode = 0o666, exist_ok = True, recursive = True, content: str = None):
+    def create(self, *, mode: int = None, exist_ok = True, recursive = True, content: str = None):
         """
-        An combined version of `Path.mkdir()`, `Path.touch()`, and `Path.write_text()`. It will `mkdir`
-        missing dirs in the path if recursive is True (the default). New directories will use the default
-        mode regardless of the `mode` parameter to match POSIX `mkdir -p` behavior. You can also specify
-        a content string which will be written to the file.
+        An combined version of `Path.mkdir()`, `Path.touch()`, `Path.chmod()` and `Path.write_text()`. It
+        will `mkdir` missing dirs in the path if recursive is True (the default). New directories will use
+        the default mode regardless of the `mode` parameter to match POSIX `mkdir -p` behavior. You can also
+        specify a content string which will be written to the file.
 
         Returns the file.
         """
         if recursive:
             self.parent.mkdir(parents = True, exist_ok = True) # mkdir is already recursive
-        self.touch(mode, exist_ok)
+        self.touch(exist_ok = exist_ok)
+        if mode != None:
+            self.chmod(mode) # touch(mode=) combines with umask first which results in odd behavior
         if content != None:
             self.write_text(content)
 

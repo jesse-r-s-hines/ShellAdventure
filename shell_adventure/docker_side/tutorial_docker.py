@@ -76,9 +76,8 @@ class TutorialDocker:
         return templates
 
     def _call_user_func(self, func, args) -> Any:
-        """ For calling puzzle templates and checkers. Calls func with args, and sets the user, cwd, and umask. """
+        """ For calling puzzle templates and checkers. Calls func with args, and sets the user and cwd. """
         os.chdir(self.home) # Make sure templates are called with home as the cwd
-        os.umask(0o000) # By default, python won't make any files writable by "other". This turns that off.
         with change_user(self.user):
             return call_with_args(func, args)
 
