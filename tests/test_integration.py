@@ -92,7 +92,7 @@ class TestIntegration:
                     src = home.random_file("txt")
                     src.write_text(rand().paragraphs(3))
                     
-                    dst = home.random_folder().random_file("txt") # Don't create yet
+                    dst = home.random_shared_folder().random_file("txt") # Don't create yet
 
                     def checker():
                         return not src.exists() and dst.exists()

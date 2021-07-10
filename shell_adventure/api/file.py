@@ -104,20 +104,20 @@ class File(PosixPath):
         """
         return shell_adventure.api.rand().file(self, ext = ext)
 
-    def random_folder(self, depth: Union[int, Tuple[int, int]] = (1, 3), create_new_chance: float = 0.5) -> File:
+    def random_shared_folder(self, depth: Union[int, Tuple[int, int]] = (1, 3), create_new_chance: float = 0.5) -> File:
         """
         Makes a File to a random folder under this file. Does not create the file or any parents on disk.
         
         The returned File can include new folders in the path with random names, and it can include existing
-        folders that are "shared". Folders are only "shared" if they were created via `random_folder()` or explicitly
+        folders that are "shared". Folders are only "shared" if they were created via `random_shared_folder()` or explicitly
         marked shared via `mark_shared()`.
         
-        Folders created by `random_folder()` can be "reused" in other calls to `folder()`, so you should not modify
+        Folders created by `random_shared_folder()` can be "reused" in other calls to `folder()`, so you should not modify
         the folders in puzzles. This way, folders created by puzzles won't interfere with one another,
         but multiple puzzles can still be created in the same directory. If you need a folder at a random location
         that won't have any other puzzles put in it you should explicitly create a folder under the one returned by
-        `random_folder()` with something like
-        >>> home.random_folder().random_file().mkdir()
+        `random_shared_folder()` with something like
+        >>> home.random_shared_folder().random_file().mkdir()
         
         depth: Either an int or a (min, max) tuple. The returned file will have a depth under parent within
               the given range (inclusive)
@@ -125,12 +125,12 @@ class File(PosixPath):
                            shared folders are available. 0 means it will only choose existing folders, 1 means
                            it will only create new folders.
 
-        >>> home.random_folder()
+        >>> home.random_shared_folder()
         File("/home/student/random/nested/folder")
-        >>> homd.random_folder()
+        >>> homd.random_shared_folder()
         File("/home/student/random/folder2")
-        >>> folder = home.random_folder()
-        # random_folder() doesn't create the file on disk. Use mkdir() with parents = True to make the folder.
+        >>> folder = home.random_shared_folder()
+        # random_shared_folder() doesn't create the file on disk. Use mkdir() with parents = True to make the folder.
         >>> folder.mkdir(parents = True) 
         """
         return shell_adventure.api.rand().folder(self, depth, create_new_chance)

@@ -4,7 +4,7 @@ import filecmp
 # Add puzzles for manipulating permissions.
 
 def cd(home: File):
-    dst = home.random_folder()
+    dst = home.random_shared_folder()
     dst.mkdir(parents = True)
     return Puzzle(
         question = f'Navigate to the "{dst}" folder',
@@ -14,8 +14,8 @@ def cd(home: File):
 
 def move(home: File):
     content = rand().paragraphs()
-    src = home.random_folder().random_file("txt").create(content = content)
-    dst = home.random_folder().random_file("txt") # Don't create
+    src = home.random_shared_folder().random_file("txt").create(content = content)
+    dst = home.random_shared_folder().random_file("txt") # Don't create
 
     def checker():
         if dst.exists():
@@ -59,7 +59,7 @@ def copy_folder():
     src = File("folder") # Files are relative to home by default
     src.mkdir()
     for _ in range(8):
-        src.random_folder(depth = 2).random_file("txt").create(content = rand().paragraphs())
+        src.random_shared_folder(depth = 2).random_file("txt").create(content = rand().paragraphs())
     dst = File("folder (copy)")
 
     def checker():
@@ -90,11 +90,11 @@ def rm(home: File):
     )
 
 def rm_folder(home: File):
-    # Make a random folder. Don't use random_folder() as that will make a shared folder that other puzzles can generate in
+    # Make a random folder. Don't use random_shared_folder() as that will make a shared folder that other puzzles can generate in
     folder = home.random_file()
     folder.mkdir() 
     for _ in range(8):
-        folder.random_folder().random_file("txt").create(content = rand().paragraphs())
+        folder.random_shared_folder().random_file("txt").create(content = rand().paragraphs())
 
     return Puzzle(
         question = f'Delete "{folder.relative_to(home)}"',
@@ -127,12 +127,12 @@ def cat():
 
 def grep(home: File):
     bulk = home / "bulk"
-    secret = bulk.random_folder(depth = (2,6)).random_file("txt")
+    secret = bulk.random_shared_folder(depth = (2,6)).random_file("txt")
     secret.create(content = "(secret key)")
 
     # Create a whole bunch of files
     for _ in range(100):
-        file = bulk.random_folder(depth = (2, 6)).random_file("txt")
+        file = bulk.random_shared_folder(depth = (2, 6)).random_file("txt")
         file.create(content = rand().paragraphs())
 
     def checker(flag):

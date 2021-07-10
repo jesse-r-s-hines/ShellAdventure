@@ -81,7 +81,7 @@ class RandomHelper:
         return new_file
 
     def folder(self, parent: File, depth: Union[int, Tuple[int, int]] = (1, 3), create_new_chance: float = 0.5) -> File:
-        """ Makes a File to a random folder under parent. See File.random_folder() for more details. """
+        """ Makes a File to a random folder under parent. See File.random_shared_folder() for more details. """
 
         if isinstance(depth, tuple): depth = random.randint(depth[0], depth[1])
         folder = parent.resolve()

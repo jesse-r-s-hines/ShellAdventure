@@ -174,7 +174,7 @@ class TestFile:
             # You have to have a tutorial object initialized for randomization to work.
             shell_adventure.api._rand = RandomHelper("a\nb\nc")
 
-            subfile = working_dir.random_folder(depth = 1)
+            subfile = working_dir.random_shared_folder(depth = 1)
             assert subfile.parent == working_dir
 
             new_folder = working_dir / "my_new_folder"

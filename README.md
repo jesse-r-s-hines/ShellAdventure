@@ -195,14 +195,14 @@ Creates a File with a random name under self. The source for random names comes 
 in the Tutorial config. The file is not created on disk and is not marked as shared. You can pass an 
 extension which will be added to the random name. Will not create a file with a name that already exists. 
 
-### `File.random_folder(self, depth: Union[int, Tuple[int, int]] = (1, 3), create_new_chance: float = 0.5) -> File`
+### `File.random_shared_folder(self, depth: Union[int, Tuple[int, int]] = (1, 3), create_new_chance: float = 0.5) -> File`
 Makes a File to a random folder under this file. Does not create the file or any parents on disk. 
 
 The returned File can include new folders in the path with random names, and it can include existing
-folders that are "shared". Folders are only "shared" if they were created via `random_folder()` or explicitly
+folders that are "shared". Folders are only "shared" if they were created via `random_shared_folder()` or explicitly
 marked shared via `mark_shared()`. 
 
-Since folders created by `random_folder()` can be "reused" in other calls to `folder()` you should not modify 
+Since folders created by `random_shared_folder()` can be "reused" in other calls to `folder()` you should not modify 
 the parent folders in puzzles. This way, folders created by puzzles won't intefere with one another, 
 but multiple puzzles can still be created in the same directory. 
 
@@ -212,12 +212,12 @@ create_new_chance: float in [0, 1]. The percentage chance that a new folder will
                    shared folders are available. 0 means it will only choose existing folders, 1 means
                    it will only create new folders.
 ```python
->>> home.random_folder()
+>>> home.random_shared_folder()
 File("/home/student/random/nested/folder")
->>> homd.random_folder()
+>>> homd.random_shared_folder()
 File("/home/student/random/folder2")
->>> folder = home.random_folder()
-# random_folder() doesn't create the file on disk. Use mkdir() with parents = True to make the folder.
+>>> folder = home.random_shared_folder()
+# random_shared_folder() doesn't create the file on disk. Use mkdir() with parents = True to make the folder.
 >>> folder.mkdir(parents = True) 
 ```
 
@@ -317,14 +317,14 @@ paramaters:
             in the range, inclusive.
 
 ### Random Files
-You can also use `File.random_file()` and `File.random_folder()` to generate randomized files (see above).
-`File`s can be "shared". Parent directories made by `File.random_folder()` are marked as "shared". What this means is
-that other calls to `File.random_folder()` can include those directories in the path. The purpose of this is to avoid
+You can also use `File.random_file()` and `File.random_shared_folder()` to generate randomized files (see above).
+`File`s can be "shared". Parent directories made by `File.random_shared_folder()` are marked as "shared". What this means is
+that other calls to `File.random_shared_folder()` can include those directories in the path. The purpose of this is to avoid
 puzzles interfering with one another, while still allowing multiple puzzles in a single directory. For example you don't
 want a `rm` puzzle to be to remove a directory another puzzle is in.
 
-It is assumed that folders made by 'File.random_folder()` are not used directly in the puzzles, but just used as a location
-for them. So you should not modify or remove folders made by `File.random_folder()` other than placing more files in them.
+It is assumed that folders made by 'File.random_shared_folder()` are not used directly in the puzzles, but just used as a location
+for them. So you should not modify or remove folders made by `File.random_shared_folder()` other than placing more files in them.
 If you need to modify a directory in a puzzle, you need to make it directly with `mkdir()`.
 
 # Examples
@@ -337,7 +337,7 @@ def move(home): # home will be passed File('/home/student')
     # Create a random txt file under home
     content = rand.paragraphs(3)
     src = home.random_file("txt").create(content = content) 
-    dst = home.random_folder().random_file("txt") # Create a random destination path. Don't write it to disk.
+    dst = home.random_shared_folder().random_file("txt") # Create a random destination path. Don't write it to disk.
 
     def checker():
         if dst.exists():
