@@ -54,20 +54,6 @@ class File(PosixPath):
 
         return self
 
-    def same_as(self, other: File) -> bool:
-        """
-        Checks if two files exist and have the same contents and permissions.
-        Does not compare file names or paths.
-        """
-        if self.is_dir() or other.is_dir(): # is_dir won't throw if not exists
-            raise IsADirectoryError("File.same_as only works on files.")
-        return (
-            self.exists() and other.exists() and
-            self.permissions == other.permissions and
-            self.read_text() == other.read_text()
-        )
-
-
     # === Permissions ===
 
     def chown(self, owner: Union[str, int] = None, group: Union[str, int] = None):

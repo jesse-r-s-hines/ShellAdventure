@@ -190,9 +190,6 @@ Returns the file.
 A property that gets a Permissions object representing the permissions of this file, or sets 
 a `File`'s permissions.
 
-### `File.same_as(self, other: File) -> bool`
-Checks if two files exist and have the same contents and permissions. Does not compare file names or paths.
-
 ### `File.random_file(self, ext = None) -> File`
 Creates a File with a random name under self. The source for random names comes from the `name_dictionary` option
 in the Tutorial config. The file is not created on disk and is not marked as shared. You can pass an 

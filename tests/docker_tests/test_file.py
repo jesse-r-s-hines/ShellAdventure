@@ -190,19 +190,4 @@ class TestFile:
     def test_home(self, working_dir):
         assert File.home() == File("/root") # No tutorial set up.
 
-    def test_same_as(self, working_dir):
-        file = File("A").create(content = "hello")
-        same = File("B").create(content = "hello")
-        diff_content = File("C").create(content = "bye")
-        diff_permissions = File("D").create(mode = 0o700, content = "hello")
-        doesnt_exist = File("E")
-        File("F").mkdir()
-        dir = File("F")
-
-        assert file.same_as(same)
-        assert not file.same_as(diff_content)
-        assert not file.same_as(diff_permissions)
-        assert not file.same_as(doesnt_exist)
-        with pytest.raises(IsADirectoryError):
-            file.same_as(dir)
 
