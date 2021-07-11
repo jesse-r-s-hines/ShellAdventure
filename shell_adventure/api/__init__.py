@@ -19,16 +19,16 @@ _home: File = None
 
 _rand: RandomHelper = None
 """
-Global that is set to the RandomHelper of the tutorial, so that rand() and File methods can access it.
+Global that is set to the `RandomHelper` of the tutorial, so that `rand()` and `File` methods can access it.
 """
 
 # After restart and pickling the lambdas we don't restore the RandomHelper state so we don't want you to be able to
 # call it in autograder functions. So we make rand a function so that it doesn't get captured directly, that way we can
 # set tutorial.rand to None and trying to use rand() will fail.
+# TutorialDocker will set _rand when it runs.
 def rand() -> RandomHelper:
     """
-    The RandomHelper which will be used when creating random files and folders. TutorialDocker will set it when it runs.
-    Has to be at the package level, and so that File methods can access it.
+    Returns the `RandomHelper` which should be used when creating random files and folders. 
     """
     if not _rand:
         raise RandomHelperException("You can only use randomization in Puzzle templates, not autograders")
@@ -37,6 +37,8 @@ def rand() -> RandomHelper:
 __all__ = [
     "file",
     "permissions",
+    "random_helper",
+    "puzzle",
     "Puzzle",
     "File",
     "Permissions",

@@ -8,7 +8,7 @@ class RandomHelper:
 
     def __init__(self, name_dictionary: str, content_sources: List[str] = []):
         """
-        Creates a RandomHelper.
+        Creates a `RandomHelper`.
         name_dictionary is a string containing words, each on its own line.
         """
         names = set(name_dictionary.splitlines())
@@ -68,7 +68,7 @@ class RandomHelper:
             return lorem.get_paragraph(count = count, sep = "\n\n") + "\n"
 
     def file(self, parent: File, ext = None) -> File:
-        """ Creates a File with a random name. See File.rand_file() for more details. """
+        """ Creates a `File` with a random name. See `File.rand_file()` for more details. """
         parent = parent.resolve()
         ext = "" if ext == None else f".{ext}"
         new_file = File("/") # garanteed to exist.
@@ -80,7 +80,7 @@ class RandomHelper:
         return new_file
 
     def folder(self, parent: File, depth: Union[int, Tuple[int, int]] = (1, 3), create_new_chance: float = 0.5) -> File:
-        """ Makes a File to a random folder under parent. See File.random_shared_folder() for more details. """
+        """ Makes a `File` to a random folder under parent. See `File.random_shared_folder()` for more details. """
 
         if isinstance(depth, tuple): depth = random.randint(depth[0], depth[1])
         folder = parent.resolve()
@@ -105,4 +105,4 @@ class RandomHelper:
         self._shared_folders.add(folder.resolve())
 
 class RandomHelperException(Exception):
-    """ Error for when the RandomHelper fails. """
+    """ Error for when the `RandomHelper` fails. """
