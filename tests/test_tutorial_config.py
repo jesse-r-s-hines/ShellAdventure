@@ -206,3 +206,23 @@ class TestTutorialConfig:
         # Will just print the API error since docker-py doesn't seem to type check the command
         with pytest.raises(ContainerStartupError, match = "cannot unmarshal number into .*Cmd of type string"):
             with tutorial: pass
+
+    def test_empty_fields(self, tmp_path, check_containers):
+        with pytest.raises(ConfigError) as exc_info:
+            tutorial = create_tutorial(tmp_path, {
+                "config.yaml": f"""
+                    image:
+                    container_options:
+                    show_tree: null
+                    modules:
+                        - puzzles.py
+                    puzzles:
+                        - puzzles.move
+                """,
+                "puzzles.py": SIMPLE_PUZZLES,
+            })
+
+        message = str(exc_info.value)
+        assert "image: 'None' is not a str" in message
+        assert "container_options : 'None' is not a map" in message
+        assert "show_tree: 'None' is not a bool" in message
