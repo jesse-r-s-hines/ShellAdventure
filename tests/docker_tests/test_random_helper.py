@@ -96,7 +96,7 @@ class TestRandomHelper:
         assert tmp_path in file.parents
         assert not file.exists()
 
-        file = random.folder(tmp_path, depth = 2)
+        file = random.folder(str(tmp_path), depth = 2)
         assert file in random._shared_folders
         assert file.parents[0] in random._shared_folders
         assert file.parents[1] not in random._shared_folders

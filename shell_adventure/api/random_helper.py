@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import List, Tuple, Union, Set
 import random, re, lorem
 from .file import File
+from shell_adventure.shared.support import PathLike
 
 class RandomHelper:
     """ RandomHelper is a class that generates random names, contents, and file paths. """
@@ -67,9 +68,9 @@ class RandomHelper:
         else:
             return lorem.get_paragraph(count = count, sep = "\n\n") + "\n"
 
-    def file(self, parent: File, ext = None) -> File:
+    def file(self, parent: PathLike, ext = None) -> File:
         """ Creates a `File` with a random name. See `File.rand_file()` for more details. """
-        parent = parent.resolve()
+        parent = File(parent).resolve()
         ext = "" if ext == None else f".{ext}"
         new_file = File("/") # garanteed to exist.
 
@@ -79,11 +80,11 @@ class RandomHelper:
 
         return new_file
 
-    def folder(self, parent: File, depth: Union[int, Tuple[int, int]] = (1, 3), create_new_chance: float = 0.5) -> File:
+    def folder(self, parent: PathLike, depth: Union[int, Tuple[int, int]] = (1, 3), create_new_chance: float = 0.5) -> File:
         """ Makes a `File` to a random folder under parent. See `File.random_shared_folder()` for more details. """
 
         if isinstance(depth, tuple): depth = random.randint(depth[0], depth[1])
-        folder = parent.resolve()
+        folder = File(parent).resolve()
         
         for i in range(depth):
             if folder.exists():
@@ -98,8 +99,9 @@ class RandomHelper:
 
         return folder
 
-    def mark_shared(self, folder: File):
+    def mark_shared(self, folder: PathLike):
         """ Marks a folder as shared. The folder does not have to exist yet. """
+        folder = File(folder)
         if folder.exists() and not folder.is_dir():
             raise RandomHelperException(f"Can't mark {folder} as shared, it already exists as a f. Can only mark folders as shared.")
         self._shared_folders.add(folder.resolve())
