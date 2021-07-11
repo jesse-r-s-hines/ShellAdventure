@@ -1,0 +1,57 @@
+# This is an example of a Shell Adventure tutorial config file
+# All paths are interpreted as relative to the config file unless they are absolute
+# All fields are optional except for "modules" and "puzzles", but are listed here with their default values for documentation
+
+# Required. A list of Python scripts that contain the puzzles templates for the tutorial
+modules:
+    - simple_examples.py
+    - advanced_examples.py
+    - permissions_examples.py
+
+# Required. A list of the puzzles templates that will be generated in the tutorial.
+# Each puzzle is the name of a function in one of the modules which will be used to generate it
+# Specify the functions as <module_name>.<puzzle_function_name>
+# You can also "nest" puzzles. Dependent puzzles will be hidden until their parent has been solved.
+puzzles:
+  - simple_examples.cd
+  - simple_examples.move
+  - simple_examples.move # You can include randomized puzzles more than once
+  - simple_examples.copy:
+    - advanced_examples.copy_folder # This puzzle will only show up after default.copy is solved
+  - simple_examples.rm:
+    - advanced_examples.rm_folder
+  - simple_examples.create_file
+  - simple_examples.cat
+  - advanced_examples.grep
+  - permissions_examples.chown:
+    - permissions_examples.chmod:
+      - permissions_examples.chmod_executable
+    - permissions_examples.create_file_in_protected_folder
+
+# Optional. This is the tag of the Docker image that the tutorial will run in.
+# Default is "shell-adventure:latest"
+image: "shell-adventure:latest"
+
+# Optional. These options are passed directly to the docker-py create() method. You generally don't need to mess with
+# this unless you need to manipulate low-level docker options.
+# See https://docker-py.readthedocs.io/en/stable/containers.html#docker.models.containers.ContainerCollection.create
+# for details on all the options you can pass.
+container_options:
+  # Most commonly used container_options are "user" and "working_dir", if you want to change the user the student
+  # is logged in as, or the directory the student starts in without having to make your own custom Docker image
+  user: "student" # "student" is the default user in the "shell-adventure" image
+  working_dir: "/home/student" # "/home/student" is the default working_dir in the "shell-adventure" image
+
+# Optional. Path to a dictionary file with one word on each line. The dictionary will be used by rand().name()
+# If omitted, a dictionary based on http://www.desiquintans.com/nounlist will be used
+name_dictionary: ../shell_adventure/host_side/name_dictionary.txt
+
+# Optional. A list of files containing text. Random paragraphs from these files will be used by the rand().paragraphs()
+# method for generating random content for files. If omitted, a "Lorem Ipsum" style generator will be used.
+content_sources: []
+
+# Optional. Whether to allow the student to restart the tutorial without regenerating randomized puzzles. Default is yes
+restart_enabled: yes
+
+# Optional. Whether to show the visual file tree in the GUI. Default is yes
+show_tree: yes

@@ -1,3 +1,5 @@
+The following commands are available in the default `shell-adventure:latest` Docker image.
+
 |   Command   |                              Description                              | 
 |-------------|-----------------------------------------------------------------------|
 | apt         | a high-level commandline interface for the package management system  |
