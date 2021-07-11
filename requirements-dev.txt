@@ -1,4 +1,3 @@
 -r requirements.txt
 pytest
 pytest-cov
-python-lorem # This is only used inside the docker container so we don't actually need it in production.

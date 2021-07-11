@@ -6,3 +6,4 @@ Pillow
 dill
 deepmerge
 yamale>=3.0.7
+python-lorem # This is only used inside the docker container, but require it so that is shows up for people developing puzzle templates
