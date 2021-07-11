@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Set
 import random, re, lorem
 from .file import File
 
@@ -32,9 +32,8 @@ class RandomHelper:
             # para_sentences = [re.findall(r".*?\.\s+", para, flags = re.DOTALL) for para in paragraphs] 
             self._content_sources.append(paragraphs)
 
-        # A list of shared folders. random.folder() can use existing folders if they are shared.
-        # It would be more efficient to store these as tree.
-        self._shared_folders: List[File] = []
+        # A set of shared folders. random.folder() can use existing folders if they are shared.
+        self._shared_folders: Set[File] = set()
 
 
     def name(self):
@@ -87,12 +86,15 @@ class RandomHelper:
         folder = parent.resolve()
         
         for i in range(depth):
-            choices = [subfolder for subfolder in self._shared_folders if subfolder.parent == folder]
+            if folder.exists():
+                choices = [d for d in folder.iterdir() if d.is_dir() and d in self._shared_folders]
+            else:
+                choices = []
             if len(choices) == 0 or random.uniform(0, 1) < create_new_chance: # Create new shared folder
                 folder = self.file(folder) # create random file under folder
                 self.mark_shared(folder)
             else:
-                folder = random.choice(choices)
+                folder = File(random.choice(choices))
 
         return folder
 
@@ -100,7 +102,7 @@ class RandomHelper:
         """ Marks a folder as shared. The folder does not have to exist yet. """
         if folder.exists() and not folder.is_dir():
             raise RandomHelperException(f"Can't mark {folder} as shared, it already exists as a f. Can only mark folders as shared.")
-        self._shared_folders.append(folder.resolve())
+        self._shared_folders.add(folder.resolve())
 
 class RandomHelperException(Exception):
     """ Error for when the RandomHelper fails. """

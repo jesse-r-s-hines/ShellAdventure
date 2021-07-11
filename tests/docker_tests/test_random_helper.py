@@ -107,7 +107,7 @@ class TestRandomHelper:
         folder1 = random.folder(tmp_path, depth = 1)
         assert folder1.parent == tmp_path
         assert folder1.name in ["a", "b", "c"]
-        assert not folder1.exists()
+        folder1.mkdir()
 
         # folder1 is empty so even with create_new_chance = 0 it will create a new path.
         folder2 = random.folder(folder1, depth = 1, create_new_chance = 0)
@@ -127,6 +127,22 @@ class TestRandomHelper:
 
         with pytest.raises(RandomHelperException, match = "Out of unique names"):
             random.folder(tmp_path, depth = 1, create_new_chance = 1) # "a" already exists, "b" was generated.
+
+    def test_random_folder_only_chooses_folders_on_disk(self, tmp_path):
+        random = RandomHelper("\n".join(map(str, range(20))))
+
+        created_file = random.file(tmp_path, "txt")
+        created_file.touch()
+        created_folder = random.folder(tmp_path, depth = 1)
+        created_folder.mkdir()
+        uncreated_folder = random.folder(tmp_path, depth = 1)
+
+        assert created_folder in random._shared_folders
+        assert uncreated_folder in random._shared_folders
+
+        for i in range(10): # Will not use the shared uncreated_folder
+            new = random.folder(tmp_path, depth = 2, create_new_chance = 0)
+            assert new.parent == created_folder
 
     def test_mark_shared(self, tmp_path):
         random = RandomHelper("a\nb\nc\nd\ne")
