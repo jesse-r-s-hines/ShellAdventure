@@ -26,17 +26,20 @@ class TestTutorialConfig:
                     user: user
                     name: mytutorial
                 modules:
-                    - path/to/puzzle1.py # Relative path
-                    - {tmp_path / "puzzle2.py"} # Absolute path
+                    - path/to/puzz1.py # Relative path
+                    - {tmp_path / "puzz2.py"} # Absolute path
+                    - path/../puzz3.py # path with ".."
                 puzzles:
-                    - puzzle1.move
-                    - puzzle2.move
+                    - puzz1.move
+                    - puzz2.move
+                    - puzz3.move
                 name_dictionary: "my_dictionary.txt"
                 content_sources:
                     - content.txt
             """,
-            "path/to/puzzle1.py": SIMPLE_PUZZLES,
-            "puzzle2.py": SIMPLE_PUZZLES,
+            "path/to/puzz1.py": SIMPLE_PUZZLES,
+            "puzz2.py": SIMPLE_PUZZLES,
+            "puzz3.py": SIMPLE_PUZZLES,
             "my_dictionary.txt": "a\nb\nc\n",
             "content.txt": "STUFF\n\nSTUFF\n\nMORE STUFF\n",
         })
@@ -50,8 +53,8 @@ class TestTutorialConfig:
         assert tutorial.name_dictionary == tmp_path / "my_dictionary.txt"
         assert tutorial.content_sources == [tmp_path / "content.txt"]
 
-        assert [m for m in tutorial.module_paths] == [tmp_path / "path/to/puzzle1.py", tmp_path / "puzzle2.py"]
-        assert [n.data for n in tutorial.puzzle_templates] == ["puzzle1.move", "puzzle2.move"]
+        assert [m for m in tutorial.module_paths] == [tmp_path / "path/to/puzz1.py", tmp_path / "puzz2.py", tmp_path / "puzz3.py"]
+        assert [n.data for n in tutorial.puzzle_templates] == ["puzz1.move", "puzz2.move", "puzz3.move"]
 
     def test_nested_puzzles(self, tmp_path, check_containers):
         tutorial = create_tutorial(tmp_path, {

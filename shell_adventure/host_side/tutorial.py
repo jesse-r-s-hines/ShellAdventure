@@ -86,6 +86,8 @@ class Tutorial:
         except (yaml.YAMLError, OSError) as e: # YAML fails to parse, or some filesystem error
             raise ConfigError(str(e))
 
+        def get_path(path: str): return Path(self.data_dir, path).resolve() # Get Path relative to config file
+
         self.image = config.get("image", "shell-adventure:latest")
 
         container_options = config.get("container_options", {})
@@ -94,7 +96,7 @@ class Tutorial:
         module_paths: Dict[str, Path] = {}
         for module in config.get("modules"):
             # Files are relative to the config file (if module is absolute, Path will use that, if relative it will join with first)
-            module = Path(self.data_dir, module)
+            module = get_path(module)
             if module.stem in module_paths: # Can't have the same name, even with different paths
                 raise ConfigError(f'Multiple puzzle modules with name "{module.stem}" found.') 
             module_paths[module.stem] = module
@@ -103,9 +105,9 @@ class Tutorial:
         self.puzzle_templates = self._parse_puzzles(config.get("puzzles"))
 
         name_dictionary = config.get("name_dictionary", PKG_PATH / "resources/name_dictionary.txt")
-        self.name_dictionary = Path(self.data_dir, name_dictionary) # relative to config file
+        self.name_dictionary = get_path(name_dictionary)
 
-        self.content_sources = [Path(self.data_dir, f) for f in config.get("content_sources", [])] # relative to config file
+        self.content_sources = [get_path(f) for f in config.get("content_sources", [])]
 
         self.restart_enabled = config.get("restart_enabled", True) # PyYAML automatically converts to bool
         self.show_tree = config.get("show_tree", True)
