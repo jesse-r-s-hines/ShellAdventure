@@ -15,7 +15,7 @@ class TestTutorialConfig:
         })
         tutorial = Tutorial(f"{tmp_path / 'config.yaml'}") # Strings should also work for path
         assert tutorial.config_file == tmp_path / "config.yaml"
-        assert str(tutorial.name_dictionary).endswith("resources/name_dictionary.txt")
+        assert tutorial.name_dictionary.name == "name_dictionary.txt"
 
     def test_creation(self, tmp_path, check_containers):
         tutorial = create_tutorial(tmp_path, {

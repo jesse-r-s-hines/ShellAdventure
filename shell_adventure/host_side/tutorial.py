@@ -104,7 +104,7 @@ class Tutorial:
 
         self.puzzle_templates = self._parse_puzzles(config.get("puzzles"))
 
-        name_dictionary = config.get("name_dictionary", PKG_PATH / "resources/name_dictionary.txt")
+        name_dictionary = config.get("name_dictionary", PKG_PATH / "name_dictionary.txt")
         self.name_dictionary = get_path(name_dictionary)
 
         self.content_sources = [get_path(f) for f in config.get("content_sources", [])]
