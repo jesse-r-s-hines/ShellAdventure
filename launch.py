@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import sys
 from textwrap import indent
 from shell_adventure.gui.main import ShellAdventureGUI
