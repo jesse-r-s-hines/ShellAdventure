@@ -202,4 +202,28 @@ class TestTutorialDocker:
         log = working_dir / "log.txt"
         assert log.read_text().splitlines() == ['puz1', 'puz3', 'puz2']
  
+    def test_puzzle_always_cwd_in_home(self, working_dir):
+        tutorial = create_tutorial(working_dir,
+            modules = {PurePath("puzzles.py"): dedent(fr"""
+                from shell_adventure.api import *
+                import os
 
+                def chdir():
+                    os.chdir("/")
+                    def checker():
+                        os.chdir("/etc")
+                        return True
+                    return Puzzle(question = "", checker = checker)
+
+                def checkcwd():
+                    assert os.getcwd() == "{working_dir}"
+                    return Puzzle(question = "", checker = lambda: os.getcwd() == "{working_dir}")
+            """)},
+            puzzles = ["puzzles.chdir", "puzzles.checkcwd"],
+        )
+
+        [chdir, checkcwd] = tutorial.puzzles.values()
+        assert tutorial.solve_puzzle(chdir.id)[0] == True
+        assert tutorial.solve_puzzle(checkcwd.id)[0] == True # cwd got changed back
+
+        
