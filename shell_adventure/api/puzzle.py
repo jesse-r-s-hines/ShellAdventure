@@ -17,7 +17,7 @@ class Puzzle:
     The function that will be used to autograde the puzzle.
     """
 
-    allowed_checker_args: ClassVar[List[str]] = ["cwd", "flag"]
+    _allowed_checker_args: ClassVar[List[str]] = ["cwd", "flag"]
     """ A set of the checker args that are recognized. """
 
     def __init__(self, question: str, checker: AutoGrader, score: int = 1):
@@ -51,11 +51,11 @@ class Puzzle:
         self.score = score
         self.checker = checker # type: ignore # MyPy fusses about "Cannot assign to a method"
 
-        extra_params = extra_func_params(self.checker, Puzzle.allowed_checker_args)
+        extra_params = extra_func_params(self.checker, Puzzle._allowed_checker_args)
         if extra_params:
             raise UnrecognizedParamsError(
                 f'Unrecognized param(s) {sentence_list(extra_params, quote = True)} in checker function.' +
-                f' Expected {sentence_list(Puzzle.allowed_checker_args, last_sep = " and/or ", quote = True)}.',
+                f' Expected {sentence_list(Puzzle._allowed_checker_args, last_sep = " and/or ", quote = True)}.',
                 extra_params = extra_params
             )
 
