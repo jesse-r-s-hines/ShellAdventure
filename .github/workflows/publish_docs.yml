@@ -1,0 +1,25 @@
+# Generates api docs and places the results in the "gh-pages" branch, which will be shown by github.io
+name: Publish API Documentation
+on:
+  push:
+    branches:
+      - main
+jobs:
+  publish-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.3.4
+
+      - name: Install Tools
+       # Could install requirements-dev.txt, but we only need python-lorem for the api package
+        run: python3 -m pip install pdoc python-lorem
+
+      - name: Generate API Documentation
+        run: pdoc -o pdoc_docs shell_adventure/api
+
+      - name: Publish
+        uses: JamesIves/github-pages-deploy-action@4.1.4
+        with:
+          branch: gh-pages
+          folder: pdoc_docs
