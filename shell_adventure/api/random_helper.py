@@ -91,7 +91,10 @@ class RandomHelper:
                 choices = [d for d in folder.iterdir() if d.is_dir() and d in self._shared_folders]
             else:
                 choices = []
-            if len(choices) == 0 or random.uniform(0, 1) < create_new_chance: # Create new shared folder
+            # Create new shared folder if no choices or random chance succeeds.
+            # Add check for 1 since uniform() is an inclusive range
+            roll = random.uniform(0, 1)
+            if len(choices) == 0 or create_new_chance == 1 or roll < create_new_chance: 
                 folder = self.file(folder) # create random file under folder
                 self.mark_shared(folder)
             else:
