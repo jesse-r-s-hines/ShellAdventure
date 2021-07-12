@@ -1,5 +1,5 @@
 from textwrap import dedent
-from pathlib import PurePath
+from pathlib import PurePath, Path
 from shell_adventure.docker_side.tutorial_docker import TutorialDocker
 
 __all__ = [
@@ -23,7 +23,7 @@ SIMPLE_PUZZLES = dedent("""
         )
 """)
 
-def create_tutorial(working_dir, **setup) -> TutorialDocker:
+def create_tutorial(working_dir: Path, **setup) -> TutorialDocker:
     """
     Factory for TutorialDocker. Pass args that will be passed to setup().
     Provides some default for setup() args, sets tutorial.home to working_dir

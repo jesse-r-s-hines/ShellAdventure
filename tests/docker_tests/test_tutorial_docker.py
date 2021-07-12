@@ -1,18 +1,18 @@
 from typing import List
 import pytest
-from pathlib import PurePath
+from pathlib import PurePath, Path
 import shell_adventure.api
 from shell_adventure.docker_side.tutorial_docker import TutorialDocker
 from shell_adventure.api.random_helper import RandomHelperException
 from shell_adventure.api.file import File
 from shell_adventure.shared.puzzle_data import PuzzleData
 from shell_adventure.shared.tutorial_errors import *
-import os, pickle
+import os
 from textwrap import dedent;
 from .helpers import *
 
 class TestTutorialDocker:
-    def test_creation(self, working_dir):
+    def test_creation(self, working_dir: Path):
         tutorial = create_tutorial(working_dir,
             modules = {PurePath("mypuzzles.py"): SIMPLE_PUZZLES},
             puzzles = ["mypuzzles.move"],
@@ -23,7 +23,7 @@ class TestTutorialDocker:
         assert puzzle.template == "mypuzzles.move"
         assert (working_dir / "A.txt").exists()
 
-    def test_lifecycle(self, working_dir):
+    def test_lifecycle(self, working_dir: Path):
         tutorial = TutorialDocker()
 
         assert shell_adventure.api._home == None
@@ -47,7 +47,7 @@ class TestTutorialDocker:
             shell_adventure.api.rand()
         assert File.home() == working_dir # File.home() should use tutorial home
 
-    def test_multiple_modules(self, working_dir):
+    def test_multiple_modules(self, working_dir: Path):
         tutorial = create_tutorial(working_dir,
             modules = {
                 PurePath("mypuzzles1.py"): SIMPLE_PUZZLES,
@@ -58,7 +58,7 @@ class TestTutorialDocker:
 
         assert len(tutorial.puzzles) == 2
 
-    def test_empty(self, working_dir):
+    def test_empty(self, working_dir: Path):
         tutorial = create_tutorial(working_dir, modules = {}, puzzles = [])
         assert tutorial.puzzles == {}
 
@@ -88,7 +88,7 @@ class TestTutorialDocker:
         templates = TutorialDocker._get_templates_from_module(module)
         assert list(templates.keys()) == ["mypuzzles.move"]
 
-    def test_restore(self, working_dir):
+    def test_restore(self, working_dir: Path):
         modules = {PurePath("mypuzzles.py"): SIMPLE_PUZZLES}
         tutorial = create_tutorial(working_dir,
             modules = modules,
@@ -110,7 +110,7 @@ class TestTutorialDocker:
         assert tutorial.solve_puzzle(puz) == (True, "Correct!")
 
 
-    def test_user(self, working_dir): 
+    def test_user(self, working_dir: Path): 
         tutorial = create_tutorial(working_dir,
             user = "student",
             modules = {PurePath("mypuzzles.py"): dedent("""
@@ -140,7 +140,7 @@ class TestTutorialDocker:
         [puzzle] = list(tutorial.puzzles.values())
         assert tutorial.solve_puzzle(puzzle.id) == (True, "Correct!")
 
-    def test_root_user(self, working_dir): 
+    def test_root_user(self, working_dir: Path): 
         tutorial = create_tutorial(working_dir,
             user = "root",
             modules = {PurePath("mypuzzles.py"): SIMPLE_PUZZLES},
@@ -149,11 +149,11 @@ class TestTutorialDocker:
         assert (working_dir / "A.txt").owner() == "root"
 
 
-    def test_student_cwd(self, working_dir):
+    def test_student_cwd(self, working_dir: Path):
         tutorial = create_tutorial(working_dir)
         assert tutorial.student_cwd() == File("/home/student") # Gets the cwd from the bash session
 
-    def test_get_files(self, working_dir):
+    def test_get_files(self, working_dir: Path):
         tutorial = create_tutorial(working_dir, puzzles = [])
 
         a = File("A"); a.mkdir()
@@ -165,7 +165,7 @@ class TestTutorialDocker:
         assert all([f.is_absolute() for _, _, f in files])
         assert set(files) == {(True, False, working_dir / "A"), (False, False, working_dir / "C"), (True, True, working_dir / "D")}
 
-    def test_get_special_files(self, working_dir):
+    def test_get_special_files(self, working_dir: Path):
         tutorial = create_tutorial(working_dir)
         
         def get_files_recursive(folder):
@@ -179,7 +179,7 @@ class TestTutorialDocker:
         # /proc has special files that sometimes throws errors when trying to get them via python. Test that they are handled properly.
         assert get_files_recursive("/proc") != []
 
-    def test_puzzle_generation_order(self, working_dir):
+    def test_puzzle_generation_order(self, working_dir: Path):
         tutorial = create_tutorial(working_dir,
             modules = {PurePath("puzzles.py"): dedent(r"""
                 from shell_adventure.api import *
@@ -202,7 +202,7 @@ class TestTutorialDocker:
         log = working_dir / "log.txt"
         assert log.read_text().splitlines() == ['puz1', 'puz3', 'puz2']
  
-    def test_puzzle_always_cwd_in_home(self, working_dir):
+    def test_puzzle_always_cwd_in_home(self, working_dir: Path):
         tutorial = create_tutorial(working_dir,
             modules = {PurePath("puzzles.py"): dedent(fr"""
                 from shell_adventure.api import *

@@ -1,10 +1,11 @@
 import pytest
+from pathlib import Path
 from shell_adventure.api.file import File
 from shell_adventure.api.permissions import *
 import os, stat
 
 class TestPermissions:
-    def test_creating_permissions(self, working_dir):
+    def test_creating_permissions(self, working_dir: Path):
         p = Permissions(0o644)
         assert p.user.read == True
         assert p.others.write == False
@@ -31,7 +32,7 @@ class TestPermissions:
         p = Permissions(user = "rwx", group = "r", others = "rx")
         assert str(p) == "rwxr--r-x"
 
-    def test_checking_permissions(self, working_dir):
+    def test_checking_permissions(self, working_dir: Path):
         file = File("file.txt")
         file.create(mode=0o766)
         perms = LinkedPermissions(file)
@@ -46,7 +47,7 @@ class TestPermissions:
         assert perms.others.write == True
         assert perms.others.execute == False
 
-    def test_setting_permissions(self, working_dir):
+    def test_setting_permissions(self, working_dir: Path):
         file = File("file.txt")
         file.create(mode=0o000)
         perms = LinkedPermissions(file)
@@ -71,7 +72,7 @@ class TestPermissions:
         assert p == 6
         assert p != 1
 
-    def test_permission_equality(self, working_dir):
+    def test_permission_equality(self, working_dir: Path):
         p1 = Permissions(0o744)
         p2 = Permissions(user = "rwx", group = "r", others = "r")
         p3 = Permissions(0o444)
@@ -93,7 +94,7 @@ class TestPermissions:
         with pytest.raises(NotImplementedError):
             p1 == "hello"
 
-    def test_permission_throws_errors(self, working_dir):
+    def test_permission_throws_errors(self, working_dir: Path):
         with pytest.raises(ValueError):
             p = Permissions(user = "z")
 
@@ -101,7 +102,7 @@ class TestPermissions:
             p = Permissions(group = "ww")
 
 
-    def test_change_user(self, working_dir):
+    def test_change_user(self, working_dir: Path):
         root_file = File("root_file.txt")
         root_file.create()
         assert (root_file.owner(), root_file.group()) == ("root", "root")
@@ -116,7 +117,7 @@ class TestPermissions:
         root_file2.create()
         assert (root_file2.owner(), root_file2.group()) == ("root", "root")
 
-    def test_change_user_and_group(self, working_dir):
+    def test_change_user_and_group(self, working_dir: Path):
         with change_user("root", "student"):
             file = File("file.txt")
             file.create()
@@ -135,7 +136,7 @@ class TestPermissions:
             assert os.geteuid() == 1000
         assert os.geteuid() == 0
 
-    def test_system_call_change_user(self, working_dir):
+    def test_system_call_change_user(self, working_dir: Path):
         with change_user("student"):
             os.system(f'touch a.txt')
             file = File("a.txt")

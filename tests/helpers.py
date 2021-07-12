@@ -1,6 +1,7 @@
 
 from typing import Dict, Tuple, Union, List
 from textwrap import dedent
+from pathlib import Path
 from shell_adventure.host_side.tutorial import Tutorial
 
 __all__ = [
@@ -48,7 +49,7 @@ SIMPLE_TUTORIAL = dedent("""
         - mypuzzles.move
 """)
 
-def create_tutorial(tmp_path, files: Dict[str, str]) -> Tutorial:
+def create_tutorial(tmp_path: Path, files: Dict[str, str]) -> Tutorial:
     """
     Creates a tutorial with the given files. 
     Files (such as puzzles) will be saved to the dictionary key names

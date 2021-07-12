@@ -1,13 +1,13 @@
 import pytest
 import stat
+from pathlib import Path
 from shell_adventure.api.file import File
 from shell_adventure.api.permissions import Permissions, change_user
 from shell_adventure.api.random_helper import RandomHelper
-from shell_adventure.docker_side.tutorial_docker import TutorialDocker
 import shell_adventure.api
 
 class TestFile:
-    def test_basic(self, working_dir):
+    def test_basic(self, working_dir: Path):
         dir = File("A")
         file = dir / "a.txt"
         assert isinstance(file, File)
@@ -17,12 +17,12 @@ class TestFile:
         file.write_text("STUFF")
         assert file.read_text() == "STUFF"
 
-    def test_path(self, working_dir):
+    def test_path(self, working_dir: Path):
         file = File("A/B.txt")
         assert file.path.startswith("/")
         assert file.path.endswith("A/B.txt")
 
-    def test_create(self, working_dir):
+    def test_create(self, working_dir: Path):
         file = File("A/B.txt")
         assert not file.parent.exists()
         assert not file.exists()
@@ -59,7 +59,7 @@ class TestFile:
         assert file.exists()
         assert file.read_text() == "STUFF"
 
-    def test_children(self, working_dir):
+    def test_children(self, working_dir: Path):
         dir = File("dir")
         for name in ["A.txt", "B.txt", "C.txt"]:
             (dir / name).create()
@@ -73,7 +73,7 @@ class TestFile:
         names = {f.name for f in dir.children}
         assert names == {"A.txt", "B.txt", "C.txt"}
 
-    def test_chmod(self, working_dir):
+    def test_chmod(self, working_dir: Path):
         file = File("a.txt")
         file.create()
 
@@ -91,7 +91,7 @@ class TestFile:
         file.chmod("g+w,u=x")
         assert file.permissions == 0o164
 
-    def test_chmod_errors(self, working_dir):
+    def test_chmod_errors(self, working_dir: Path):
         file = File("a.txt")
 
         with pytest.raises(FileNotFoundError):
@@ -103,7 +103,7 @@ class TestFile:
         with pytest.raises(ValueError, match="Invalid mode"):
             file.chmod("not-a-chmod-string")
 
-    def test_chown(self, working_dir):
+    def test_chown(self, working_dir: Path):
         file = File("a.txt")
         file.create()
         assert (file.owner(), file.group()) == ("root", "root")
@@ -117,7 +117,7 @@ class TestFile:
         file.chown(0, 0) # uid for root
         assert (file.owner(), file.group()) == ("root", "root")
 
-    def test_chown_chmod_run_as_root(self, working_dir):
+    def test_chown_chmod_run_as_root(self, working_dir: Path):
         file = File("a.txt")
         file.create()
         assert (file.owner(), file.group()) == ("root", "root")
@@ -130,7 +130,7 @@ class TestFile:
             file.chown("student", "student")
             assert (file.owner(), file.group()) == ("student", "student")
 
-    def test_checking_setting_permissions(self, working_dir):
+    def test_checking_setting_permissions(self, working_dir: Path):
         file = File("root_file.txt")
         file.create(mode=0o764)
 
@@ -145,29 +145,29 @@ class TestFile:
         assert int(file.permissions) == 0o754
         assert stat.S_IMODE(file.stat().st_mode) == 0o754
 
-    def test_setting_permissions_with_int(self, working_dir):
+    def test_setting_permissions_with_int(self, working_dir: Path):
         file = File("file.txt")
         file.create(mode=0o000)
 
-        file.permissions = 0o666
+        file.permissions = 0o666 #type: ignore # this confuses mypy https://github.com/python/mypy/issues/3004
         assert file.permissions.user.write == True
         assert stat.S_IMODE(File("file.txt").stat().st_mode) == 0o666
 
         file.permissions.others.write = False # Still "linked" to the actual file
         assert stat.S_IMODE(File("file.txt").stat().st_mode) == 0o664
 
-    def test_setting_permissions_with_object(self, working_dir):
+    def test_setting_permissions_with_object(self, working_dir: Path):
         file = File("file.txt")
         file.create(mode=0o000)
 
-        file.permissions = Permissions(0o666)
+        file.permissions = Permissions(0o666) #type: ignore # this confuses mypy
         assert file.permissions.user.write == True
         assert stat.S_IMODE(File("file.txt").stat().st_mode) == 0o666
 
         file.permissions.others.write = False # Still "linked" to the actual file
         assert stat.S_IMODE(File("file.txt").stat().st_mode) == 0o664
 
-    def test_random(self, working_dir):
+    def test_random(self, working_dir: Path):
         try:
             working_dir = File(working_dir)
 
@@ -187,7 +187,7 @@ class TestFile:
         finally:
             shell_adventure.api._rand = None
 
-    def test_home(self, working_dir):
+    def test_home(self, working_dir: Path):
         assert File.home() == File("/root") # No tutorial set up.
 
 

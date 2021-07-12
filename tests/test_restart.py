@@ -3,10 +3,11 @@ from shell_adventure.host_side.tutorial import Tutorial
 from shell_adventure.host_side import docker_helper
 from shell_adventure.shared.tutorial_errors import *
 from textwrap import dedent
+from pathlib import Path
 from .helpers import *
 
 class TestRestart:
-    def test_restart_disabled(self, tmp_path, check_containers):
+    def test_restart_disabled(self, tmp_path: Path, check_containers):
         tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
                 modules:
@@ -41,7 +42,7 @@ class TestRestart:
             tutorial.restart()
             assert file_exists(tutorial, "new.txt") # restart should just do nothing
 
-    def test_restart_basic(self, tmp_path, check_containers):
+    def test_restart_basic(self, tmp_path: Path, check_containers):
         tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
                 modules:
@@ -88,7 +89,7 @@ class TestRestart:
 
             assert tutorial.solve_puzzle(globals_set) == (True, "Correct!") # _home is still set
 
-    def test_restart_pickle_failure(self, tmp_path, check_containers):
+    def test_restart_pickle_failure(self, tmp_path: Path, check_containers):
         puzzles = dedent("""
             from shell_adventure.api import *
 

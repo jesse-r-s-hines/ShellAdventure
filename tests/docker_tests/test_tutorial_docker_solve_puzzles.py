@@ -1,13 +1,13 @@
 import pytest
 from shell_adventure.docker_side.tutorial_docker import TutorialDocker
 from shell_adventure.api.file import File
-from pathlib import PurePath
+from pathlib import PurePath, Path
 import os
 from textwrap import dedent;
 from .helpers import *
 
 class TestTutorialDockerSolvePuzzles:
-    def test_solve_puzzle(self, working_dir):
+    def test_solve_puzzle(self, working_dir: Path):
         tutorial = create_tutorial(working_dir,
             modules = {PurePath("mypuzzles.py"): SIMPLE_PUZZLES},
             puzzles = ["mypuzzles.move"]
@@ -27,8 +27,8 @@ class TestTutorialDockerSolvePuzzles:
         assert tutorial.solve_puzzle(puzzle.id) == (True, "Correct!")
         assert puzzle.solved == True
 
-    def test_solve_puzzle_flag(self, working_dir):
-        puzzle = dedent("""
+    def test_solve_puzzle_flag(self, working_dir: Path):
+        puzzle_str = dedent("""
             from shell_adventure.api import *
 
             def flag_puzzle():
@@ -38,7 +38,7 @@ class TestTutorialDockerSolvePuzzles:
                 )
         """)
         tutorial = create_tutorial(working_dir,
-            modules = {PurePath("mypuzzles.py"): puzzle},
+            modules = {PurePath("mypuzzles.py"): puzzle_str},
             puzzles = ["mypuzzles.flag_puzzle"],
         )
         [puzzle] = list(tutorial.puzzles.values())
@@ -47,8 +47,8 @@ class TestTutorialDockerSolvePuzzles:
         assert tutorial.solve_puzzle(puzzle.id, "not ok") == (False, "Incorrect!")
         assert tutorial.solve_puzzle(puzzle.id, "OK") == (True, "Correct!")
 
-    def test_solve_puzzle_feedback(self, working_dir):
-        puzzle = dedent("""
+    def test_solve_puzzle_feedback(self, working_dir: Path):
+        puzzle_str = dedent("""
             from shell_adventure.api import *
 
             def move():
@@ -66,7 +66,7 @@ class TestTutorialDockerSolvePuzzles:
 
         """)
         tutorial = create_tutorial(working_dir,
-            modules = {PurePath("mypuzzles.py"): puzzle},
+            modules = {PurePath("mypuzzles.py"): puzzle_str},
             puzzles = ["mypuzzles.move"],
         )
         [puzzle] = list(tutorial.puzzles.values())
@@ -75,7 +75,7 @@ class TestTutorialDockerSolvePuzzles:
         os.system("mv A.txt B.txt")
         assert tutorial.solve_puzzle(puzzle.id) == (True, "Correct!")
 
-    def test_solve_puzzle_twice(self, working_dir):
+    def test_solve_puzzle_twice(self, working_dir: Path):
         module = dedent("""
             from shell_adventure.api import *
             def puz():
@@ -96,7 +96,7 @@ class TestTutorialDockerSolvePuzzles:
         
         assert puzzle.solved == False
 
-    def test_puzzle_func_args(self, working_dir):
+    def test_puzzle_func_args(self, working_dir: Path):
         puzzles = dedent(f"""
             from shell_adventure.api import *
 
@@ -118,7 +118,7 @@ class TestTutorialDockerSolvePuzzles:
             puzzles = ["mypuzzles.puzzle"],
         )
 
-    def test_checker_func_args(self, working_dir):
+    def test_checker_func_args(self, working_dir: Path):
         puzzles = dedent("""
             from shell_adventure.api import *
 
@@ -137,7 +137,7 @@ class TestTutorialDockerSolvePuzzles:
 
         assert tutorial.solve_puzzle(puzzle.id) == (True, "Correct!")
 
-    def test_solve_puzzle_randomized(self, working_dir):
+    def test_solve_puzzle_randomized(self, working_dir: Path):
         puzzles = dedent("""
             from shell_adventure.api import *
 

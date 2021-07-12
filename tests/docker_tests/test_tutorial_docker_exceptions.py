@@ -1,18 +1,18 @@
-from pathlib import PurePath
+from pathlib import PurePath, Path
 import pytest, re
 from textwrap import dedent, indent;
 from shell_adventure.shared.tutorial_errors import *
 from .helpers import *
 
 class TestTutorialDockerExceptions:
-    def test_puzzle_not_found(self, working_dir):
+    def test_puzzle_not_found(self, working_dir: Path):
         with pytest.raises(ConfigError, match=re.escape("Unknown puzzle template(s) 'mypuzzles.puzz_a', 'mypuzzles.puzz_b' and 'mypuzzles.puzz_c'")):
             tutorial = create_tutorial(working_dir,
                 modules = {PurePath("mypuzzles.py"): SIMPLE_PUZZLES},
                 puzzles = ["mypuzzles.puzz_a", "mypuzzles.puzz_b", "mypuzzles.puzz_c"]
             )
 
-    def test_config_error(self, working_dir):
+    def test_config_error(self, working_dir: Path):
         with pytest.raises(ConfigError, match="doesn't exist"):
             tutorial = create_tutorial(working_dir,
                 home = "/not/a/dir",
@@ -24,7 +24,7 @@ class TestTutorialDockerExceptions:
             )
 
 
-    def test_puzzle_template_bad_return(self, working_dir):
+    def test_puzzle_template_bad_return(self, working_dir: Path):
         puzzles = dedent("""
             def invalid():
                 return "a string"
@@ -36,7 +36,7 @@ class TestTutorialDockerExceptions:
                 puzzles = ["mypuzzles.invalid"],
             )
 
-    def test_solve_puzzle_bad_return(self, working_dir):
+    def test_solve_puzzle_bad_return(self, working_dir: Path):
         puzzles = dedent("""
             from shell_adventure.api import *
 
@@ -55,7 +55,7 @@ class TestTutorialDockerExceptions:
         with pytest.raises(UserCodeError, match="mypuzzles.invalid returned int, expected bool or str"):
             tutorial.solve_puzzle(puzzle.id)
 
-    def test_template_unrecognized_params(self, working_dir):
+    def test_template_unrecognized_params(self, working_dir: Path):
         puzzles = dedent("""
             from shell_adventure.api import *
 
@@ -73,7 +73,7 @@ class TestTutorialDockerExceptions:
                 puzzles = ["mypuzzles.puzzle"],
             )
 
-    def test_checker_unrecognized_params(self, working_dir):
+    def test_checker_unrecognized_params(self, working_dir: Path):
         puzzles = dedent("""
             from shell_adventure.api import *
 
@@ -91,9 +91,9 @@ class TestTutorialDockerExceptions:
             )
         assert "UnrecognizedParamsError" in str(exc_info.value)
 
-    def test_generation_exception(self, tmp_path):
+    def test_generation_exception(self, working_dir: Path):
         with pytest.raises(UserCodeError, match = "Puzzle generation failed") as exc_info:
-            tutorial = create_tutorial(tmp_path, 
+            tutorial = create_tutorial(working_dir, 
                 modules = {PurePath("puzzles.py"): dedent(r"""
                     def puzzle():
                         raise ValueError('BOOM!')
@@ -110,9 +110,9 @@ class TestTutorialDockerExceptions:
         """).lstrip()
         assert expected == str(exc_info.value)
 
-    def test_module_exception(self, tmp_path):
+    def test_module_exception(self, working_dir: Path):
         with pytest.raises(UserCodeError, match = "Puzzle generation failed") as exc_info:
-            tutorial = create_tutorial(tmp_path,
+            tutorial = create_tutorial(working_dir,
                 modules = {PurePath("/path/to/puzzles.py"): dedent(r"""
                     1 ++
                 """)},
@@ -129,8 +129,8 @@ class TestTutorialDockerExceptions:
         """).lstrip()
         assert expected == str(exc_info.value)
 
-    def test_checker_exception(self, tmp_path):
-        tutorial = create_tutorial(tmp_path, 
+    def test_checker_exception(self, working_dir: Path):
+        tutorial = create_tutorial(working_dir, 
             modules = {PurePath("puzzles.py"): dedent(r"""
                 from shell_adventure.api import *
 
@@ -159,8 +159,8 @@ class TestTutorialDockerExceptions:
         """).lstrip()
         assert expected == str(exc_info.value)
 
-    def test_checker_cant_call_rand(self, tmp_path):
-        tutorial = create_tutorial(tmp_path, 
+    def test_checker_cant_call_rand(self, working_dir: Path):
+        tutorial = create_tutorial(working_dir, 
             modules = {PurePath("puzzles.py"): dedent(r"""
                 from shell_adventure.api import *
 
@@ -177,8 +177,8 @@ class TestTutorialDockerExceptions:
         with pytest.raises(UserCodeError, match = "You can only use randomization in Puzzle templates"):
             tutorial.solve_puzzle(puz_id)
 
-    def test_format_user_exception(self, tmp_path):
-        tutorial = create_tutorial(tmp_path,
+    def test_format_user_exception(self, working_dir: Path):
+        tutorial = create_tutorial(working_dir,
             modules = {PurePath("/path/to/puzzles.py"): dedent(r"""
                 from shell_adventure.api import *
                 import lorem
@@ -216,9 +216,9 @@ class TestTutorialDockerExceptions:
         """).lstrip()
         assert expected == str(exc_info.value)
 
-    def test_unpickleable_checker(self, tmp_path):
+    def test_unpickleable_checker(self, working_dir: Path):
         with pytest.raises(UserCodeError, match = "Unpickleable autograder function in 'puzzles.unpickleable'") as exc_info:
-            tutorial = create_tutorial(tmp_path,
+            tutorial = create_tutorial(working_dir,
                 modules = {PurePath("puzzles.py"): dedent(r"""
                     from shell_adventure.api import *
 
