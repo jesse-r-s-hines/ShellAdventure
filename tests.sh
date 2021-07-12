@@ -17,13 +17,13 @@ set +e # Undo "set -e"
 echo -e "\n\n"
 echo "Tests in Docker container"
 # Also makes a ".coverage" report in cwd
-.venv/bin/python3.7 -m tests.run_docker_tests $@
+python3 -m tests.run_docker_tests $@
 
 
 echo -e "\n\n"
 echo "Main tests"
 # Merge coverage report with report from container
-.venv/bin/python3.7 -m pytest --cov --cov-report= --cov-append $@
+python3 -m pytest --cov --cov-report= --cov-append $@
 
 # Output html report
 # Coverage reports are somewhat incomplete as we don't have a good way to track the code that gets run in the container

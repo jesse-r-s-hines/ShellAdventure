@@ -21,13 +21,14 @@ sudo usermod -aG docker $USER
 
 ## Installing on Debian
 ```bash
-# Install Dependencies 
-sudo apt install python3-pil python3-pil.imagetk
-python3 -m pip install -r requirements.txt # or requirements-dev.txt for developers
-
-# build the docker container
+# Install Dependencies
 cd ShellAdventure
-docker build -t shell-adventure docker_image
+
+sudo apt install python3-pil python3-pil.imagetk
+python3 -m pip install -r requirements.txt
+
+# build the docker container using build_image.sh
+./build_image.sh
 ```
 
 If you get an error while building the container on the Raspberry Pi about `invalid signature was encountered` you may need to manually update libseccomp. Download the latest `libseccomp2_x.x.x-x_armhf.deb` from [here](http://ftp.us.debian.org/debian/pool/main/libs/libseccomp/) and
@@ -259,4 +260,15 @@ You can use any of the standard Python libraries in your puzzle generation funct
 See the [examples](examples) folder for complete examples of tutorial configuration and puzzle templates.
 
 # Running Tests
-The project uses [mypy](http://mypy-lang.org) to do static type checking on the code. The tests are split up into two groups, those that run host-side, and those that run in the default `shell-adventure` container. Both use [pytest](https://docs.pytest.org/en/6.2.x/). To do mypy analysis and run the tests, run the `./tests.sh` script.
+The project uses [mypy](http://mypy-lang.org) to do static type checking on the code. The tests are split up into two groups, those that run host-side, and those that run in the default `shell-adventure` container. Both use [pytest](https://docs.pytest.org/en/6.2.x/).
+
+To run the tests, set up a Python3.7 venv (since Python3.7 is the lowest version of Python *Shell Adventure* supports):
+```bash
+python3.7 -m venv .venv
+.venv/bin/python3 -m pip install -r requirements-dev.txt
+```
+Then run
+```bash
+./tests.sh
+```
+to do mypy analysis and run the tests.

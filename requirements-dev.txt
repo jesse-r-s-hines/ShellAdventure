@@ -1,4 +1,5 @@
 -r requirements.txt
+mypy
 pytest
 pytest-cov
 pdoc
