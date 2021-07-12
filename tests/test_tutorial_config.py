@@ -166,7 +166,7 @@ class TestTutorialConfig:
         assert "à.ñ" not in message # unicode is valid
 
     def test_config_parse_error(self, tmp_path: Path, check_containers):
-        with pytest.raises(ConfigError, match = "block sequence entries are not allowed in this context"):
+        with pytest.raises(ConfigError):
             tutorial = create_tutorial(tmp_path, {
                 "config.yaml": """
                     modules: - -
