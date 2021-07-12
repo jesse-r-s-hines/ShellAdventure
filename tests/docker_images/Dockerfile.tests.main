@@ -1,4 +1,4 @@
-FROM shell-adventure:latest
+FROM shelladventure/shell-adventure:latest
 
 # Install pytest
 USER root

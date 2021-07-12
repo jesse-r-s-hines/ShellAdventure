@@ -270,7 +270,7 @@ class TestIntegration:
     def test_different_image(self, tmp_path: Path, check_containers):
         tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
-                image: shell-adventure/tests:alpine
+                image: shelladventure/tests:alpine
                 modules:
                     - puzzles.py
                 puzzles:
@@ -312,7 +312,7 @@ class TestIntegration:
     def test_missing_deps(self, tmp_path: Path, check_containers):
         tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
-                image: shell-adventure/tests:missing-deps
+                image: shelladventure/tests:missing-deps
                 modules:
                     - puzzles.py
                 puzzles:

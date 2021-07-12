@@ -12,7 +12,7 @@ def check_containers():
     or stopping docker containers.
     """
     # Get the number of images before we made the tutorial
-    image_filter = {"reference": "shell-adventure*"}
+    image_filter = {"reference": "shelladventure/*"}
     containers_before = set(docker_helper.client.containers.list(all = True))
     images_before = set(docker_helper.client.images.list(filters = image_filter))
 

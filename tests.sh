@@ -1,10 +1,13 @@
 #!/bin/bash
 set -e # Exit script if any command fails
 
-docker build -t shell-adventure docker_image 1> /dev/null # Only print errors
+# Build the image locally. Then build the shelladventure/tests:main and other test images. We'll use that
+# tests:main image in our actual tests unless specified otherwise so that the tests are using our local
+# version of the image instead of pulling the one on DockerHub
+docker build -t shelladventure/shell-adventure:latest docker_image 1> /dev/null # Only print errors
 for dockerfile in tests/docker_images/Dockerfile.tests.*; do # Build all Dockerfiles in tests/docker_images
     tag=${dockerfile##*.} # Removes all but last extension of dockerfile
-    docker build -t shell-adventure/tests:$tag --file $dockerfile tests/docker_images 1> /dev/null
+    docker build -t shelladventure/tests:$tag --file $dockerfile tests/docker_images 1> /dev/null
 done
 
 source .venv/bin/activate

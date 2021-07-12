@@ -62,7 +62,13 @@ def create_tutorial(tmp_path: Path, files: Dict[str, str]) -> Tutorial:
         path.parent.mkdir(parents = True, exist_ok = True)
         path.write_text(content)
 
-    return Tutorial(tmp_path / "config.yaml")
+    tutorial = Tutorial(tmp_path / "config.yaml")
+    # If we are using the default image, set it to shelladventure/tests:main image. We want to be using a local image
+    # for tests or Tutorial will try an pull the latest from DockHub instead of using our local image and whatever changes
+    # we've made in it.
+    if tutorial.image == Tutorial.DEFAULT_IMAGE:
+        tutorial.image = "shelladventure/tests:main"
+    return tutorial
 
 def run_command(tutorial: Tutorial, cmd: Union[str, List[str]],  **kwargs) -> Tuple[int, str]:
     """ Execute a command in a tutorial, return the exit code and output """

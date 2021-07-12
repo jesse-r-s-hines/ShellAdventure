@@ -11,7 +11,7 @@ proj_dir = shell_adventure.PKG_PATH.parent
 work_dir = "/usr/local" # Path in the container we are working in
 
 try:
-    container = docker_helper.launch("shell-adventure/tests:main",
+    container = docker_helper.launch("shelladventure/tests:main",
         volumes = {
             test_dir: {'bind': f"{work_dir}/tests", 'mode': 'ro'},
         },

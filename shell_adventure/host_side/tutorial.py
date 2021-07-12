@@ -29,7 +29,7 @@ class Tutorial:
     # Config fields
 
     image: str
-    """ The name or id of the Docker image to run the container in. Defaults to "shell-adventure:latest" """
+    """ The name or id of the Docker image to run the container in. Defaults to "shelladventure/shell-adventure:latest" """
 
     container_options: Dict[str, Any]
     """
@@ -69,7 +69,8 @@ class Tutorial:
     """ Time the tutorial ended. """
 
     # Static fields
-    config_schema: ClassVar[Schema] = yamale.make_schema(PKG_PATH / "config_schema.yaml")
+    CONFIG_SCHEMA: ClassVar[Schema] = yamale.make_schema(PKG_PATH / "config_schema.yaml")
+    DEFAULT_IMAGE: ClassVar[str] = "shelladventure/shell-adventure:latest"
 
     def __init__(self, config_file: PathLike):
         """ Create a tutorial from a config_file. """
@@ -78,7 +79,7 @@ class Tutorial:
 
         try:
             data = yamale.make_data(config_file) # Parse the YAML data
-            yamale.validate(Tutorial.config_schema, data) # Throws if invalid
+            yamale.validate(Tutorial.CONFIG_SCHEMA, data) # Throws if invalid
             [(config, _)] = data # data is [(data, file_name),...] we should only have one though
         except yamale.YamaleError as e:
             errors = "\n".join(e.results[0].errors)
@@ -88,7 +89,7 @@ class Tutorial:
 
         def get_path(path: str): return Path(self.data_dir, path).resolve() # Get Path relative to config file
 
-        self.image = config.get("image", "shell-adventure:latest")
+        self.image = config.get("image", Tutorial.DEFAULT_IMAGE)
 
         container_options = config.get("container_options", {})
         self.container_options = {str(k): v for k, v in container_options.items()} # Force keys to str
@@ -269,7 +270,7 @@ class Tutorial:
 
     def _commit(self):
         """ Return snapshot of the current state of the tutorial """
-        return self.container.commit("shell-adventure", f"snapshot-{datetime.now().timestamp()}")
+        return self.container.commit("shelladventure/shell-adventure", f"snapshot-{datetime.now().timestamp()}")
 
     def restart(self):
         """

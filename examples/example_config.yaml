@@ -29,8 +29,8 @@ puzzles:
     - permissions_examples.create_file_in_protected_folder
 
 # Optional. This is the tag of the Docker image that the tutorial will run in.
-# Default is "shell-adventure:latest"
-image: "shell-adventure:latest"
+# Default is "shelladventure/shell-adventure:latest"
+image: "shelladventure/shell-adventure:latest"
 
 # Optional. These options are passed directly to the docker-py create() method. You generally don't need to mess with
 # this unless you need to manipulate low-level docker options.

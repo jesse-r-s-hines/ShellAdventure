@@ -1,21 +1,23 @@
 """
-This module contains methods for launching the shell-adventure container.
+This module contains methods for launching a container for the tutorial.
 """
 from typing import Union
 import docker, deepmerge
 from docker.models.images import Image
 from docker.models.containers import Container
+from docker.errors import ImageNotFound
 import shell_adventure
 
 client = docker.from_env()
 
 def launch(image: Union[str, Image], **container_options) -> Container:
     """
-    Launches the given container and sets it up for a Shell Adventure tutorial. Puts all the
-    Shell Adventure files in a volume and sets all the other settings as needed. You can specify
-    extra options which will be merged in with the default options to `Container.create()`. Returns
-    the container. You can attach to the container to interact with the shell session inside. Make
-    sure to `stop()` the container when you are done with it (it will auto-remove once stopped).
+    Attempts to pull the given image if a string is given, then launches the image container and
+    sets it up for a Shell Adventure tutorial. Puts all the Shell Adventure files in a volume and
+    sets all the other settings as needed. You can specify extra options which will be merged in
+    with the default options to `Container.create()`. Returns the container. You can attach to the
+    container to interact with the shell session inside. Make sure to `stop()` the container when 
+    you are done with it (it will auto-remove once stopped).
     """
     container_options = deepmerge.always_merger.merge(dict(
         volumes = {
@@ -32,6 +34,15 @@ def launch(image: Union[str, Image], **container_options) -> Container:
         auto_remove = True,
         detach = True,
     ), container_options)
+
+    if isinstance(image, str): # Pull the image or get the image
+        try:
+            image = client.images.pull(image)
+        except Exception as pullError: # Image not found online, internet access errors, etc...
+            try: # Fallback to a local image if we have one
+                image = client.images.get(image)
+            except ImageNotFound:
+                raise pullError # Raise the original pull error
 
     container: Container = client.containers.create(image, **container_options)
     container.start()

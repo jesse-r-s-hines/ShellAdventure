@@ -26,14 +26,6 @@ cd ShellAdventure
 
 sudo apt install python3-pil python3-pil.imagetk
 python3 -m pip install -r requirements.txt
-
-# build the docker container using build_image.sh
-./build_image.sh
-```
-
-If you get an error while building the container on the Raspberry Pi about `invalid signature was encountered` you may need to manually update libseccomp. Download the latest `libseccomp2_x.x.x-x_armhf.deb` from [here](http://ftp.us.debian.org/debian/pool/main/libs/libseccomp/) and
-```bash
-sudo apt install ./libseccomp2_x.x.x-x_armhf.deb
 ```
 
 ## Other OS's
@@ -205,15 +197,15 @@ File("/blueberry/lemon/watermellon/kiwi/strawberry")
 ```
 
 ## Using Custom Docker Images
-If you want to customize the environment the student will be placed in, install or remove commands, or add preexisting files you can make *Shell Adventure* use a custom docker image. Simply make your own Dockerfile and build the image (see Docker's [docs](https://docs.docker.com/engine/reference/builder/)), and specify the image tag in the config file.
+If you want to customize the environment the student will be placed in, install or remove commands, or add preexisting files you can make *Shell Adventure* use a different Docker image by specifying the name and tag of the image you want to use in the config file. You can use any image that is available on [Docker Hub](https://hub.docker.com/), or make your own custom images by making your own Dockerfile and building the image (see Docker's [docs](https://docs.docker.com/engine/reference/builder/)).
 
 The `USER` of the image will be used as the student, and the `WORKDIR` of the image will be used as the student's "home". The `CMD` of the image should run the shell. Normally this will be `bash`, but you can also use a different shell application if you want. (Currently there are some minor issues using shells other than bash so use at your own risk.)
 
-The easiest way to make your own Docker image is to extend from the default `shell-adventure` image. Note that since the `shell-adventure` image sets the `USER` to `student` you will need to set the user to `root` before installing things, and then set it back when you are done.
+The easiest way to make your own Docker image is to extend from the default `shelladventure/shell-adventure` image. Note that since the `shell-adventure` image sets the `USER` to `student` you will need to set the user to `root` before installing things, and then set it back when you are done.
 
 Example:
 ```Dockerfile
-FROM shell-adventure:latest
+FROM shelladventure/shell-adventure:latest
 
 USER root
 RUN apt install -y hostnamectl
@@ -238,7 +230,7 @@ WORKDIR /home/bob
 CMD ["sh"]
 ```
 
-Then build your image specify and the image tag in the config.
+Then build your image and specify and the image tag in the config.
 ```bash
 docker build -t my-image -f Dockerfile .
 ```

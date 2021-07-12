@@ -1,4 +1,4 @@
-The following commands are available in the default `shell-adventure:latest` Docker image.
+The following commands are available in the default `shelladventure/shell-adventure:latest` Docker image.
 
 |   Command   |                              Description                              |
 |-------------|-----------------------------------------------------------------------|
