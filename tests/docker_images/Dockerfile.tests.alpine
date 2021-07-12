@@ -3,7 +3,7 @@ FROM alpine:3
 
 # Install stuff necessary for Shell Adventure
 RUN apk add --no-cache python3 py3-pip
-RUN python3 -m pip --no-cache-dir install dill python-lorem 
+RUN python3 -m pip --no-cache-dir install dill python-lorem
 
 # Make new user
 RUN adduser -D bob

@@ -110,7 +110,7 @@ class TestTutorialDocker:
         assert tutorial.solve_puzzle(puz) == (True, "Correct!")
 
 
-    def test_user(self, working_dir: Path): 
+    def test_user(self, working_dir: Path):
         tutorial = create_tutorial(working_dir,
             user = "student",
             modules = {PurePath("mypuzzles.py"): dedent("""
@@ -140,7 +140,7 @@ class TestTutorialDocker:
         [puzzle] = list(tutorial.puzzles.values())
         assert tutorial.solve_puzzle(puzzle.id) == (True, "Correct!")
 
-    def test_root_user(self, working_dir: Path): 
+    def test_root_user(self, working_dir: Path):
         tutorial = create_tutorial(working_dir,
             user = "root",
             modules = {PurePath("mypuzzles.py"): SIMPLE_PUZZLES},
@@ -167,7 +167,7 @@ class TestTutorialDocker:
 
     def test_get_special_files(self, working_dir: Path):
         tutorial = create_tutorial(working_dir)
-        
+
         def get_files_recursive(folder):
             all_files = []
             for is_dir, is_symlink, file in tutorial.get_files(folder):
@@ -201,7 +201,7 @@ class TestTutorialDocker:
 
         log = working_dir / "log.txt"
         assert log.read_text().splitlines() == ['puz1', 'puz3', 'puz2']
- 
+
     def test_puzzle_always_cwd_in_home(self, working_dir: Path):
         tutorial = create_tutorial(working_dir,
             modules = {PurePath("puzzles.py"): dedent(fr"""

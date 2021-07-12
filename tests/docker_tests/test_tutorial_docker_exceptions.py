@@ -93,7 +93,7 @@ class TestTutorialDockerExceptions:
 
     def test_generation_exception(self, working_dir: Path):
         with pytest.raises(UserCodeError, match = "Puzzle generation failed") as exc_info:
-            tutorial = create_tutorial(working_dir, 
+            tutorial = create_tutorial(working_dir,
                 modules = {PurePath("puzzles.py"): dedent(r"""
                     def puzzle():
                         raise ValueError('BOOM!')
@@ -130,7 +130,7 @@ class TestTutorialDockerExceptions:
         assert expected == str(exc_info.value)
 
     def test_checker_exception(self, working_dir: Path):
-        tutorial = create_tutorial(working_dir, 
+        tutorial = create_tutorial(working_dir,
             modules = {PurePath("puzzles.py"): dedent(r"""
                 from shell_adventure.api import *
 
@@ -160,7 +160,7 @@ class TestTutorialDockerExceptions:
         assert expected == str(exc_info.value)
 
     def test_checker_cant_call_rand(self, working_dir: Path):
-        tutorial = create_tutorial(working_dir, 
+        tutorial = create_tutorial(working_dir,
             modules = {PurePath("puzzles.py"): dedent(r"""
                 from shell_adventure.api import *
 

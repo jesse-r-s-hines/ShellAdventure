@@ -99,7 +99,7 @@ class TestRestart:
                     question = f"Unpickleable",
                     checker = lambda: gen != None,
                 )
-        """)  
+        """)
 
         tutorial = create_tutorial(tmp_path, {
             "config.yaml": """

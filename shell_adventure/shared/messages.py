@@ -11,7 +11,7 @@ class Message(Enum):
     Enum for various messages that can be sent between host and docker.
     They will be sent as tuples (enum, *args), so that the message can have parameters.
     """
-    
+
     STOP = 'STOP'
     """ Stop the tutorial. Usage: (STOP,) """
     SETUP = 'SETUP'

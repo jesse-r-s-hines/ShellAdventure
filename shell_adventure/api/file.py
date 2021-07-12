@@ -29,7 +29,7 @@ class File(PosixPath):
         Basically an alias of `Path.iterdir()` but returns a list instead of a generator.
         """
         return list(self.iterdir()) # type: ignore
-    
+
     @property
     def path(self) -> str:
         """ A property that returns the absolute path to this file as a string. """
@@ -113,17 +113,17 @@ class File(PosixPath):
         """
         Makes a `File` to a random folder under this file. The folder may be several levels deep, and its parents may or may
         not exist. Its does not create the file or any parents on disk.
-        
+
         The returned `File` can include new folders in the path with random names, and it can include existing folders that are
         "shared". Folders are only "shared" if they were created via `random_shared_folder()` or explicitly marked shared via
         `mark_shared()`.
-        
+
         Folders created by `random_shared_folder()` can be "reused" in other calls to `folder()`, so you should not modify
         the folders in puzzles. This way, folders created by puzzles won't interfere with one another, but multiple puzzles can
         still be created in the same directory. If you need a folder at a random location that won't have any other puzzles put
         in it you should explicitly create a folder under the one returned by `random_shared_folder()` with something like
         >>> home.random_shared_folder().random_file().mkdir()
-        
+
         depth: Either an int or a (min, max) tuple. Specifies the depth under parent of the returned file. If a tuple is given
                a random depth in rand [min, max] will be used.
         create_new_chance: float in [0, 1]. The percentage chance that a new folder will be created even if shared folders are
@@ -137,7 +137,7 @@ class File(PosixPath):
         File("/home/student/apple/banana")
         >>> folder.mkdir(parents = True) # random_shared_folder() doesn't create the file on disk. Use mkdir() with parents = True to make the folder.
         >>> # Make a random nested folder, but make the last folder not "shared" so we can safely rm it
-        >>> home.random_shared_folder().random_file().mkdir() 
+        >>> home.random_shared_folder().random_file().mkdir()
         File("/home/student/orange/lime/tomato")
         >>> home.random_shared_folder(create_new_chance = 0) # Will choose an existing "shared" folder
         File("/home/student/orange/lime")

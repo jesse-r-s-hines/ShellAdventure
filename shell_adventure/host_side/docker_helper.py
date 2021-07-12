@@ -29,7 +29,7 @@ def launch(image: Union[str, Image], **container_options) -> Container:
         stdin_open = True,
         # We will usually have to stop the container manually since the bash session won't quit on its own.
         # But if we don't have auto remove enabled a "Created" container will get left around that we can't remove
-        auto_remove = True, 
+        auto_remove = True,
         detach = True,
     ), container_options)
 

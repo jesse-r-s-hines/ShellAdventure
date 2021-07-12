@@ -1,6 +1,6 @@
 The following commands are available in the default `shell-adventure:latest` Docker image.
 
-|   Command   |                              Description                              | 
+|   Command   |                              Description                              |
 |-------------|-----------------------------------------------------------------------|
 | apt         | a high-level commandline interface for the package management system  |
 | apt-get     | APT package handling utility -- command-line interface                |

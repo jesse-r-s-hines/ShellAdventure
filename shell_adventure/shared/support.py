@@ -24,7 +24,7 @@ def call_with_args(func: Callable[..., Any], args: Dict[str, Any]) -> Any:
     extra_params = extra_func_params(func, known_args)
     if extra_params:
         raise UnrecognizedParamsError(
-            f'Unrecognized param(s) {sentence_list(extra_params, quote = True)}.' + 
+            f'Unrecognized param(s) {sentence_list(extra_params, quote = True)}.' +
             f' Expected {sentence_list(known_args, last_sep = " and/or ", quote = True)}.',
             extra_params = extra_params
         )
@@ -41,7 +41,7 @@ class UnrecognizedParamsError(Exception):
 
     def __str__(self):
         return self.message
-    
+
     def __reduce__(self): # Make it picklable
         return (type(self), (self.message, self.extra_params))
 

@@ -11,7 +11,7 @@ class TestFile:
         dir = File("A")
         file = dir / "a.txt"
         assert isinstance(file, File)
-        
+
         file = File(working_dir, "b.txt")
         assert file.exists() == False
         file.write_text("STUFF")
@@ -66,7 +66,7 @@ class TestFile:
 
         with pytest.raises(NotADirectoryError):
             (dir / "A.txt").children
-        
+
         assert isinstance(dir.children, list)
         assert isinstance(dir.children[0], File)
 
@@ -125,7 +125,7 @@ class TestFile:
         with change_user("student"):
             file.chmod("o-rwx")
             assert file.permissions == 0o640
-    
+
         with change_user("student"):
             file.chown("student", "student")
             assert (file.owner(), file.group()) == ("student", "student")

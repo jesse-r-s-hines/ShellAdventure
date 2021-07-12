@@ -4,7 +4,7 @@ def chown(home: File):
     root_file = (home / "root_file")
     # Change the user we are running to root so the file is created as root
     # You could also just create the file and then chown it to root afterwards
-    with change_user("root"): 
+    with change_user("root"):
         root_file.create()
 
     def checker():
@@ -14,7 +14,7 @@ def chown(home: File):
             return "You need to change the group as well"
         else:
             return False
-    
+
     return Puzzle(
         question = 'Use sudo to take ownership of "root_file" (You are "student" and your password is "student")',
         checker = checker
@@ -38,7 +38,7 @@ def chmod_executable(home: File):
 
 def create_file_in_protected_folder(root: File):
     file = root.random_file()
-    
+
     def checker():
         if file.exists():
             return True

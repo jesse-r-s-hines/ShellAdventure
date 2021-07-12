@@ -58,7 +58,7 @@ class TestPuzzleData:
         puzzle = PuzzleData("template", Puzzle("Solve this puzzle.", checker = lambda: True))
         # Pickle throws attribute error instead of PickleError for some reason.
         # See https://bugs.python.org/issue29187
-        with pytest.raises(AttributeError, match = "Can't pickle"): 
+        with pytest.raises(AttributeError, match = "Can't pickle"):
             data = pickle.dumps(puzzle)
 
         # But packing first should work

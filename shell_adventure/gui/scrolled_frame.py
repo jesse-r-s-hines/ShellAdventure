@@ -39,8 +39,8 @@ class VerticalScrolledFrame(ttk.Frame):
         self.canvas.bind('<Configure>', self._configure_canvas)
         self.canvas.bind('<Enter>', self._bind_to_mousewheel)
         self.canvas.bind('<Leave>', self._unbind_from_mousewheel)
-        
-        
+
+
         # track changes to the canvas and frame width and sync them,
         # also updating the scrollbar
 
@@ -55,7 +55,7 @@ class VerticalScrolledFrame(ttk.Frame):
         #     self.canvas.config(width=self.interior.winfo_reqwidth())
 
         # This seems to make the canvas shrink to fit if the content is smaller than requested height.
-        # If there isn't room on the window for the canvas to have the full height of the frame, the 
+        # If there isn't room on the window for the canvas to have the full height of the frame, the
         # geometry manager will force it to be smaller, and the scrollbar will kick in.
         self.canvas.config(height = self.interior.winfo_reqheight())
 

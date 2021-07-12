@@ -30,7 +30,7 @@ class RandomHelper:
             paragraphs = re.split(r"\s*\n\s*\n", source) # split into paragraphs
             paragraphs = [clean_paragraph(para) for para in paragraphs if para.strip() != ""]
             # # split paragraphs into lists of sentences
-            # para_sentences = [re.findall(r".*?\.\s+", para, flags = re.DOTALL) for para in paragraphs] 
+            # para_sentences = [re.findall(r".*?\.\s+", para, flags = re.DOTALL) for para in paragraphs]
             self._content_sources.append(paragraphs)
 
         # A set of shared folders. random.folder() can use existing folders if they are shared.
@@ -57,7 +57,7 @@ class RandomHelper:
         if isinstance(count, tuple): count = random.randint(count[0], count[1])
         # filter sources too small for chosen size
         sources = [source for source in self._content_sources if count <= len(source)]
-    
+
         if sources: # If we have source
             # Weight the files so all paragraphs are equally likely regardless of source
             weights = [len(source) - count + 1 for source in sources]
@@ -85,7 +85,7 @@ class RandomHelper:
 
         if isinstance(depth, tuple): depth = random.randint(depth[0], depth[1])
         folder = File(parent).resolve()
-        
+
         for i in range(depth):
             if folder.exists():
                 choices = [d for d in folder.iterdir() if d.is_dir() and d in self._shared_folders]
@@ -94,7 +94,7 @@ class RandomHelper:
             # Create new shared folder if no choices or random chance succeeds.
             # Add check for 1 since uniform() is an inclusive range
             roll = random.uniform(0, 1)
-            if len(choices) == 0 or create_new_chance == 1 or roll < create_new_chance: 
+            if len(choices) == 0 or create_new_chance == 1 or roll < create_new_chance:
                 folder = self.file(folder) # create random file under folder
                 self.mark_shared(folder)
             else:

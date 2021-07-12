@@ -93,7 +93,7 @@ class TestTutorialDockerSolvePuzzles:
         # Solving a puzzle twice resets the solved state.
         assert tutorial.solve_puzzle(puzzle.id, "NOT OK") == (False, "Incorrect!")
         assert puzzle.solved == False
-        
+
         assert puzzle.solved == False
 
     def test_puzzle_func_args(self, working_dir: Path):
@@ -144,7 +144,7 @@ class TestTutorialDockerSolvePuzzles:
             def move(home):
                 src = home.random_file("txt")
                 src.write_text(rand().paragraphs(3))
-                
+
                 dst = home.random_shared_folder().random_file("txt") # Don't create yet
 
                 def checker():

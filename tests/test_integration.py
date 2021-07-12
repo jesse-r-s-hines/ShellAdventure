@@ -52,7 +52,7 @@ class TestIntegration:
 
             assert [p.question for p in tutorial.get_current_puzzles()] == ["Rename A.txt to B.txt", "Rename C.txt to D.txt"]
             assert [p.question for p in tutorial.get_all_puzzles()] == ["Rename A.txt to B.txt", "Rename C.txt to D.txt"]
-    
+
             run_command(tutorial, "mv C.txt D.txt")
 
             move_puzzle2 = tutorial.get_current_puzzles()[1]
@@ -91,7 +91,7 @@ class TestIntegration:
                 def random_puzzle(home):
                     src = home.random_file("txt")
                     src.write_text(rand().paragraphs(3))
-                    
+
                     dst = home.random_shared_folder().random_file("txt") # Don't create yet
 
                     def checker():
@@ -145,7 +145,7 @@ class TestIntegration:
                     with change_user("root"):
                         fileB = File("B").create()
                         assert fileB.owner() == "root"
-                
+
                     return Puzzle(
                         question = "Who are you?",
                         checker = lambda: getpass.getuser() == "root" # checker functions are also run as root
@@ -162,7 +162,7 @@ class TestIntegration:
             puzzle = tutorial.get_all_puzzles()[0]
             solved, feedback = tutorial.solve_puzzle(puzzle)
             assert solved == True
-    
+
     def test_different_user(self, tmp_path: Path, check_containers):
         tutorial = create_tutorial(tmp_path, {
             "config.yaml": """
@@ -201,7 +201,7 @@ class TestIntegration:
             assert output == "root"
             assert tutorial.get_student_cwd() == Path("/")
 
-            assert file_exists(tutorial, "/A.txt") # The puzzles are generated in root 
+            assert file_exists(tutorial, "/A.txt") # The puzzles are generated in root
             code, owner = run_command(tutorial, "stat -c '%U' A.txt", workdir="/")
             assert owner == "root"
 
@@ -221,9 +221,9 @@ class TestIntegration:
         })
 
         with pytest.raises(UserCodeError, match = "Puzzle generation failed") as exc_info:
-            with tutorial: 
+            with tutorial:
                 pass # Just launch
-        
+
         # Shouldn't include our code in the traceback, and traceback should show the real path on the host
         expected = dedent(f"""
             Puzzle generation failed for template puzzles.puzzle:
@@ -288,7 +288,7 @@ class TestIntegration:
                     with change_user("root"):
                         fileB = File("B").create()
                         assert fileB.owner() == "root"
-                
+
                     return Puzzle(
                         question = "Who are you?",
                         checker = lambda: getpass.getuser() == "root"
@@ -296,7 +296,7 @@ class TestIntegration:
             """),
         })
 
-        with tutorial:   
+        with tutorial:
             exit_code, output = run_command(tutorial, "ps -o user=", user = "root")
              # alpine's ps can't filter by pid, it just gives a list of all processes. We want the first (PID 1)
             assert output.splitlines()[0] == "bob"
@@ -320,7 +320,7 @@ class TestIntegration:
             """,
             "puzzles.py": SIMPLE_PUZZLES,
         })
-    
+
         with pytest.raises(ContainerStartupError, match = "dill, python-lorem"):
             with tutorial:
                 pass
@@ -342,9 +342,9 @@ class TestIntegration:
         })
 
         with pytest.raises(ContainerError, match = "unable to find user not-a-user"):
-            with tutorial: 
+            with tutorial:
                 pass # Just launch
-    
+
     def test_missing_image(self, tmp_path: Path, check_containers):
         # Test that exceptions in the container get raised in the Tutorial
         tutorial = create_tutorial(tmp_path, {
@@ -359,7 +359,7 @@ class TestIntegration:
         })
 
         with pytest.raises(ContainerStartupError, match = "Not Found .* not-a-docker-image"):
-            with tutorial: 
+            with tutorial:
                 pass # Just launch
 
     def test_container_dies(self, tmp_path: Path, check_containers):

@@ -73,7 +73,7 @@ class ShellAdventureGUI(ThemedTk):
 
     def _get_file_icons(self) -> Dict[Tuple[bool, bool], ImageTk.PhotoImage]:
         """ Returns a map of icons representing 4 file types. Maps (is_dir, is_symlink) tuples to the icons """
-        icon_files = { 
+        icon_files = {
             (False, False): "file",
             (False, True ): "file_symlink",
             (True,  False): "folder",
@@ -89,7 +89,7 @@ class ShellAdventureGUI(ThemedTk):
         ttk.Separator(status_bar, orient='vertical').pack(side = tk.RIGHT, fill = tk.Y, padx = 5)
         ttk.Label(status_bar, textvariable = self.time_label).pack(side = tk.RIGHT) # Time: 01:5
         ttk.Separator(status_bar, orient='vertical').pack(side = tk.RIGHT, fill = tk.Y, padx = 5)
-        
+
         return status_bar
 
     def _make_file_tree(self, master):
@@ -208,7 +208,7 @@ class ShellAdventureGUI(ThemedTk):
         # get new children
         new_files = self.tutorial.get_files(self._tree_node_to_path(folder))
         new_files.sort()
-       
+
         # Update the Treeview
         for i, (is_dir, is_symlink, file) in enumerate(new_files):
             file_id = str(file) # Use full path as iid
@@ -222,7 +222,7 @@ class ShellAdventureGUI(ThemedTk):
             if self.student_cwd == file:
                 tags.append("cwd")
                 file_text += " <--"
-            
+
             if file_in_tree:
                 self.file_tree.item(file, text = file_text, tags = tags, image = file_icon) # modify existing item.
                 self.file_tree.move(file, folder, i)
@@ -235,7 +235,7 @@ class ShellAdventureGUI(ThemedTk):
                 # Also open the current directory (and any parents of it)
                 is_in_cwd_path = (file == self.student_cwd or file in self.student_cwd.parents)
                 should_open = file_was_open or is_in_cwd_path or (was_open and not file_in_tree and not is_symlink)
-                if should_open: 
+                if should_open:
                     self.file_tree.item(file_id, open = True) # open it
                     self.load_folder(file_id, was_open = file_was_open) # trigger update on the subfolder
                 elif not file_in_tree:
@@ -288,5 +288,5 @@ class ShellAdventureGUI(ThemedTk):
     def report_callback_exception(self, exc, val, tb):
         """ Override. """
         self.destroy()
-        # Raising the exception so that we can handle it in the launch script 
+        # Raising the exception so that we can handle it in the launch script
         raise val

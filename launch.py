@@ -13,7 +13,7 @@ if __name__ == "__main__":
         tutorial = Tutorial(sys.argv[1])
     except ConfigError as e:
         exit(e)
-    
+
     def log_and_exit(header: str, message, show_logs: bool = True):
         """ Print a header, error and exit. Optionally print container logs. """
         print(f"\n\n{f' {header} '.center(60, '=')}\n")
@@ -29,7 +29,7 @@ if __name__ == "__main__":
     except (ConfigError, ContainerStartupError) as e: # Bash session hasn't started so we don't need to show header
         exit(e)
     except ContainerError as e: # ContainerError has container logs already, so don't print them twice
-        log_and_exit("An error occurred", e, show_logs = False) 
+        log_and_exit("An error occurred", e, show_logs = False)
     except UnhandledError as e: # Our code in the container broke
         log_and_exit("An unhandled error occurred in the container", format_exc(e))
     except TutorialError as e: # User caused errors or environment errors

@@ -114,7 +114,7 @@ class TestTutorialConfig:
                 """,
                 "puzzle1.py": SIMPLE_PUZZLES,
                 "path/to/puzzle1.py": SIMPLE_PUZZLES,
-            }) 
+            })
 
     def test_validation_error(self, tmp_path: Path, check_containers):
         with pytest.raises(ConfigError) as exc_info:
@@ -127,7 +127,7 @@ class TestTutorialConfig:
                 "puzzles.py": SIMPLE_PUZZLES,
             })
         message = str(exc_info.value)
-        
+
         assert re.search('Validation error in ".*/config.yaml"', message)
         assert re.search("restart_enabled: .* is not a bool.", message)
         assert re.search("modules: Required field missing", message)

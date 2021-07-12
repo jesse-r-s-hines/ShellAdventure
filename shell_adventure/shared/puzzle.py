@@ -40,7 +40,7 @@ class Puzzle:
             The checker function should return a string or a boolean. If it returns True, the puzzle is solved. If it returns
             False or a string, the puzzle was not solved. Returning a string will show the string as feedback to the student.
         score:
-            The score given on success. Defaults to 1. 
+            The score given on success. Defaults to 1.
         """
         if not isinstance(question, str): raise TypeError("Puzzle.question should be a string.")
         if not callable(checker): raise TypeError("Puzzle.checker should be a Callable.")

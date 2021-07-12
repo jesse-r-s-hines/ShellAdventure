@@ -29,7 +29,7 @@ class SelectableMessage(tk.Text):
         for (start, end, link) in hyperlinks:
             self.tag_add('link', start, end)
             self.tag_add(f'url:{link}', start, end)
-        
+
         self.tag_config('link', underline = True, foreground = 'blue')
         self.tag_bind('link', "<Button-1>", self._open_link)
 
@@ -42,14 +42,14 @@ class SelectableMessage(tk.Text):
         pattern = r"\[(.*?)\]\((.*?)\)" # match [text](www.example.com)
         hyperlinks = []
 
-        # Go through the text, 
-        offset = 0 # Number of chars the new text will be shorter than the old 
+        # Go through the text,
+        offset = 0 # Number of chars the new text will be shorter than the old
         for match in re.finditer(pattern, text):
             start = match.start() - offset
             display, link = match.groups()
             hyperlinks.append( (f"1.0+{start}c", f"1.0+{start + len(display)}c", link) )
             offset += (len(match[0]) - len(display))
-        
+
         new_text = re.sub(pattern, r'\1', text)
 
         return hyperlinks, new_text
@@ -62,7 +62,7 @@ class SelectableMessage(tk.Text):
     def update_size(self, event = None):
         lines = self.count("1.0", "end", "update", "displaylines") # gets lines after wordwrap
         self.config(height = lines)
-        
+
 def popup_box(title: str, text: str):
     popup = tk.Toplevel()
     popup.title(title)

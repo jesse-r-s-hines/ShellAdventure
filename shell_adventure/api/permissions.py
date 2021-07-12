@@ -94,13 +94,13 @@ class Permissions:
 
 class LinkedPermissions(Permissions):
     """
-    `LinkedPermissions` is linked to an actual file. Modifying the `LinkedPermissions` object will modify the permissions of 
+    `LinkedPermissions` is linked to an actual file. Modifying the `LinkedPermissions` object will modify the permissions of
     the actual file on disk.
 
     You can access and modify `File` permissions via the `File.permissions` property, which offers a more convenient API to manipulate
     UNIX file permissions than `os` and `stat` modules.
     """
-    
+
     def __init__(self, file: file.File):
         self._file = file
         self.user = LinkedPermissionsGroup(file, 6)
@@ -134,7 +134,7 @@ class PermissionsGroup:
             raise ValueError(f'Invalid string "{mode}" for permissions, must only contain "r", "w", and/or "x"')
 
         return PermissionsGroup(read, write, execute)
-    
+
     @staticmethod
     def from_int(mode: int) -> PermissionsGroup:
         """ Takes an int and assigns lowermost 3 bits to read/write/execute. Returns a `PermissionGroup` """
@@ -163,12 +163,12 @@ class LinkedPermissionsGroup(PermissionsGroup):
     Represents the read, write, and execute bits for either "user", "group", or "other". Is linked to an actual file
     on disk. Modifying the `LinkedPermissionsGroup` will modify the file's permissions.
     """
-    
+
     def _get_bit(self, mask: int) -> bool:
         """ Gets the read (0o4), write (0o2), or execute (0o1) bit. """
         mode = stat.S_IMODE(self._file.stat().st_mode)
         return bool((mode >> self._bit_shift) & mask)
-    
+
     def _set_bit(self, mask: int, val: bool):
         """ Gets the read (0o4), write (0o2), or execute (0o1) bit. """
         mode = stat.S_IMODE(self._file.stat().st_mode)
@@ -179,7 +179,7 @@ class LinkedPermissionsGroup(PermissionsGroup):
         self._file.chmod(mode)
 
     # MyPy fusses at overriding field with property. See https://github.com/python/mypy/issues/4125
-    read = property(lambda self: self._get_bit(0o4), lambda self, val: self._set_bit(0o4, val)) #type: ignore 
+    read = property(lambda self: self._get_bit(0o4), lambda self, val: self._set_bit(0o4, val)) #type: ignore
     write = property(lambda self: self._get_bit(0o2), lambda self, val: self._set_bit(0o2, val)) #type: ignore
     execute = property(lambda self: self._get_bit(0o1), lambda self, val: self._set_bit(0o1, val)) #type: ignore
 

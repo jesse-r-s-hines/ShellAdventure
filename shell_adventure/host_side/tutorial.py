@@ -62,7 +62,7 @@ class Tutorial:
 
     puzzles: List[Tree[PuzzleData]]
     """ The tree of generated PuzzleData for this tutorial. """
-    
+
     start_time: datetime
     """ Time the tutorial started. """
     end_time: datetime
@@ -98,7 +98,7 @@ class Tutorial:
             # Files are relative to the config file (if module is absolute, Path will use that, if relative it will join with first)
             module = get_path(module)
             if module.stem in module_paths: # Can't have the same name, even with different paths
-                raise ConfigError(f'Multiple puzzle modules with name "{module.stem}" found.') 
+                raise ConfigError(f'Multiple puzzle modules with name "{module.stem}" found.')
             module_paths[module.stem] = module
         self.module_paths = list(module_paths.values())
 
@@ -206,7 +206,7 @@ class Tutorial:
         the Tutorial context manager.
         """
         self._start_container(self.image)
-        
+
         try:
             modules = {PurePath(file): file.read_text() for file in self.module_paths}
             name_dictionary = self.name_dictionary.read_text()
@@ -288,7 +288,7 @@ class Tutorial:
                 modules = {PurePath(file): file.read_text() for file in self.module_paths}
             except OSError as e: # some filesystem error
                 raise ConfigError(str(e))
-        
+
             self._send(Message.RESTORE, {
                 "modules": modules,
                 "puzzles": self.get_all_puzzles(),

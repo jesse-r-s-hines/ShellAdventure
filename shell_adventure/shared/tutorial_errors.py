@@ -22,7 +22,7 @@ class ContainerError(TutorialError):
     Exception for when something goes wrong in the container that we can't catch in the container side Python,
     such as the container failing to start.
     """
-    
+
     def __init__(self, message: str, container_logs: str = None):
         self.message: str = message
         self.container_logs: str = container_logs
@@ -55,7 +55,7 @@ class WrappedError(TutorialError):
     You can pass it a tb_str which is a string representation of the original error traceback.
     """
     # We can't send arbitrary errors and traceback info over the connection since they may not be pickleable. tblib has hacks
-    # that let us send tracebacks, but we still can't guarantee that an error thrown by user created code will pickle. Also, 
+    # that let us send tracebacks, but we still can't guarantee that an error thrown by user created code will pickle. Also,
     # sending the traceback object makes it so we can't see the lines of the original file since the file doesn't exist outside
     # the container. So instead we just wrap exceptions, and store the traceback in formatted string form.
 

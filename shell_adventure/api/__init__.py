@@ -29,7 +29,7 @@ Global that is set to the `RandomHelper` of the tutorial, so that `rand()` and `
 # TutorialDocker will set _rand when it runs.
 def rand() -> RandomHelper:
     """
-    Returns the `RandomHelper` which should be used when creating random files and folders. 
+    Returns the `RandomHelper` which should be used when creating random files and folders.
     """
     if not _rand:
         raise RandomHelperException("You can only use randomization in Puzzle templates, not autograders")

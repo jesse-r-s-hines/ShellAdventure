@@ -51,7 +51,7 @@ SIMPLE_TUTORIAL = dedent("""
 
 def create_tutorial(tmp_path: Path, files: Dict[str, str]) -> Tutorial:
     """
-    Creates a tutorial with the given files. 
+    Creates a tutorial with the given files.
     Files (such as puzzles) will be saved to the dictionary key names
     under tmp_path with the matching content in the dictionary.
     The config file should be saved under the key "config.yaml"
@@ -69,7 +69,7 @@ def run_command(tutorial: Tutorial, cmd: Union[str, List[str]],  **kwargs) -> Tu
     exit_code, output = tutorial.container.exec_run(cmd, **kwargs)
     return (exit_code, output.decode().strip())
 
-def file_exists(tutorial: Tutorial, file: str): 
+def file_exists(tutorial: Tutorial, file: str):
     """ Checks if a file exists in the container. """
     exit_code, output = tutorial.container.exec_run(["test", "-f", file])
     return exit_code == 0 # file exists

@@ -12,11 +12,11 @@ Sentence f.
 
 CONTENT_2 = """
 
-    Space indented paragraph.   
+    Space indented paragraph.
 
 
 
-\tTab indented paragraph.   
+\tTab indented paragraph.
 
 
 """

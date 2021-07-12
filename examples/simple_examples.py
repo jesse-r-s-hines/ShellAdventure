@@ -5,7 +5,7 @@ from shell_adventure.api import *
 # You could also just call File("/home/student") in the puzzle template if you wanted.
 def cd(home: File):
     # Create a File to a random nested folder. The folder is not made on disk until we call mkdir
-    dst = home.random_shared_folder() 
+    dst = home.random_shared_folder()
     dst.mkdir(parents = True) # Make the folder and its parents
 
     # The checker function can optionally have parameters.
@@ -16,7 +16,7 @@ def cd(home: File):
         else:
             # You can return False or a string to indicate failure. The string will be shown to the student
             # as feedback
-            return "Use cd" 
+            return "Use cd"
 
     return Puzzle(
         question = f'Navigate to the "{dst}" folder',
@@ -75,7 +75,7 @@ def rm(home: File):
 
 def create_file(home: File):
     file = home.random_file().random_file()
-    
+
     def checker():
         if file.exists():
             return True

@@ -63,7 +63,7 @@ A simple config file example:
 
 # Required. A list of Python scripts that contain the puzzles templates for the tutorial
 modules:
-    - path/to/my_puzzles.py 
+    - path/to/my_puzzles.py
 
 # Required. A list of the puzzles templates that will be generated in the tutorial.
 # Each puzzle is a function in one of the modules.
@@ -135,7 +135,7 @@ class Puzzle:
             The checker function should return a string or a boolean. If it returns True, the puzzle is solved. If it returns
             False or a string, the puzzle was not solved. Returning a string will show the string as feedback to the student.
         score:
-            The score given on success. Defaults to 1. 
+            The score given on success. Defaults to 1.
         """
 ```
 
@@ -196,7 +196,7 @@ File("/home/student/random/nested/folder")
 File("/home/student/apple/banana")
 >>> folder.mkdir(parents = True) # random_shared_folder() doesn't create the file on disk. Use mkdir() with parents = True to make the folder.
 >>> # Make a random nested folder, but make the last folder not "shared" so we can safely rm it
->>> home.random_shared_folder().random_file().mkdir() 
+>>> home.random_shared_folder().random_file().mkdir()
 File("/home/student/orange/lime/tomato")
 >>> home.random_shared_folder(create_new_chance = 0) # Will choose an existing "shared" folder
 File("/home/student/orange/lime")
@@ -228,7 +228,7 @@ FROM alpine:3
 
 # Install stuff necessary for Shell Adventure
 RUN apk add --no-cache python3 py3-pip
-RUN python3 -m pip --no-cache-dir install dill python-lorem 
+RUN python3 -m pip --no-cache-dir install dill python-lorem
 
 # The student will be user "bob" and their password will be "bob"
 RUN adduser -D bob

@@ -12,7 +12,7 @@ class PuzzleData:
 
     question: str
     score: int
-    
+
     checker: Union[AutoGrader, bytes]
     """
     The function that will be used to autograde the puzzle.
@@ -62,7 +62,7 @@ class PuzzleData:
 
     def checker_undilled(self):
         """
-        Returns a new PuzzleData with the checker function unpickled. Throws if the checker function can't be unpickled. 
+        Returns a new PuzzleData with the checker function unpickled. Throws if the checker function can't be unpickled.
         Just returns a new PuzzleData if the checker is already unpickled.
         """
         new = copy.copy(self)

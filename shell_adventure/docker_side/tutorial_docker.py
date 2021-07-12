@@ -60,7 +60,7 @@ class TutorialDocker:
         module = importlib.util.module_from_spec(spec)
         # We don't want the puzzle modules to exist on disk, but exceptions from exec'ed strings don't have as much info
         # If we compile the code with a special "filename", we can inject the file line info into any exceptions that are thrown.
-        compiled_code = compile(code, f"<string>:{path}", "exec") 
+        compiled_code = compile(code, f"<string>:{path}", "exec")
         exec(compiled_code, module.__dict__) # Execute the module
         return module
 
@@ -84,7 +84,7 @@ class TutorialDocker:
     def _generate_puzzle(self, template: PuzzleTemplate, template_name: str) -> PuzzleData:
         """ Takes a puzzle template and generates a puzzle from it. """
         args = {
-            "home": File(self.home), # can't use home() since the user is actually root. 
+            "home": File(self.home), # can't use home() since the user is actually root.
             "root": File("/"),
         }
 
@@ -98,7 +98,7 @@ class TutorialDocker:
             puzzle = self._call_user_func(template, args)
         except Exception as e:
             raise UserCodeError(
-                f'Puzzle generation failed for template {template_name}:', 
+                f'Puzzle generation failed for template {template_name}:',
                 tb_str = self._format_user_exc(e)
             )
         if not isinstance(puzzle, Puzzle):
@@ -119,7 +119,7 @@ class TutorialDocker:
         # See https://stackoverflow.com/questions/31949760/how-to-limit-python-traceback-to-specific-files
         frames = []
         for f in traceback.extract_tb(e.__traceback__):
-            if f.filename.startswith("<string>:"): # User code, get the line info from the string 
+            if f.filename.startswith("<string>:"): # User code, get the line info from the string
                 _, path = f.filename.split(":", 2) # "<string>:/path/to/file/on/host/puzzles.py"
                 frames.append(traceback.FrameSummary( # See https://docs.python.org/library/traceback.html#framesummary-objects
                     filename = path, lineno = f.lineno, lookup_line = False, locals = None, name = f.name,
@@ -128,7 +128,7 @@ class TutorialDocker:
             elif shell_adventure.PKG_PATH not in Path(f.filename).parents: # include library code in the traceback
                 frames.append(f)
             # But don't include our code in the traceback, show only the user's code to keep traceback short
-        
+
         if isinstance(e, SyntaxError) and e.filename.startswith("<string>:"): # Syntax errors need to have the filename fixed as well
             e = copy.copy(e) # shallow copy
             e.filename = e.filename.split(":", 2)[1]
@@ -172,7 +172,7 @@ class TutorialDocker:
 
 
     ### Message actions, these functions can be called by sending a message over the connection
-    
+
     def setup(self, *, home: PathLike = None, user: str = None, modules: Dict[PurePath, str], puzzles: List[str],
               name_dictionary: str, content_sources: List[str], send_checkers: bool) -> List[PuzzleData]:
         """
@@ -189,10 +189,10 @@ class TutorialDocker:
             modules_list = [TutorialDocker._create_module(path, code) for path, code in modules.items()]
         except Exception as e:
             raise UserCodeError(f'Puzzle generation failed:', tb_str = self._format_user_exc(e))
-    
+
         # Get puzzle templates from the modules
         templates: Dict[str, PuzzleTemplate] = {}
-        for module in modules_list: 
+        for module in modules_list:
             templates.update( TutorialDocker._get_templates_from_module(module) )
 
         unknown_puzzles = [p for p in puzzles if p not in templates]
@@ -299,7 +299,7 @@ class TutorialDocker:
         """
         Sets up a connection between the tutorial inside the docker container and the driving application outside and
         listen for requests from the host.
-        """ 
+        """
         with Listener(messages.conn, authkey = messages.conn_key) as listener:
             with listener.accept() as conn:
                 try:
@@ -326,7 +326,7 @@ class TutorialDocker:
                             return
                         else: # call the lambda with *args, send the return value.
                             if message not in actions: raise ValueError(f"Unrecognized message {message}.")
-                            conn.send(actions[message](*args)) 
+                            conn.send(actions[message](*args))
                 except TutorialError as e:
                     conn.send(e)
                 except BaseException as e: # Any other exception will get wrapped

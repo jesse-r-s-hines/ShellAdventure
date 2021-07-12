@@ -1,6 +1,6 @@
 from shell_adventure.api import *
 # You can of course use any of Python's default libraries. filecmp is particularly useful.
-import filecmp 
+import filecmp
 
 # Private methods won't be used as puzzle generators
 def _cmp_folders(diff: filecmp.dircmp):
@@ -32,7 +32,7 @@ def copy_folder():
 def rm_folder(home: File, root: File):
     # Make a random folder. Don't use random_shared_folder() as that will make a shared folder that other puzzles can generate in
     folder = home.random_file()
-    folder.mkdir() 
+    folder.mkdir()
     for _ in range(8):
         folder.random_shared_folder().random_file("txt").create(content = rand().paragraphs())
 
@@ -57,7 +57,7 @@ def grep(home: File):
             return True
         else:
             return "There's a command to search lots of files."
-    
+
     return Puzzle(
         question = 'Find the path to the file that contains "(secret key)"',
         checker = checker,
