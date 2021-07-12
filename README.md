@@ -4,6 +4,8 @@
 # Installing
 
 ## Requirements
+*Shell Adventure* should run on any Linux system capable of running Docker.
+
 You will need to install:
 - [Python3.7+](https://www.python.org/downloads/)
 - [Docker](https://docs.docker.com/get-docker/)
@@ -32,6 +34,9 @@ If you get an error while building the container on the Raspberry Pi about `inva
 ```bash
 sudo apt install ./libseccomp2_x.x.x-x_armhf.deb
 ```
+
+## Other OS's
+Currently *Shell Adventure* does not run on Windows properly, though with [Docker for Windows](https://docs.docker.com/docker-for-windows/install) it should be possible to get it working in the future. [Docker for Mac](https://docs.docker.com/docker-for-mac/install/) should also make it possible to run *Shell Adventure* on macOS, though it has not been tested.
 
 # The Environnement
 The tutorials will take place in a Linux command-line environnement running insside a Docker container. The default container is running a bash shell in a headless Ubuntu 20.04. See [`supported_commands.md`](docs/supported_commands.md) for a list of the commands available in the default container. The student will be logged in as user `student` with password `student` and home directory `/home/student`. The student has `sudo` privileges by default so that you can teach use of `sudo` and permissions.
