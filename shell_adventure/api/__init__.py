@@ -3,13 +3,13 @@ The shell_adventure.api package contains the classes and methods needed to make 
 """
 
 from __future__ import annotations
-from shell_adventure.shared import puzzle
-from shell_adventure.shared.puzzle import Puzzle
+from shell_adventure.shared.puzzle import Puzzle, PuzzleTemplate, AutoGrader
 from .file import File
-from .permissions import Permissions, change_user
+from .permissions import (change_user, user_exists, Permissions, LinkedPermissions,
+                          PermissionsGroup, LinkedPermissionsGroup)
 from .random_helper import RandomHelper, RandomHelperException
 
-from pathlib import Path as _Path # "private" import
+from pathlib import Path as _Path
 
 PKG_PATH = _Path(__path__[0]).resolve() # type: ignore  # mypy issue #1422
 
@@ -36,13 +36,17 @@ def rand() -> RandomHelper:
     return _rand
 
 __all__ = [
-    "file",
-    "permissions",
-    "random_helper",
-    "puzzle",
     "Puzzle",
+    "PuzzleTemplate",
+    "AutoGrader",
     "File",
-    "Permissions",
     "change_user",
+    "user_exists",
+    "Permissions",
+    "LinkedPermissions",
+    "PermissionsGroup",
+    "LinkedPermissionsGroup",
+    "RandomHelper",
+    "RandomHelperException",
     "rand",
 ]
