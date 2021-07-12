@@ -1,6 +1,6 @@
 import pytest, re
 from shell_adventure.shared.support import UnrecognizedParamsError
-from shell_adventure.api.puzzle import Puzzle
+from shell_adventure.shared.puzzle import Puzzle
 
 class TestPuzzle:
     def test_create_puzzle(self):

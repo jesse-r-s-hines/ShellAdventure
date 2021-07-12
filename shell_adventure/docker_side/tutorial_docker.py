@@ -8,10 +8,10 @@ import shell_adventure # For access to globals
 from shell_adventure.shared import messages
 from shell_adventure.shared.messages import Message
 from shell_adventure.shared.support import PathLike, sentence_list, call_with_args, extra_func_params
+from shell_adventure.shared.puzzle import Puzzle, PuzzleTemplate
 from shell_adventure.shared.puzzle_data import PuzzleData
 from shell_adventure.shared.tutorial_errors import *
 import shell_adventure.api
-from shell_adventure.api.puzzle import Puzzle, PuzzleTemplate
 from shell_adventure.api.file import File
 from shell_adventure.api.permissions import change_user, user_exists
 from shell_adventure.api.random_helper import RandomHelper

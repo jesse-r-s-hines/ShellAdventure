@@ -1,7 +1,7 @@
 from typing import Callable, Type
 import pytest
 from shell_adventure.shared.support import UnrecognizedParamsError
-from shell_adventure.api.puzzle import Puzzle
+from shell_adventure.shared.puzzle import Puzzle
 from shell_adventure.shared.puzzle_data import PuzzleData
 import pickle
 

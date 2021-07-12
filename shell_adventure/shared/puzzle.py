@@ -1,3 +1,5 @@
+# Logically this should be in the api module. But I can't import the api module from shared since that will cause circular dependencies issues and
+# since shared is used host-side and docker-side, cause api with Linux only modules to imported host-side.
 from __future__ import annotations
 from typing import Union, Callable, List, ClassVar
 from shell_adventure.shared.support import extra_func_params, UnrecognizedParamsError, sentence_list

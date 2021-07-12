@@ -2,7 +2,7 @@
 from __future__ import annotations
 from typing import Union, List
 import uuid, inspect, dill, copy
-from shell_adventure.api.puzzle import Puzzle, PuzzleTemplate, AutoGrader
+from shell_adventure.shared.puzzle import Puzzle, PuzzleTemplate, AutoGrader
 
 class PuzzleData:
     """

@@ -3,7 +3,8 @@ The shell_adventure.api package contains the classes and methods needed to make 
 """
 
 from __future__ import annotations
-from .puzzle import Puzzle
+from shell_adventure.shared import puzzle
+from shell_adventure.shared.puzzle import Puzzle
 from .file import File
 from .permissions import Permissions, change_user
 from .random_helper import RandomHelper, RandomHelperException
