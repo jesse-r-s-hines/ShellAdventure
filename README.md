@@ -12,7 +12,7 @@ You will need to install:
 
 
 #### Optional:
-By default, you need to run docker as root. Since *Shell Adventure* uses Docker, you will either have to run *Shell Adventure* as root or add your user to the `docker` group to allow running Docker
+By default, you need to run docker as root. Since *Shell Adventure* uses Docker, you will either have to run *Shell Adventure* as root or add your user to the `docker` group to allow running Docker:
 ```bash
 sudo groupadd docker
 sudo usermod -aG docker $USER
@@ -250,6 +250,20 @@ You can use any of the standard Python libraries in your puzzle generation funct
 
 # Examples
 See the [examples](examples) folder for complete examples of tutorial configuration and puzzle templates.
+
+# Troubleshooting
+## *Shell Adventure* crashes with `no matching manifest for ... in the manifest list entries`
+This means that the [`shell-adventure`](https://hub.docker.com/repository/docker/shelladventure/shell-adventure) image on DockerHub isn't built for your architecture. You'll need to build the image manually by running `build_image.sh`:
+```bash
+cd ShellAdventure
+./build_image.sh
+```
+
+## Building the Docker image fails with `invalid signature was encountered`
+If you get an error while building the container on the Raspberry Pi about `invalid signature was encountered` you may need to manually update libseccomp. Download the latest `libseccomp2_x.x.x-x_armhf.deb` from [here](http://ftp.us.debian.org/debian/pool/main/libs/libseccomp/) and
+```bash
+sudo apt install ./libseccomp2_x.x.x-x_armhf.deb
+```
 
 # Running Tests
 The project uses [mypy](http://mypy-lang.org) to do static type checking on the code. The tests are split up into two groups, those that run host-side, and those that run in the default `shell-adventure` container. Both use [pytest](https://docs.pytest.org/en/6.2.x/).

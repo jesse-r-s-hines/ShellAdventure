@@ -70,6 +70,7 @@ class Tutorial:
 
     # Static fields
     CONFIG_SCHEMA: ClassVar[Schema] = yamale.make_schema(PKG_PATH / "config_schema.yaml")
+    # Update the image tag if we update change the container. See .github/workflows/publish_image.yml for what tag we are pushing to
     DEFAULT_IMAGE: ClassVar[str] = "shelladventure/shell-adventure:v1.0"
 
     def __init__(self, config_file: PathLike):
