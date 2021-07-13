@@ -29,7 +29,7 @@ class Tutorial:
     # Config fields
 
     image: str
-    """ The name or id of the Docker image to run the container in. Defaults to "shelladventure/shell-adventure:latest" """
+    """ The name or id of the Docker image to run the container in. Defaults to Tutorial.DEFAULT_IMAGE """
 
     container_options: Dict[str, Any]
     """
@@ -70,7 +70,7 @@ class Tutorial:
 
     # Static fields
     CONFIG_SCHEMA: ClassVar[Schema] = yamale.make_schema(PKG_PATH / "config_schema.yaml")
-    DEFAULT_IMAGE: ClassVar[str] = "shelladventure/shell-adventure:latest"
+    DEFAULT_IMAGE: ClassVar[str] = "shelladventure/shell-adventure:v1.0"
 
     def __init__(self, config_file: PathLike):
         """ Create a tutorial from a config_file. """
