@@ -22,6 +22,7 @@ if __name__ == "__main__":
             print("Container Logs:\n" + indent(tutorial.logs(), "  "))
         exit(1)
 
+    print("Launching tutorial container...")
     try:
         with tutorial: # Sets up the container with the tutorial inside, context manager will remove container
             tutorial.attach_to_shell()
