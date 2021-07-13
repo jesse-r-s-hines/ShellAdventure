@@ -46,6 +46,8 @@ python3 launch.py <config_file>
 ```
 This will launch the tutorial with the given configuration. It will generate any puzzles you specified and then place the student at `/home/student` in the docker container. The student will be shown the list of puzzles in small GUI detached from the terminal and can try to solve them.
 
+The first time you run *Shell Adventure* may take a while as it pulls the Docker image.
+
 ## Configuration
 The configuration file passed to *Shell Adventure* controls what puzzles are used in the tutorial and various other options.
 
