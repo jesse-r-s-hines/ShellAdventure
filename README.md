@@ -254,14 +254,14 @@ You can use any of the standard Python libraries in your puzzle generation funct
 See the [examples](examples) folder for complete examples of tutorial configuration and puzzle templates.
 
 # Troubleshooting
-## *Shell Adventure* crashes with `no matching manifest for ... in the manifest list entries`
+### *Shell Adventure* crashes with `no matching manifest for ... in the manifest list entries`
 This means that the [`shell-adventure`](https://hub.docker.com/repository/docker/shelladventure/shell-adventure) image on DockerHub isn't built for your architecture. You'll need to build the image manually by running `build_image.sh`:
 ```bash
 cd ShellAdventure
 ./build_image.sh
 ```
 
-## Building the Docker image fails with `invalid signature was encountered`
+### Building the Docker image fails with `invalid signature was encountered`
 If you get an error while building the container on the Raspberry Pi about `invalid signature was encountered` you may need to manually update libseccomp. Download the latest `libseccomp2_x.x.x-x_armhf.deb` from [here](http://ftp.us.debian.org/debian/pool/main/libs/libseccomp/) and
 ```bash
 sudo apt install ./libseccomp2_x.x.x-x_armhf.deb
