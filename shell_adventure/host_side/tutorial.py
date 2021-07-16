@@ -180,8 +180,9 @@ class Tutorial:
             _, self._logs_stream = self.container.exec_run(["python3", "/usr/local/shell_adventure/docker_side/start.py"],
                                                                       user = "root", stream = True)
             # retry the connection a few times since the container may take a bit to get started.
-            self._conn = retry(lambda: Client(messages.conn, authkey = messages.conn_key), tries = 20, delay = 0.2)
-        except (docker.errors.DockerException, ConnectionError) as e:
+            self._conn = retry(lambda: Client(('127.0.0.1', messages.port), authkey = messages.conn_key),
+                               tries = 20, delay = 0.2)
+        except (docker.errors.DockerException, ConnectionError, EOFError, OSError) as e:
             raise ContainerStartupError(
                 f"Failed to connect to container:\n{indent(str(e), '  ')}",
                 container_logs = self.logs()

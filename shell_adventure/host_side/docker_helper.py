@@ -6,6 +6,7 @@ import docker, deepmerge
 from docker.models.images import Image
 from docker.models.containers import Container
 from docker.errors import ImageNotFound
+from shell_adventure.shared import messages
 import shell_adventure
 
 client = docker.from_env()
@@ -23,7 +24,9 @@ def launch(image: Union[str, Image], **container_options) -> Container:
         volumes = {
             shell_adventure.PKG_PATH: {'bind': f"/usr/local/shell_adventure", 'mode': 'ro'},
         },
-        network_mode = "host",
+        # network_mode = "host", # network_mode host doesn't work on Docker for Windows
+        # Map the port inside the container to localhost
+        ports = {messages.port: ('127.0.0.1', messages.port)},
         cap_add = [
             "CAP_SYS_PTRACE", # Allows us to call `pwdx` to get working directory of student
         ],

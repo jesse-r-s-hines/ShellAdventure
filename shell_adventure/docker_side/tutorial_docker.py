@@ -305,7 +305,8 @@ class TutorialDocker:
         Sets up a connection between the tutorial inside the docker container and the driving application outside and
         listen for requests from the host.
         """
-        with Listener(messages.conn, authkey = messages.conn_key) as listener:
+        # Host a port "publicly". We'll map it to localhost via Docker.
+        with Listener(('0.0.0.0', messages.port), authkey = messages.conn_key) as listener:
             with listener.accept() as conn:
                 try:
                     # Receive the initial setup message.
