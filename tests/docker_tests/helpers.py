@@ -4,7 +4,7 @@ from shell_adventure.docker_side.tutorial_docker import TutorialDocker
 
 __all__ = [
     "SIMPLE_PUZZLES",
-    "create_tutorial",
+    "setup_tutorial",
 ]
 
 SIMPLE_PUZZLES = dedent("""
@@ -23,9 +23,9 @@ SIMPLE_PUZZLES = dedent("""
         )
 """)
 
-def create_tutorial(working_dir: Path, **setup) -> TutorialDocker:
+def setup_tutorial(tutorial: TutorialDocker, working_dir: Path, **setup):
     """
-    Factory for TutorialDocker. Pass args that will be passed to setup().
+    Calls setup on TutorialDocker. Pass args that will be passed to setup().
     Provides some default for setup() args, sets tutorial.home to working_dir
     """
     default_setup = {
@@ -38,8 +38,4 @@ def create_tutorial(working_dir: Path, **setup) -> TutorialDocker:
         "send_checkers": True,
     }
     setup = {**default_setup, **setup} # merge
-
-    tutorial = TutorialDocker()
     tutorial.setup(**setup)
-
-    return tutorial

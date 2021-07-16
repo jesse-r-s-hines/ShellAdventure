@@ -47,9 +47,14 @@ class TutorialDocker:
         self.shell_pid: int = 1 # The shell is the main process of the container which is always 1
         self.rand = None
 
-    def __del__(self):
-        # Clear the globals when the tutorial is deleted.
-        # Only really matters for tests since the tutorial normally runs for the lifetime of the container
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        """
+        Context manager to make sure that the globals set in api are cleared when the tutorial is done.
+        This only really matters for tests since normally the container ends if the TutorialDocker does
+        """
         shell_adventure.api._home = None
         shell_adventure.api._rand = None
 

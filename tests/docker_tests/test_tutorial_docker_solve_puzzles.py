@@ -8,24 +8,25 @@ from .helpers import *
 
 class TestTutorialDockerSolvePuzzles:
     def test_solve_puzzle(self, working_dir: Path):
-        tutorial = create_tutorial(working_dir,
-            modules = {PurePath("mypuzzles.py"): SIMPLE_PUZZLES},
-            puzzles = ["mypuzzles.move"]
-        )
-        [puzzle] = list(tutorial.puzzles.values())
+        with TutorialDocker() as tutorial:
+            setup_tutorial(tutorial, working_dir,
+                modules = {PurePath("mypuzzles.py"): SIMPLE_PUZZLES},
+                puzzles = ["mypuzzles.move"]
+            )
+            [puzzle] = list(tutorial.puzzles.values())
 
-        assert File("A.txt").exists()
-        assert not File("B.txt").exists()
+            assert File("A.txt").exists()
+            assert not File("B.txt").exists()
 
-        assert tutorial.solve_puzzle(puzzle.id) == (False, "Incorrect!")
-        assert puzzle.solved == False
+            assert tutorial.solve_puzzle(puzzle.id) == (False, "Incorrect!")
+            assert puzzle.solved == False
 
-        os.system("cp A.txt B.txt")
-        assert tutorial.solve_puzzle(puzzle.id) == (False, "Incorrect!")
+            os.system("cp A.txt B.txt")
+            assert tutorial.solve_puzzle(puzzle.id) == (False, "Incorrect!")
 
-        os.system("mv A.txt B.txt")
-        assert tutorial.solve_puzzle(puzzle.id) == (True, "Correct!")
-        assert puzzle.solved == True
+            os.system("mv A.txt B.txt")
+            assert tutorial.solve_puzzle(puzzle.id) == (True, "Correct!")
+            assert puzzle.solved == True
 
     def test_solve_puzzle_flag(self, working_dir: Path):
         puzzle_str = dedent("""
@@ -37,15 +38,16 @@ class TestTutorialDockerSolvePuzzles:
                     checker = lambda flag: flag == "OK",
                 )
         """)
-        tutorial = create_tutorial(working_dir,
-            modules = {PurePath("mypuzzles.py"): puzzle_str},
-            puzzles = ["mypuzzles.flag_puzzle"],
-        )
-        [puzzle] = list(tutorial.puzzles.values())
+        with TutorialDocker() as tutorial:
+            setup_tutorial(tutorial, working_dir,
+                modules = {PurePath("mypuzzles.py"): puzzle_str},
+                puzzles = ["mypuzzles.flag_puzzle"],
+            )
+            [puzzle] = list(tutorial.puzzles.values())
 
-        assert tutorial.solve_puzzle(puzzle.id) == (False, "Incorrect!")
-        assert tutorial.solve_puzzle(puzzle.id, "not ok") == (False, "Incorrect!")
-        assert tutorial.solve_puzzle(puzzle.id, "OK") == (True, "Correct!")
+            assert tutorial.solve_puzzle(puzzle.id) == (False, "Incorrect!")
+            assert tutorial.solve_puzzle(puzzle.id, "not ok") == (False, "Incorrect!")
+            assert tutorial.solve_puzzle(puzzle.id, "OK") == (True, "Correct!")
 
     def test_solve_puzzle_feedback(self, working_dir: Path):
         puzzle_str = dedent("""
@@ -65,15 +67,16 @@ class TestTutorialDockerSolvePuzzles:
                 )
 
         """)
-        tutorial = create_tutorial(working_dir,
-            modules = {PurePath("mypuzzles.py"): puzzle_str},
-            puzzles = ["mypuzzles.move"],
-        )
-        [puzzle] = list(tutorial.puzzles.values())
+        with TutorialDocker() as tutorial:
+            setup_tutorial(tutorial, working_dir,
+                modules = {PurePath("mypuzzles.py"): puzzle_str},
+                puzzles = ["mypuzzles.move"],
+            )
+            [puzzle] = list(tutorial.puzzles.values())
 
-        assert tutorial.solve_puzzle(puzzle.id) == (False, "Try mv")
-        os.system("mv A.txt B.txt")
-        assert tutorial.solve_puzzle(puzzle.id) == (True, "Correct!")
+            assert tutorial.solve_puzzle(puzzle.id) == (False, "Try mv")
+            os.system("mv A.txt B.txt")
+            assert tutorial.solve_puzzle(puzzle.id) == (True, "Correct!")
 
     def test_solve_puzzle_twice(self, working_dir: Path):
         module = dedent("""
@@ -81,20 +84,21 @@ class TestTutorialDockerSolvePuzzles:
             def puz():
                 return Puzzle(question = f"Say OK", checker = lambda flag: flag == "OK")
         """)
-        tutorial = create_tutorial(working_dir,
-            modules = {PurePath("mypuzzles.py"): module},
-            puzzles = ["mypuzzles.puz"]
-        )
-        [puzzle] = list(tutorial.puzzles.values())
+        with TutorialDocker() as tutorial:
+            setup_tutorial(tutorial, working_dir,
+                modules = {PurePath("mypuzzles.py"): module},
+                puzzles = ["mypuzzles.puz"]
+            )
+            [puzzle] = list(tutorial.puzzles.values())
 
-        assert tutorial.solve_puzzle(puzzle.id, "OK") == (True, "Correct!")
-        assert puzzle.solved == True
+            assert tutorial.solve_puzzle(puzzle.id, "OK") == (True, "Correct!")
+            assert puzzle.solved == True
 
-        # Solving a puzzle twice resets the solved state.
-        assert tutorial.solve_puzzle(puzzle.id, "NOT OK") == (False, "Incorrect!")
-        assert puzzle.solved == False
+            # Solving a puzzle twice resets the solved state.
+            assert tutorial.solve_puzzle(puzzle.id, "NOT OK") == (False, "Incorrect!")
+            assert puzzle.solved == False
 
-        assert puzzle.solved == False
+            assert puzzle.solved == False
 
     def test_puzzle_func_args(self, working_dir: Path):
         puzzles = dedent(f"""
@@ -113,10 +117,11 @@ class TestTutorialDockerSolvePuzzles:
                 )
         """)
 
-        tutorial = create_tutorial(working_dir,
-            modules = {PurePath("mypuzzles.py"): puzzles},
-            puzzles = ["mypuzzles.puzzle"],
-        )
+        with TutorialDocker() as tutorial:
+            setup_tutorial(tutorial, working_dir,
+                modules = {PurePath("mypuzzles.py"): puzzles},
+                puzzles = ["mypuzzles.puzzle"],
+            )
 
     def test_checker_func_args(self, working_dir: Path):
         puzzles = dedent("""
@@ -129,13 +134,14 @@ class TestTutorialDockerSolvePuzzles:
                 return Puzzle( question = f"Puzzle", checker = checker )
         """)
 
-        tutorial = create_tutorial(working_dir,
-            modules = {PurePath("mypuzzles.py"): puzzles},
-            puzzles = ["mypuzzles.puzzle"],
-        )
-        [puzzle] = list(tutorial.puzzles.values())
+        with TutorialDocker() as tutorial:
+            setup_tutorial(tutorial, working_dir,
+                modules = {PurePath("mypuzzles.py"): puzzles},
+                puzzles = ["mypuzzles.puzzle"],
+            )
+            [puzzle] = list(tutorial.puzzles.values())
 
-        assert tutorial.solve_puzzle(puzzle.id) == (True, "Correct!")
+            assert tutorial.solve_puzzle(puzzle.id) == (True, "Correct!")
 
     def test_solve_puzzle_randomized(self, working_dir: Path):
         puzzles = dedent("""
@@ -156,16 +162,17 @@ class TestTutorialDockerSolvePuzzles:
                 )
         """)
 
-        tutorial = create_tutorial(working_dir,
-            modules = {PurePath("mypuzzles.py"): puzzles},
-            puzzles = ["mypuzzles.move"],
-            name_dictionary = "\n".join("abcdefg")
-        )
-        [puzzle] = list(tutorial.puzzles.values())
+        with TutorialDocker() as tutorial:
+            setup_tutorial(tutorial, working_dir,
+                modules = {PurePath("mypuzzles.py"): puzzles},
+                puzzles = ["mypuzzles.move"],
+                name_dictionary = "\n".join("abcdefg")
+            )
+            [puzzle] = list(tutorial.puzzles.values())
 
-        assert tutorial.solve_puzzle(puzzle.id) == (False, "Incorrect!")
-        src, dst = map(File, puzzle.question.split(" -> "))
+            assert tutorial.solve_puzzle(puzzle.id) == (False, "Incorrect!")
+            src, dst = map(File, puzzle.question.split(" -> "))
 
-        os.system(f"mkdir --parents {src} {dst.parent}")
-        os.system(f"mv {src} {dst}")
-        assert tutorial.solve_puzzle(puzzle.id) == (True, "Correct!")
+            os.system(f"mkdir --parents {src} {dst.parent}")
+            os.system(f"mv {src} {dst}")
+            assert tutorial.solve_puzzle(puzzle.id) == (True, "Correct!")

@@ -22,5 +22,5 @@ if missing_deps:
 
 from shell_adventure.docker_side.tutorial_docker import TutorialDocker
 
-tutorial = TutorialDocker()
-tutorial.run()
+with TutorialDocker() as tutorial:
+    tutorial.run()
