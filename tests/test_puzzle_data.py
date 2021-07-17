@@ -58,7 +58,7 @@ class TestPuzzleData:
         puzzle = PuzzleData("template", Puzzle("Solve this puzzle.", checker = lambda: True))
         # Pickle throws attribute error instead of PickleError for some reason.
         # See https://bugs.python.org/issue29187
-        with pytest.raises(AttributeError, match = "Can't pickle"):
+        with pytest.raises(AttributeError, match = "pickle .*lambda"):
             data = pickle.dumps(puzzle)
 
         # But packing first should work
@@ -68,7 +68,7 @@ class TestPuzzleData:
         # Generators can't be dilled
         gen = (i for i in range(10))
         puzzle = PuzzleData("template", Puzzle("Solve this puzzle.", checker = lambda: gen))
-        with pytest.raises(TypeError, match = "can't pickle"): # And dill throws TypeError instead of PickleError. That is useless.
+        with pytest.raises(TypeError, match = "pickle .*generator"): # And dill throws TypeError instead of PickleError. That is useless.
             puzzle.checker_dilled()
 
     def test_checker_stripped(self):

@@ -117,7 +117,7 @@ class TestIntegration:
             solved, feedback = tutorial.solve_puzzle(rand_puzzle)
             assert solved == False
 
-            run_command(tutorial, ["mkdir", "--parents", src, str(Path(dst).parent)])
+            run_command(tutorial, ["mkdir", "--parents", src, str(PurePosixPath(dst).parent)])
             run_command(tutorial, ["mv", src, dst])
             solved, feedback = tutorial.solve_puzzle(rand_puzzle)
             assert solved == True
@@ -157,7 +157,7 @@ class TestIntegration:
             # Check that the bash session is running as student in /home/student
             exit_code, output = run_command(tutorial, "ps -o uname= 1", user = "root")
             assert output == "student"
-            assert tutorial.get_student_cwd() == Path("/home/student")
+            assert tutorial.get_student_cwd() == PurePosixPath("/home/student")
 
             puzzle = tutorial.get_all_puzzles()[0]
             solved, feedback = tutorial.solve_puzzle(puzzle)
@@ -199,7 +199,7 @@ class TestIntegration:
             # Check that the bash session is running as root in /
             exit_code, output = run_command(tutorial, "ps -o uname= 1", user = "root")
             assert output == "root"
-            assert tutorial.get_student_cwd() == Path("/")
+            assert tutorial.get_student_cwd() == PurePosixPath("/")
 
             assert file_exists(tutorial, "/A.txt") # The puzzles are generated in root
             code, owner = run_command(tutorial, "stat -c '%U' A.txt", workdir="/")
@@ -228,7 +228,7 @@ class TestIntegration:
         expected = dedent(f"""
             Puzzle generation failed for template puzzles.puzzle:
               Traceback (most recent call last):
-                File "{tmp_path}/puzzles.py", line 3, in puzzle
+                File "{tmp_path / 'puzzles.py'}", line 3, in puzzle
                   raise ValueError('BOOM!')
               ValueError: BOOM!
         """).lstrip()
@@ -300,7 +300,7 @@ class TestIntegration:
             exit_code, output = run_command(tutorial, "ps -o user=", user = "root")
              # alpine's ps can't filter by pid, it just gives a list of all processes. We want the first (PID 1)
             assert output.splitlines()[0] == "bob"
-            assert tutorial.get_student_cwd() == Path("/home/bob")
+            assert tutorial.get_student_cwd() == PurePosixPath("/home/bob")
 
             puzzle = tutorial.get_all_puzzles()[0]
             assert tutorial.solve_puzzle(puzzle) == (True, "Correct!")

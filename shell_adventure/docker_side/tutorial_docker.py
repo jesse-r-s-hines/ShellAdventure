@@ -25,8 +25,11 @@ class TutorialDocker:
     user: str
     """ This is the name of the user that the student is logged in as. Default is the user of the bash session. """
 
-    modules: Dict[PurePath, str]
-    """ Map of the puzzle modules, filename mapped to file contents. """
+    modules: Dict[str, str]
+    """
+    Map of the puzzle modules, filename on host mapped to file contents.
+    Use str instead of Path since host might be Windows or Linux and WindowsPath != PosixPath
+    """
 
     puzzles: Dict[str, PuzzleData]
     """ Puzzles in this tutorial, mapped to their id. """
@@ -128,7 +131,7 @@ class TutorialDocker:
                 _, path = f.filename.split(":", 1) # "<string>:/path/to/file/on/host/puzzles.py"
                 frames.append(traceback.FrameSummary( # See https://docs.python.org/library/traceback.html#framesummary-objects
                     filename = path, lineno = f.lineno, lookup_line = False, locals = None, name = f.name,
-                    line = self.modules[PurePath(path)].splitlines()[f.lineno - 1],
+                    line = self.modules[path].splitlines()[f.lineno - 1],
                 ))
             elif shell_adventure.PKG_PATH not in Path(f.filename).parents: # include library code in the traceback
                 frames.append(f)
@@ -188,7 +191,7 @@ class TutorialDocker:
         # Unfortunately we have to have some package level variables allow File methods to access the RandomHelper and TutorialDocker
         rand = RandomHelper(name_dictionary, content_sources)
         self._common_setup(home, user, rand)
-        self.modules = modules
+        self.modules = {str(path): content for path, content in modules.items()}
 
         try: # Load modules
             modules_list = [TutorialDocker._create_module(path, code) for path, code in modules.items()]
@@ -225,7 +228,7 @@ class TutorialDocker:
         so we can use the checkers.
         """
         self._common_setup(home, user)
-        self.modules = modules
+        self.modules = {str(path): content for path, content in modules.items()}
 
         # Convert the pickled checker back into a function
         self.puzzles = {p.id: p.checker_undilled() for p in puzzles}
