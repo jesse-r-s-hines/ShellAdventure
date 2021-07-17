@@ -125,7 +125,7 @@ class TutorialDocker:
         frames = []
         for f in traceback.extract_tb(e.__traceback__):
             if f.filename.startswith("<string>:"): # User code, get the line info from the string
-                _, path = f.filename.split(":", 2) # "<string>:/path/to/file/on/host/puzzles.py"
+                _, path = f.filename.split(":", 1) # "<string>:/path/to/file/on/host/puzzles.py"
                 frames.append(traceback.FrameSummary( # See https://docs.python.org/library/traceback.html#framesummary-objects
                     filename = path, lineno = f.lineno, lookup_line = False, locals = None, name = f.name,
                     line = self.modules[PurePath(path)].splitlines()[f.lineno - 1],

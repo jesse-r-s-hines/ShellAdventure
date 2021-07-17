@@ -229,6 +229,34 @@ class TestTutorialDockerExceptions:
         """).lstrip()
         assert expected == str(exc_info.value)
 
+    def test_format_user_exception_with_colon_filename(self, working_dir: Path):
+        with TutorialDocker() as tutorial:
+            setup_tutorial(tutorial, working_dir,
+                modules = {PurePath("/path:with/colon/puzzles.py"): dedent(r"""
+                    from shell_adventure.api import *
+
+                    def throws():
+                        def checker(): raise Exception("BOOM!")
+                        return Puzzle(question = "Fails!", checker = checker)
+                """)},
+                puzzles = ["puzzles.throws"],
+            )
+            [puzzle] = list(tutorial.puzzles.values())
+
+            with pytest.raises(UserCodeError) as exc_info:
+                tutorial.solve_puzzle(puzzle.id)
+
+        # Shouldn't include our code. Should include library code.
+        expected = dedent("""
+          Puzzle autograder for template puzzles.throws failed:
+            Traceback (most recent call last):
+              File "/path:with/colon/puzzles.py", line 5, in checker
+                def checker(): raise Exception("BOOM!")
+            Exception: BOOM!
+        """).lstrip()
+        assert expected == str(exc_info.value)
+
+
     def test_unpickleable_checker(self, working_dir: Path):
         with pytest.raises(UserCodeError, match = "Unpickleable autograder function in 'puzzles.unpickleable'") as exc_info:
             with TutorialDocker() as tutorial:
