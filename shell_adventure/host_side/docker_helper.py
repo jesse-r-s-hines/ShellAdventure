@@ -40,12 +40,10 @@ def launch(image: Union[str, Image], **container_options) -> Container:
 
     if isinstance(image, str): # Pull the image or get the image
         try:
-            image = client.images.pull(image)
-        except Exception as pullError: # Image not found online, internet access errors, etc...
-            try: # Fallback to a local image if we have one
-                image = client.images.get(image)
-            except ImageNotFound:
-                raise pullError # Raise the original pull error
+            image = client.images.get(image)
+        except ImageNotFound as e: # If we don't have a local image pull it from online
+            # We don't want to pull everytime since that it is very slow, especially on Windows
+            image = client.images.pull(image) # Propagate any errors 
 
     container: Container = client.containers.create(image, **container_options)
     container.start()
