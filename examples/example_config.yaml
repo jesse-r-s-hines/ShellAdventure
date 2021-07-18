@@ -32,15 +32,15 @@ puzzles:
 # Default is "shelladventure/shell-adventure:v1.0"
 image: "shelladventure/shell-adventure:v1.0"
 
-# Optional. These options are passed directly to the docker-py create() method. You generally don't need to mess with
-# this unless you need to manipulate low-level docker options.
+# Optional. These are passed directly to the docker-py create() method. You generally shouldn't mess with these unless
+# you need to manipulate low-level Docker options. Invalid container_options may cause Docker to crash or hang.
 # See https://docker-py.readthedocs.io/en/stable/containers.html#docker.models.containers.ContainerCollection.create
 # for details on all the options you can pass.
 container_options:
-  # Most commonly used container_options are "user" and "working_dir", if you want to change the user the student
-  # is logged in as, or the directory the student starts in without having to make your own custom Docker image
-  user: "student" # "student" is the default user in the "shell-adventure" image
-  working_dir: "/home/student" # "/home/student" is the default working_dir in the "shell-adventure" image
+  # Most commonly used container_options are "user", "working_dir", and "command"
+  user: "student" # The user the student is logged in as. Default "student" in the "shell-adventure" image
+  working_dir: "/home/student" # The directory the tutorial starts in. Default "/home/student"  in the "shell-adventure" image
+  command: "bash" # The shell the student is using. Default "bash" in the "shell-adventure" image
 
 # Optional. Path to a dictionary file with one word on each line. The dictionary will be used by rand().name()
 # If omitted, a dictionary based on http://www.desiquintans.com/nounlist will be used

@@ -3,7 +3,7 @@ import pytest
 from shell_adventure.host_side.tutorial import Tutorial
 from textwrap import dedent;
 from pathlib import Path
-import re
+import re, sys
 from .helpers import *
 from shell_adventure.shared.tutorial_errors import *
 
@@ -25,6 +25,7 @@ class TestTutorialConfig:
                 container_options:
                     working_dir: /home/user
                     user: user
+                    command: sh
                     name: mytutorial
                 modules:
                     - path/to/puzz1.py # Relative path
@@ -49,6 +50,7 @@ class TestTutorialConfig:
         assert tutorial.container_options == {
             "working_dir": "/home/user",
             "user": "user",
+            "command": "sh",
             "name": "mytutorial",
         }
         assert tutorial.name_dictionary == tmp_path / "my_dictionary.txt"
@@ -99,7 +101,7 @@ class TestTutorialConfig:
             "config.yaml": SIMPLE_TUTORIAL,
             "mypuzzles.py/file": "", # make mypuzzles.py a directory
         })
-        with pytest.raises(ConfigError, match = r"Is a directory.*puzzles\.py"):
+        with pytest.raises(ConfigError, match = r".*puzzles\.py"):
             with tutorial: pass
 
     def test_duplicate_module_names(self, tmp_path: Path, check_containers):
@@ -128,7 +130,7 @@ class TestTutorialConfig:
             })
         message = str(exc_info.value)
 
-        assert re.search('Validation error in ".*/config.yaml"', message)
+        assert re.search('Validation error in ".*config.yaml"', message)
         assert re.search("restart_enabled: .* is not a bool.", message)
         assert re.search("modules: Required field missing", message)
         assert re.search("puzzles: .* is not a list.", message)
@@ -178,6 +180,21 @@ class TestTutorialConfig:
         with pytest.raises(ConfigError):
             tutorial = create_tutorial(tmp_path, {"config.yaml": "", "mypuzzles.py": SIMPLE_PUZZLES})
 
+    def test_container_options_command_list(self, tmp_path: Path, check_containers):
+        tutorial = create_tutorial(tmp_path, {
+            "config.yaml": f"""
+                container_options:
+                    command: ["sh", "-i"]
+                modules:
+                    - puzzles.py
+                puzzles:
+                    - puzzles.move
+            """,
+            "puzzles.py": SIMPLE_PUZZLES,
+        })
+
+        assert tutorial.container_options["command"] == ["sh", "-i"]
+
     def test_container_options_unrecognized_keys(self, tmp_path: Path, check_containers):
         tutorial = create_tutorial(tmp_path, {
             "config.yaml": f"""
@@ -195,10 +212,25 @@ class TestTutorialConfig:
             with tutorial: pass
 
     def test_container_options_wrong_type(self, tmp_path: Path, check_containers):
+        with pytest.raises(ConfigError, match = "'1' is not a str"):
+            tutorial = create_tutorial(tmp_path, {
+                "config.yaml": f"""
+                    container_options:
+                        command: ["sh", 1]
+                    modules:
+                        - puzzles.py
+                    puzzles:
+                        - puzzles.move
+                """,
+                "puzzles.py": SIMPLE_PUZZLES,
+            })
+
+    @pytest.mark.skipif(sys.platform == "win32", reason = "Malformed Docker API calls hang on Windows")
+    def test_container_options_api_error(self, tmp_path: Path, check_containers):
         tutorial = create_tutorial(tmp_path, {
             "config.yaml": f"""
                 container_options:
-                    command: 1 # Not string
+                    labels: 1 # Not string
                 modules:
                     - puzzles.py
                 puzzles:
@@ -208,7 +240,7 @@ class TestTutorialConfig:
         })
 
         # Will just print the API error since docker-py doesn't seem to type check the command
-        with pytest.raises(ContainerStartupError, match = "cannot unmarshal number into .*Cmd of type string"):
+        with pytest.raises(ContainerStartupError, match = "cannot unmarshal number .*Label"):
             with tutorial: pass
 
     def test_empty_fields(self, tmp_path: Path, check_containers):

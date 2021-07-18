@@ -23,9 +23,15 @@ puzzle: "any(
 container_options:
   # container_options are passed to docker-py create() method
   # see https://docker-py.readthedocs.io/en/stable/containers.html#docker.models.containers.ContainerCollection.create
-  user: str(required = False)
-  working_dir: str(required = False)
+
+  # Validate some of the most commonly used options.
+  user: str(required = False, none = False)
+  working_dir: str(required = False, none = False)
+  command: any(str(), list(str()), required = False, none = False)
+
   # Validate these to make sure the user values get merged with our values instead of overriding them
-  volumes: map(required = False)
-  cap_add: list(required = False)
-  # Other options will be allowed and passed to docker-py if you include with `strict = False`
+  volumes: map(required = False, none = False)
+  cap_add: list(required = False, none = False)
+
+  # Other options will be allowed and passed to docker-py if you include with `strict = False` but they will be
+  # passed as is and may make Docker crash/hang/etc.
