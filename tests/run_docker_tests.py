@@ -19,7 +19,7 @@ try:
     )
 
     # Disable pytest cache, since the volume is readonly (and writing in volume while root causes problems)
-    command = ["docker", "exec", "-it", "--user", "root", "--workdir", work_dir, container.id,
+    command = ["docker", "exec", "-t", "--user", "root", "--workdir", work_dir, container.id,
                "pytest", "-p", "no:cacheprovider", "--cov=shell_adventure", "--cov-report=", *options, "tests"]
     os.system(" ".join(map(shlex.quote, command)))
 
