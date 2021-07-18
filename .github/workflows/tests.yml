@@ -1,0 +1,40 @@
+name: Tests
+
+on: ["push"]
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        # I'd like to test on Windows and Mac, but Github's Mac runner doesn't come with Docker and Windows
+        # runner can't run Linux images yet. See https://github.com/actions/virtual-environments/issues/1143
+        os: [ubuntu-latest]
+        python-version: [3.7, 3.9]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - uses: actions/cache@v1
+        with:
+          path: .pip_cache
+          key: ${{ runner.os }}-${{ matrix.python-version }}-pip-${{ hashFiles('requirements.txt', 'requirements-dev.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip --cache-dir .pip_cache install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      # Using this action instead of Docker's official action seems to let me cache and still use the script to build the images
+      - uses: satackey/action-docker-layer-caching@v0.0.11
+        continue-on-error: true
+
+      - name: Run tests
+        run: python3 run_tests.py

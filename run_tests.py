@@ -9,7 +9,8 @@ PROJ_PATH = shell_adventure.PKG_PATH.parent
 args = sys.argv[1:]
 
 def header(message: str):
-    print(f"\n{f' {message} '.center(45, '=')}\n")
+    # Using flush fixes an issue in GitHub actions where prints and output from subprocesses get out of order in the report
+    print(f"\n{f' {message} '.center(45, '=')}\n", flush = True)
 def run(command: List[str]):
     return subprocess.run(command, stdout=sys.stdout).returncode
 
@@ -32,7 +33,7 @@ for dockerfile in PROJ_PATH.glob("tests/docker_images/Dockerfile.tests.*"):
         tag = f"shelladventure/tests:{tag}",
         rm = True, # Remove intermediate containers
     )
-print("Done!")
+print("Done!", flush = True)
 
 header("MyPy Analysis")
 
