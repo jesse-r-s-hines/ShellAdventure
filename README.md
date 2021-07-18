@@ -270,13 +270,18 @@ sudo apt install ./libseccomp2_x.x.x-x_armhf.deb
 # Running Tests
 The project uses [mypy](http://mypy-lang.org) to do static type checking on the code. The tests are split up into two groups, those that run host-side, and those that run in the default `shell-adventure` container. Both use [pytest](https://docs.pytest.org/en/6.2.x/).
 
-To run the tests, set up a Python3.7 venv (since Python3.7 is the lowest version of Python *Shell Adventure* supports):
+Its recommended that you setup a Python3.7 [venv](https://docs.python.org/3/library/venv.html) to run the tests since Python3.7 is the lowest version of Python *Shell Adventure* supports:
 ```bash
 python3.7 -m venv .venv
-.venv/bin/python3 -m pip install -r requirements-dev.txt
+source .venv/bin/activate # Or .venv/bin/activate.bat
 ```
 Then run
 ```bash
-./tests.sh
+python3 run_tests.py
 ```
 to do mypy analysis and run the tests.
+
+Any args passed to `run_tests.py` will be passed to `pytest`. Eg. to run tests matching a pattern:
+```bash
+python3 run_tests.py -k name_of_test
+```
