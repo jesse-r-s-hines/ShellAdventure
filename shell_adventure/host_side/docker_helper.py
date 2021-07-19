@@ -5,11 +5,14 @@ from typing import Union
 import docker, deepmerge
 from docker.models.images import Image
 from docker.models.containers import Container
-from docker.errors import ImageNotFound, NotFound
+from docker.errors import DockerException, ImageNotFound, NotFound
 from shell_adventure.shared import messages
 import shell_adventure
 
-client = docker.from_env()
+try:
+    client = docker.from_env()
+except DockerException as e:
+    raise Exception("Couldn't initialize Docker client. Is Docker not installed or is the Docker engine not started?") from e
 
 def launch(image: Union[str, Image], **container_options) -> Container:
     """
