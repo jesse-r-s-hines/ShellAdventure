@@ -4,32 +4,49 @@
 # Installing
 
 ## Requirements
-*Shell Adventure* should run on any Linux system capable of running Docker.
-
 You will need to install:
 - [Python3.7+](https://www.python.org/downloads/)
 - [Docker](https://docs.docker.com/get-docker/)
 
+## Installing on Debian
+```bash
+cd ShellAdventure
 
-#### Optional:
-By default, you need to run docker as root. Since *Shell Adventure* uses Docker, you will either have to run *Shell Adventure* as root or add your user to the `docker` group to allow running Docker:
+# Install Dependencies
+sudo apt install python3-pil python3-pil.imagetk
+python3 -m pip install -r requirements.txt
+```
+
+### Optional:
+By default, you need to run Docker as root. Since *Shell Adventure* uses Docker, you will either have to run *Shell Adventure* as root or add your user to the `docker` group to allow running Docker:
 ```bash
 sudo groupadd docker
 sudo usermod -aG docker $USER
 # Logout and login to refresh user groups.
 ```
 
-## Installing on Debian
-```bash
-# Install Dependencies
+## Installing on Windows
+*Shell Adventure* will also work on Windows if you install [Docker for Windows](https://docs.docker.com/docker-for-windows/install), though it will generally be slower to load.
+```bat
 cd ShellAdventure
 
-sudo apt install python3-pil python3-pil.imagetk
+:: Install Dependencies
 python3 -m pip install -r requirements.txt
 ```
 
-## Other OS's
-Currently *Shell Adventure* does not run on Windows properly, though with [Docker for Windows](https://docs.docker.com/docker-for-windows/install) it should be possible to get it working in the future. [Docker for Mac](https://docs.docker.com/docker-for-mac/install/) should also make it possible to run *Shell Adventure* on macOS, though it has not been tested.
+## macOS
+[Docker for Mac](https://docs.docker.com/docker-for-mac/install/) should also make it possible to run *Shell Adventure* on macOS, though it has not been tested.
+
+# Running
+Simply run the [`launch.py`](launch.py) Python script and pass it a path to a YAML config file to start the tutorial.
+```bash
+python3 launch.py <config_file>
+```
+This will launch the tutorial with the given configuration (see [below](#usage) for how to make a tutorial config file). It will generate any puzzles you specified and then place the student at `/home/student` in the docker container. The student will be shown the list of puzzles in small GUI detached from the terminal and can try to solve them.
+
+The first time you run *Shell Adventure* may take a while as it pulls the Docker image. 
+
+If you are using Docker for Windows, make sure that the Docker engine is started before running [`launch.py`](launch.py).
 
 # The Environnement
 The tutorials will take place in a Linux command-line environnement running insside a Docker container. The default container is running a bash shell in a headless Ubuntu 20.04. See [`supported_commands.md`](docs/supported_commands.md) for a list of the commands available in the default container. The student will be logged in as user `student` with password `student` and home directory `/home/student`. The student has `sudo` privileges by default so that you can teach use of `sudo` and permissions.
@@ -39,17 +56,8 @@ If you want to add or remove commands in the container, change the user, or even
 # Usage
 You configure each tutorial with [YAML](https://yaml.org/) config files and Python scripts. The Python scripts will define a function for each puzzle template. The function will generate any files needed for the puzzle and then return a `Puzzle` object containing the puzzle question text and a callback that will autograde the puzzle. The YAML config file will specify which puzzles templates to use, and other tutorial settings.
 
-## Running
-Simply run the [`launch.py`](launch.py) Python script and pass it a path to a YAML config file to start the tutorial.
-```bash
-python3 launch.py <config_file>
-```
-This will launch the tutorial with the given configuration. It will generate any puzzles you specified and then place the student at `/home/student` in the docker container. The student will be shown the list of puzzles in small GUI detached from the terminal and can try to solve them.
-
-The first time you run *Shell Adventure* may take a while as it pulls the Docker image.
-
 ## Configuration
-The configuration file passed to *Shell Adventure* controls what puzzles are used in the tutorial and various other options.
+The configuration file passed to the *Shell Adventure* [`launch.py`](launch.py) script controls what puzzles are used in the tutorial and various other options.
 
 A simple config file example:
 ```yaml
