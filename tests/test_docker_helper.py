@@ -13,6 +13,6 @@ class TestDockerHelper:
             container = docker_helper.launch("shelladventure/tests:alpine") # Image only stored locally
             assert container.image == docker_helper.client.images.get("shelladventure/tests:alpine")
         finally:
-            container.stop(timeout = 0) # should autoremove
+            docker_helper.stop(container) # should autoremove
 
     # I'm not going to test an actual pull here as it would make the tests take forever

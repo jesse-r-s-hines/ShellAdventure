@@ -28,4 +28,4 @@ try:
     tar = tarfile.open(fileobj = io.BytesIO(b''.join(bytes)))
     tar.extract(".coverage", proj_dir)
 finally:
-    container.stop(timeout = 0)
+    docker_helper.stop(container)

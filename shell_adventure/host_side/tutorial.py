@@ -196,12 +196,7 @@ class Tutorial:
             self._conn.close()
 
         if self.container:
-            try: # Force the container to stop (then it will get autoremoved)
-                self.container.stop(timeout = 2) # throws NotFound if container already stopped
-                # Wait until the container is removed (sometimes it takes a second for the docker api to do so)
-                self.container.wait(condition = "removed") # will throw NotFound if already removed
-            except docker.errors.NotFound: # Container was already removed
-                pass
+            docker_helper.stop(self.container)
 
     def _start(self):
         """

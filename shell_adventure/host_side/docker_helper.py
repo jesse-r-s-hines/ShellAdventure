@@ -5,7 +5,7 @@ from typing import Union
 import docker, deepmerge
 from docker.models.images import Image
 from docker.models.containers import Container
-from docker.errors import ImageNotFound
+from docker.errors import ImageNotFound, NotFound
 from shell_adventure.shared import messages
 import shell_adventure
 
@@ -48,3 +48,12 @@ def launch(image: Union[str, Image], **container_options) -> Container:
     container: Container = client.containers.create(image, **container_options)
     container.start()
     return container
+
+def stop(container: Container, timeout: int = 2):
+    """ Stops the container if its running and blocks until it gets autoremoved.  """
+    try: # Force the container to stop (then it will get autoremoved)
+        container.stop(timeout = timeout) # throws NotFound if container already stopped
+        # Wait until the container is removed (sometimes it takes a second for the docker api to do so)
+        container.wait(condition = "removed") # will throw NotFound if already removed
+    except NotFound: # Container was already removed
+            pass
