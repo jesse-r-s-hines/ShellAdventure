@@ -5,11 +5,16 @@ from tkinter import StringVar, ttk, font, messagebox
 import tkinter.simpledialog as simpledialog
 from ttkthemes import ThemedTk
 from PIL import ImageTk, Image
+import ctypes, sys
 from .gui_widgets import WrappingLabel, SelectableMessage, popup_box
 from .scrolled_frame import VerticalScrolledFrame
 from shell_adventure.host_side import tutorial
 from shell_adventure.shared.puzzle_data import PuzzleData
 from . import PKG_PATH
+
+# Fix resolution on Windows. See https://coderslegacy.com/python/problem-solving/improve-tkinter-resolution/
+if sys.platform == "win32":
+    ctypes.windll.shcore.SetProcessDpiAwareness(1)
 
 class ShellAdventureGUI(ThemedTk):
     def __init__(self, tutorial: tutorial.Tutorial, restart_callback: Callable):
