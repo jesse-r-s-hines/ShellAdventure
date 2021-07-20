@@ -34,8 +34,15 @@ cd ShellAdventure
 python3 -m pip install -r requirements.txt
 ```
 
-## macOS
-[Docker for Mac](https://docs.docker.com/docker-for-mac/install/) should also make it possible to run *Shell Adventure* on macOS, though it has not been tested.
+## Installing on Mac
+*Shell Adventure* will work using [Docker for Mac](https://docs.docker.com/docker-for-mac/install/).
+
+```bash
+cd ShellAdventure
+
+brew install python-tk
+python3 -m pip install -r requirements.txt
+```
 
 # Running
 Simply run the [`launch.py`](launch.py) Python script and pass it a path to a YAML config file to start the tutorial.
@@ -46,7 +53,7 @@ This will launch the tutorial with the given configuration (see [below](#usage) 
 
 The first time you run *Shell Adventure* may take a while as it pulls the Docker image. 
 
-If you are using Docker for Windows, make sure that the Docker engine is started before running [`launch.py`](launch.py).
+If you are using Docker for Windows or Docker for Mac, make sure that the Docker engine is started before running [`launch.py`](launch.py).
 
 # The Environnement
 The tutorials will take place in a Linux command-line environnement running insside a Docker container. The default container is running a bash shell in a headless Ubuntu 20.04. See [`supported_commands.md`](docs/supported_commands.md) for a list of the commands available in the default container. The student will be logged in as user `student` with password `student` and home directory `/home/student`. The student has `sudo` privileges by default so that you can teach use of `sudo` and permissions.
