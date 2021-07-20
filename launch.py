@@ -5,12 +5,9 @@ from shell_adventure.gui.main import ShellAdventureGUI
 from shell_adventure.host_side.tutorial import Tutorial
 from shell_adventure.shared.tutorial_errors import *
 
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        exit("No tutorial config file given.")
-
+def launch(config_file: str):
     try:
-        tutorial = Tutorial(sys.argv[1])
+        tutorial = Tutorial(config_file)
     except ConfigError as e:
         exit(e)
 
@@ -39,3 +36,10 @@ if __name__ == "__main__":
         log_and_exit("An unhandled error occurred", format_exc(e))
     finally:
         print() # Add newline so that the terminal's next program is on a line by itself properly.
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        exit("No tutorial config file given.")
+
+    launch(sys.argv[1])
