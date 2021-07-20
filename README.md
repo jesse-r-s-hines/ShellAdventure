@@ -289,6 +289,7 @@ Its recommended that you setup a Python3.7 [venv](https://docs.python.org/3/libr
 ```bash
 python3.7 -m venv .venv
 source .venv/bin/activate # Or .venv/bin/activate.bat
+python3 -m pip install -r requirements-dev.txt
 ```
 Then run
 ```bash
