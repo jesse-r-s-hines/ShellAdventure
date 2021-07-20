@@ -19,10 +19,10 @@ header("Building Images")
 (image, log) = docker_helper.client.images.build(
     path = str(PROJ_PATH / "docker_image"),
     dockerfile = "Dockerfile",
-    tag = f"shelladventure/tests:v1",
+    tag = f"shelladventure/shell-adventure:v1.0",
     rm = True, # Remove intermediate containers
 )
-image.tag(f"shelladventure/tests:latest")
+image.tag(f"shelladventure/shell-adventure:latest")
 
 # Build all the images in tests/docker_images
 for dockerfile in PROJ_PATH.glob("tests/docker_images/Dockerfile.tests.*"):
