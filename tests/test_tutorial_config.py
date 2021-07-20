@@ -240,8 +240,11 @@ class TestTutorialConfig:
         })
 
         # Will just print the API error since docker-py doesn't seem to type check the command
-        with pytest.raises(ContainerStartupError, match = "cannot unmarshal number .*Label"):
+        with pytest.raises(ContainerStartupError) as exc_info:
             with tutorial: pass
+
+        if sys.platform.startswith("linux"): # Only Linux gives any useful error message back
+            assert re.search("labels", str(exc_info.value), re.IGNORECASE)
 
     def test_empty_fields(self, tmp_path: Path, check_containers):
         with pytest.raises(ConfigError) as exc_info:
