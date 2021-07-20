@@ -263,10 +263,10 @@ See the [examples](examples) folder for complete examples of tutorial configurat
 
 # Troubleshooting
 ### *Shell Adventure* crashes with `no matching manifest for ... in the manifest list entries`
-This means that the [`shell-adventure`](https://hub.docker.com/repository/docker/shelladventure/shell-adventure) image on DockerHub isn't built for your architecture. You'll need to build the image manually by running `build_image.sh`:
+This means that the [`shell-adventure`](https://hub.docker.com/repository/docker/shelladventure/shell-adventure) image on DockerHub isn't built for your architecture. You'll need to build the image manually by running `build_image.py`:
 ```bash
 cd ShellAdventure
-./build_image.sh
+python3 build_image.py
 ```
 
 ### Building the Docker image fails with `invalid signature was encountered`

@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 from typing import List
-from pathlib import Path
 import sys, subprocess
-import shell_adventure
+import shell_adventure, build_image
 from shell_adventure.host_side import docker_helper
 
 PROJ_PATH = shell_adventure.PKG_PATH.parent
@@ -14,16 +13,10 @@ def header(message: str):
 def run(command: List[str]):
     return subprocess.run(command, stdout=sys.stdout).returncode
 
+
 header("Building Images")
 # Build the docker image locally (in case it has been modified locally since last release)
-(image, log) = docker_helper.client.images.build(
-    path = str(PROJ_PATH / "docker_image"),
-    dockerfile = "Dockerfile",
-    tag = f"shelladventure/shell-adventure:v1.0",
-    rm = True, # Remove intermediate containers
-)
-image.tag(f"shelladventure/shell-adventure:latest")
-
+build_image.build_image()
 # Build all the images in tests/docker_images
 for dockerfile in PROJ_PATH.glob("tests/docker_images/Dockerfile.tests.*"):
     tag = dockerfile.suffix[1:]
@@ -36,9 +29,7 @@ for dockerfile in PROJ_PATH.glob("tests/docker_images/Dockerfile.tests.*"):
 print("Done!", flush = True)
 
 header("MyPy Analysis")
-
 assert run(["mypy"]) == 0 # quit if mypy fails
-
 
 header("Tests in Docker Container")
 # Also makes a ".coverage" report in cwd
@@ -47,7 +38,6 @@ dockerTests = run(["python3", "-m", "tests.run_docker_tests", *args])
 header("Main Tests")
 # Merge coverage report with report from container
 mainTests = run(["python3", "-m", "pytest", "--cov", "--cov-report=", "--cov-append", *args])
-
 
 # Output html report
 # Coverage reports are somewhat incomplete as we don't have a good way to track the code that gets run in the container
