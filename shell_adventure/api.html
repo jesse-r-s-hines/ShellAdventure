@@ -30,6 +30,12 @@
                                 <a class="function" href="#Puzzle.__init__">Puzzle</a>
                         </li>
                         <li>
+                                <a class="variable" href="#Puzzle.question">question</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#Puzzle.score">score</a>
+                        </li>
+                        <li>
                                 <a class="variable" href="#Puzzle.checker">checker</a>
                         </li>
                 </ul>
@@ -118,6 +124,15 @@
                             <ul class="memberlist">
                         <li>
                                 <a class="function" href="#PermissionsGroup.__init__">PermissionsGroup</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#PermissionsGroup.read">read</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#PermissionsGroup.write">write</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#PermissionsGroup.execute">execute</a>
                         </li>
                         <li>
                                 <a class="function" href="#PermissionsGroup.from_str">from_str</a>
@@ -271,8 +286,10 @@ shell_adventure<wbr>.api    </h1>
     <span class="sd">&quot;&quot;&quot; Represents a single puzzle in the tutorial. &quot;&quot;&quot;</span>
 
     <span class="n">question</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="sd">&quot;&quot;&quot; The question string that will be shown to the student. &quot;&quot;&quot;</span>
 
     <span class="n">score</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="sd">&quot;&quot;&quot; The score that will be given when the puzzle is solved. &quot;&quot;&quot;</span>
 
     <span class="n">checker</span><span class="p">:</span> <span class="n">AutoGrader</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -405,6 +422,28 @@ False or a string, the puzzle was not solved. Returning a string will show the s
 
 <p>score:
     The score given on success. Defaults to 1.</p>
+</div>
+
+
+                            </div>
+                            <div id="Puzzle.question" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#Puzzle.question">#&nbsp;&nbsp</a>
+
+        <span class="name">question</span><span class="annotation">: str</span>
+    </div>
+
+            <div class="docstring"><p>The question string that will be shown to the student.</p>
+</div>
+
+
+                            </div>
+                            <div id="Puzzle.score" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#Puzzle.score">#&nbsp;&nbsp</a>
+
+        <span class="name">score</span><span class="annotation">: int</span>
+    </div>
+
+            <div class="docstring"><p>The score that will be given when the puzzle is solved.</p>
 </div>
 
 
@@ -1333,8 +1372,11 @@ Eg.</p>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">read</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="sd">&quot;&quot;&quot; The read permission bit &quot;&quot;&quot;</span>
     <span class="n">write</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="sd">&quot;&quot;&quot; The write permission bit &quot;&quot;&quot;</span>
     <span class="n">execute</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="sd">&quot;&quot;&quot; The execute permission bit &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">read</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">write</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">execute</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">read</span> <span class="o">=</span> <span class="n">read</span>
@@ -1402,6 +1444,39 @@ Eg.</p>
         </details>
 
     
+
+                            </div>
+                            <div id="PermissionsGroup.read" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#PermissionsGroup.read">#&nbsp;&nbsp</a>
+
+        <span class="name">read</span><span class="annotation">: bool</span>
+    </div>
+
+            <div class="docstring"><p>The read permission bit</p>
+</div>
+
+
+                            </div>
+                            <div id="PermissionsGroup.write" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#PermissionsGroup.write">#&nbsp;&nbsp</a>
+
+        <span class="name">write</span><span class="annotation">: bool</span>
+    </div>
+
+            <div class="docstring"><p>The write permission bit</p>
+</div>
+
+
+                            </div>
+                            <div id="PermissionsGroup.execute" class="classattr">
+                                            <div class="attr variable"><a class="headerlink" href="#PermissionsGroup.execute">#&nbsp;&nbsp</a>
+
+        <span class="name">execute</span><span class="annotation">: bool</span>
+    </div>
+
+            <div class="docstring"><p>The execute permission bit</p>
+</div>
+
 
                             </div>
                             <div id="PermissionsGroup.from_str" class="classattr">
@@ -1497,8 +1572,11 @@ Eg.</p>
 
     <span class="c1"># MyPy fusses at overriding field with property. See https://github.com/python/mypy/issues/4125</span>
     <span class="n">read</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_bit</span><span class="p">(</span><span class="mi">0</span><span class="n">o4</span><span class="p">),</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_bit</span><span class="p">(</span><span class="mi">0</span><span class="n">o4</span><span class="p">,</span> <span class="n">val</span><span class="p">))</span> <span class="c1">#type: ignore</span>
+    <span class="sd">&quot;&quot;&quot; The read permission bit &quot;&quot;&quot;</span>
     <span class="n">write</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_bit</span><span class="p">(</span><span class="mi">0</span><span class="n">o2</span><span class="p">),</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_bit</span><span class="p">(</span><span class="mi">0</span><span class="n">o2</span><span class="p">,</span> <span class="n">val</span><span class="p">))</span> <span class="c1">#type: ignore</span>
+    <span class="sd">&quot;&quot;&quot; The write permission bit &quot;&quot;&quot;</span>
     <span class="n">execute</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_bit</span><span class="p">(</span><span class="mi">0</span><span class="n">o1</span><span class="p">),</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_bit</span><span class="p">(</span><span class="mi">0</span><span class="n">o1</span><span class="p">,</span> <span class="n">val</span><span class="p">))</span> <span class="c1">#type: ignore</span>
+    <span class="sd">&quot;&quot;&quot; The execute permission bit &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">file</span><span class="p">:</span> <span class="nb">file</span><span class="o">.</span><span class="n">File</span><span class="p">,</span> <span class="n">bit_shift</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
