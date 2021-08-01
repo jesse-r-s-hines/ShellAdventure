@@ -114,8 +114,11 @@ class PermissionsGroup:
     """
 
     read: bool
+    """ The read permission bit """
     write: bool
+    """ The write permission bit """
     execute: bool
+    """ The execute permission bit """
 
     def __init__(self, read: bool, write: bool, execute: bool):
         self.read = read
@@ -180,8 +183,11 @@ class LinkedPermissionsGroup(PermissionsGroup):
 
     # MyPy fusses at overriding field with property. See https://github.com/python/mypy/issues/4125
     read = property(lambda self: self._get_bit(0o4), lambda self, val: self._set_bit(0o4, val)) #type: ignore
+    """ The read permission bit """
     write = property(lambda self: self._get_bit(0o2), lambda self, val: self._set_bit(0o2, val)) #type: ignore
+    """ The write permission bit """
     execute = property(lambda self: self._get_bit(0o1), lambda self, val: self._set_bit(0o1, val)) #type: ignore
+    """ The execute permission bit """
 
     def __init__(self, file: file.File, bit_shift: int):
         """

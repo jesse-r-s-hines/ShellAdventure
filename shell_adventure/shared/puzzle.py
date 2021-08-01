@@ -8,8 +8,10 @@ class Puzzle:
     """ Represents a single puzzle in the tutorial. """
 
     question: str
+    """ The question string that will be shown to the student. """
 
     score: int
+    """ The score that will be given when the puzzle is solved. """
 
     checker: AutoGrader
     """
