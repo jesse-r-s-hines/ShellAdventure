@@ -214,7 +214,7 @@ File("/blueberry/lemon/watermellon/kiwi/strawberry")
 ```
 
 ## Using Custom Docker Images
-If you want to customize the environment the student will be placed in, install or remove commands, or add preexisting files you can make *Shell Adventure* use a different Docker image by specifying the name and tag of the image you want to use in the config file. You can use any image that is available on [Docker Hub](https://hub.docker.com/), or make your own custom images by making your own Dockerfile and building the image (see Docker's [docs](https://docs.docker.com/engine/reference/builder/)).
+If you want to customize the environment the student will be placed in, install or remove commands, or add pre-existing files you can make *Shell Adventure* use a different Docker image by specifying the name and tag of the image you want to use in the config file. You can use any image that is available on [Docker Hub](https://hub.docker.com/), or make your own custom images by making your own Dockerfile and building the image (see Docker's [docs](https://docs.docker.com/engine/reference/builder/)).
 
 The `USER` of the image will be used as the student, and the `WORKDIR` of the image will be used as the student's "home". The `CMD` of the image should run the shell. Normally this will be `bash`, but you can also use a different shell application if you want. (Currently there are some minor issues using shells other than bash so use at your own risk.)
 
@@ -229,7 +229,7 @@ RUN apt install -y hostnamectl
 USER student
 ```
 
-You can also make your own docker images from scratch if you want to use an entirely different distro of linux for example. You need to make sure that Python3.7+ and the Python packages `dill` and `python-lorem` are installed in the container.
+You can also make your own docker images from scratch if you want to use an entirely different distro of Linux for example. You need to make sure that Python3.7+ and the Python packages `dill` and `python-lorem` are installed in the container.
 
 Example:
 ```Dockerfile
@@ -239,7 +239,7 @@ FROM alpine:3
 RUN apk add --no-cache python3 py3-pip
 RUN python3 -m pip --no-cache-dir install dill python-lorem
 
-# The student will be user "bob" and their password will be "bob"
+# The student will be user "bob"
 RUN adduser -D bob
 USER bob
 WORKDIR /home/bob
@@ -288,7 +288,7 @@ The project uses [mypy](http://mypy-lang.org) to do static type checking on the 
 Its recommended that you setup a Python3.7 [venv](https://docs.python.org/3/library/venv.html) to run the tests since Python3.7 is the lowest version of Python *Shell Adventure* supports:
 ```bash
 python3.7 -m venv .venv
-source .venv/bin/activate # Or .venv/bin/activate.bat
+source .venv/bin/activate # See https://docs.python.org/3/library/venv.html#creating-virtual-environments for Windows
 python3 -m pip install -r requirements-dev.txt
 ```
 Then run
