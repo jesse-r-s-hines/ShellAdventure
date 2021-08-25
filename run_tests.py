@@ -29,7 +29,8 @@ for dockerfile in PROJ_PATH.glob("tests/docker_images/Dockerfile.tests.*"):
 print("Done!", flush = True)
 
 header("MyPy Analysis")
-assert run(["mypy"]) == 0 # quit if mypy fails
+
+if run(["mypy"]) != 0: exit(1) # quit if mypy fails
 
 header("Tests in Docker Container")
 # Also makes a ".coverage" report in cwd
