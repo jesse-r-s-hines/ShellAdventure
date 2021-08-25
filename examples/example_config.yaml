@@ -32,14 +32,14 @@ puzzles:
 # Default is "shelladventure/shell-adventure:v1.0"
 image: "shelladventure/shell-adventure:v1.0"
 
-# Optional. These are passed directly to the docker-py create() method. You generally shouldn't mess with these unless
-# you need to manipulate low-level Docker options. Invalid container_options may cause Docker to crash or hang.
+# Optional. These are passed directly to the docker-py create() method. You generally shouldn't mess with these
+# unless you know what you are doing. Invalid container_options may cause Docker to crash or hang.
 # See https://docker-py.readthedocs.io/en/stable/containers.html#docker.models.containers.ContainerCollection.create
 # for details on all the options you can pass.
 container_options:
   # Most commonly used container_options are "user", "working_dir", and "command"
   user: "student" # The user the student is logged in as. Default "student" in the "shell-adventure" image
-  working_dir: "/home/student" # The directory the tutorial starts in. Default "/home/student"  in the "shell-adventure" image
+  working_dir: "/home/student" # The directory the tutorial starts in. Default "/home/student" in the "shell-adventure" image
   command: "bash" # The shell the student is using. Default "bash" in the "shell-adventure" image
 
 # Optional. A list of Python scripts which will be run before puzzles are generated.
@@ -51,7 +51,7 @@ setup_scripts:
 
 # Optional. Path to a dictionary file with one word on each line. The dictionary will be used by rand().name()
 # If omitted, a dictionary based on http://www.desiquintans.com/nounlist will be used
-name_dictionary: ../shell_adventure/host_side/name_dictionary.txt
+# name_dictionary: ../shell_adventure/host_side/name_dictionary.txt
 
 # Optional. A list of files containing text. Random paragraphs from these files will be used by the rand().paragraphs()
 # method for generating random content for files. If omitted, a "Lorem Ipsum" style generator will be used.
