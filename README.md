@@ -8,10 +8,14 @@ You will need to install:
 - [Python3.7+](https://www.python.org/downloads/)
 - [Docker](https://docs.docker.com/get-docker/)
 
+Follow the instructions from the links above to install Python and Docker on your system.
+
 ## Installing on Debian
 ```bash
 cd ShellAdventure
 
+# Install pip
+sudo apt install python3-pip
 # Install Dependencies
 sudo apt install python3-pil python3-pil.imagetk
 python3 -m pip install -r requirements.txt
