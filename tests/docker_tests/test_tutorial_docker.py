@@ -63,12 +63,24 @@ class TestTutorialDocker:
             setup_tutorial(tutorial, working_dir, modules = {}, puzzles = [])
             assert tutorial.puzzles == {}
 
-    def test_get_templates(self):
-        module = TutorialDocker._create_module(PurePath("mypuzzles.py"), SIMPLE_PUZZLES)
-        templates = TutorialDocker._get_templates_from_module(module)
-        assert list(templates.keys()) == ["mypuzzles.move"]
+    def test_create_module_executes_as_user(self, working_dir: Path):
+        with TutorialDocker() as tutorial:
+            setup_tutorial(tutorial, working_dir)
+            module = tutorial._create_module(PurePath("mypuzzles.py"), dedent("""
+                from shell_adventure.api import *
+                File("output").create()
+            """))
+            output = working_dir / "output"
+            assert (output.owner(), output.group()) == ("student", "student")
 
-    def test_private_methods_arent_puzzles(self):
+    def test_get_templates(self, working_dir: Path):
+        with TutorialDocker() as tutorial:
+            setup_tutorial(tutorial, working_dir)
+            module = tutorial._create_module(PurePath("mypuzzles.py"), SIMPLE_PUZZLES)
+            templates = tutorial._get_templates_from_module(module)
+            assert list(templates.keys()) == ["mypuzzles.move"]
+
+    def test_private_methods_arent_puzzles(self, working_dir: Path):
         puzzles = dedent("""
             from shell_adventure.api import *
             from os import system # Don't use the imported method as a puzzle.
@@ -84,10 +96,11 @@ class TestTutorialDocker:
                     checker = lambda: True,
                 )
         """)
-
-        module = TutorialDocker._create_module(PurePath("mypuzzles.py"), puzzles)
-        templates = TutorialDocker._get_templates_from_module(module)
-        assert list(templates.keys()) == ["mypuzzles.move"]
+        with TutorialDocker() as tutorial:
+            setup_tutorial(tutorial, working_dir)
+            module = tutorial._create_module(PurePath("mypuzzles.py"), puzzles)
+            templates = tutorial._get_templates_from_module(module)
+            assert list(templates.keys()) == ["mypuzzles.move"]
 
     def test_restore(self, working_dir: Path):
         modules = {PurePath("mypuzzles.py"): SIMPLE_PUZZLES}

@@ -61,19 +61,26 @@ class TutorialDocker:
         shell_adventure.api._home = None
         shell_adventure.api._rand = None
 
-    @staticmethod
-    def _create_module(path: PurePath, code: str) -> ModuleType:
+    def _call_user_func(self, func, args = {}) -> Any:
+        """ For calling puzzle templates and checkers. Calls func with args, and sets the user and cwd. """
+        os.chdir(self.home) # Make sure templates are called with home as the cwd
+        with change_user(self.user):
+            return call_with_args(func, args)
+
+    def _create_module(self, path: PurePath, code: str) -> ModuleType:
         """ Constructs a module object from a string of python code. Executes the module. """
         spec = importlib.util.spec_from_loader(path.stem, loader = None)
         module = importlib.util.module_from_spec(spec)
         # We don't want the puzzle modules to exist on disk, but exceptions from exec'ed strings don't have as much info
         # If we compile the code with a special "filename", we can inject the file line info into any exceptions that are thrown.
         compiled_code = compile(code, f"<string>:{path}", "exec")
-        exec(compiled_code, module.__dict__) # Execute the module
+
+        # execute module in home as user
+        self._call_user_func(lambda: exec(compiled_code, module.__dict__))
+
         return module
 
-    @staticmethod
-    def _get_templates_from_module(module: ModuleType) -> Dict[str, PuzzleTemplate]:
+    def _get_templates_from_module(self, module: ModuleType) -> Dict[str, PuzzleTemplate]:
         """ Extracts puzzle template functions from a module as a map of {name: func} """
         templates = {}
         for func_name, func in inspect.getmembers(module, inspect.isfunction):
@@ -82,12 +89,6 @@ class TutorialDocker:
                 templates[f"{module.__name__}.{func_name}"] = func
 
         return templates
-
-    def _call_user_func(self, func, args) -> Any:
-        """ For calling puzzle templates and checkers. Calls func with args, and sets the user and cwd. """
-        os.chdir(self.home) # Make sure templates are called with home as the cwd
-        with change_user(self.user):
-            return call_with_args(func, args)
 
     def _generate_puzzle(self, template: PuzzleTemplate, template_name: str) -> PuzzleData:
         """ Takes a puzzle template and generates a puzzle from it. """
@@ -194,14 +195,14 @@ class TutorialDocker:
         self.modules = {str(path): content for path, content in modules.items()}
 
         try: # Load modules
-            modules_list = [TutorialDocker._create_module(path, code) for path, code in modules.items()]
+            modules_list = [self._create_module(path, code) for path, code in modules.items()]
         except Exception as e:
             raise UserCodeError(f'Puzzle generation failed:', tb_str = self._format_user_exc(e))
 
         # Get puzzle templates from the modules
         templates: Dict[str, PuzzleTemplate] = {}
         for module in modules_list:
-            templates.update( TutorialDocker._get_templates_from_module(module) )
+            templates.update( self._get_templates_from_module(module) )
 
         unknown_puzzles = [p for p in puzzles if p not in templates]
         if unknown_puzzles: raise ConfigError(f"Unknown puzzle template(s) {sentence_list(unknown_puzzles, quote = True)}")
