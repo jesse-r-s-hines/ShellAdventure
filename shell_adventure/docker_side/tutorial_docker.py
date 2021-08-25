@@ -4,7 +4,6 @@ from pathlib import Path, PurePath, PurePosixPath;
 import subprocess, os, pwd, copy
 from multiprocessing.connection import Listener
 import importlib.util, inspect, traceback
-from itertools import chain
 import shell_adventure # For access to globals
 from shell_adventure.shared import messages
 from shell_adventure.shared.messages import Message
@@ -158,12 +157,12 @@ class TutorialDocker:
                  "for what objects dill can serialize. The error dill threw was:\n\n" + format_exc_only(e)
             )
 
-    def _common_setup(self, home: PathLike = None, user: str = None, rand: RandomHelper = None):
+    def _common_setup(self, home: PathLike = None, user: str = None, rand: RandomHelper = None, modules: Dict[PurePath, str] = {}):
         """
         Does some shared setup between setup and restore methods.
-        Sets home, user, and rand. If home and user are None they default to home and user of the
-        shell session. Checks if home and user are valid. And initializes the global variables needed
-        for the api to work.
+        Sets home, user, rand, and modules. If home and user are None they default to home and user of the
+        shell session. Checks if home and user are valid. And initializes the global variables needed for the
+        api to work.
         """
         self.home = Path(home if home else self.student_cwd()).resolve()
         # see https://stackoverflow.com/questions/5327707/how-could-i-get-the-user-name-from-a-process-id-in-python-on-linux
@@ -174,6 +173,7 @@ class TutorialDocker:
         if not user_exists(self.user): raise ConfigError(f'"{self.user}" doesn\'t exist')
 
         self.rand = rand
+        self.modules = {str(path): content for path, content in modules.items()}
 
         # Unfortunately we have to have some package level variables to allow File methods to access
         # the RandomHelper and student home
@@ -192,8 +192,7 @@ class TutorialDocker:
         """
         # Unfortunately we have to have some package level variables allow File methods to access the RandomHelper and TutorialDocker
         rand = RandomHelper(name_dictionary, content_sources)
-        self._common_setup(home, user, rand)
-        self.modules = {str(path): content for path, content in chain(setup_scripts.items(), modules.items())}
+        self._common_setup(home, user, rand, modules = {**setup_scripts, **modules})
 
         try: # Run setup scripts
             for path, script in setup_scripts.items(): self._create_module(path, script) # Execute the module
@@ -234,8 +233,7 @@ class TutorialDocker:
         we have to restart the container and processes. We don't need to regenerate the puzzles, but we do need to resend the puzzle objects
         so we can use the checkers.
         """
-        self._common_setup(home, user)
-        self.modules = {str(path): content for path, content in modules.items()}
+        self._common_setup(home, user, modules = modules)
 
         # Convert the pickled checker back into a function
         self.puzzles = {p.id: p.checker_undilled() for p in puzzles}
