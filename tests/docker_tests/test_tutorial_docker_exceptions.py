@@ -99,6 +99,23 @@ class TestTutorialDockerExceptions:
                 )
         assert "UnrecognizedParamsError" in str(exc_info.value)
 
+    def test_setup_script_exception(self, working_dir: Path):
+        with pytest.raises(UserCodeError, match='Setup scripts failed') as exc_info:
+            with TutorialDocker() as tutorial:
+                setup_tutorial(tutorial, working_dir,
+                    setup_scripts = {PurePath("script.py"): r"""raise TypeError('BOOM!')"""}
+                )
+
+        expected = dedent("""
+            Setup scripts failed:
+              Traceback (most recent call last):
+                File "script.py", line 1, in <module>
+                  raise TypeError('BOOM!')
+              TypeError: BOOM!
+        """).lstrip()
+        assert expected == str(exc_info.value)
+
+
     def test_generation_exception(self, working_dir: Path):
         with pytest.raises(UserCodeError, match = "Puzzle generation failed") as exc_info:
             with TutorialDocker() as tutorial:

@@ -38,6 +38,9 @@ class Tutorial:
     for details on the options you can pass. Most commonly used are `user` and `working_dir`.
     """
 
+    setup_scripts: List[Path]
+    """ A list of paths to python scripts that will be run before before puzzle generation. """
+
     module_paths: List[Path]
     """ List of absolute paths to the puzzle generation modules. """
 
@@ -94,6 +97,8 @@ class Tutorial:
 
         container_options = config.get("container_options", {})
         self.container_options = {str(k): v for k, v in container_options.items()} # Force keys to str
+
+        self.setup_scripts = [get_path(f) for f in config.get("setup_scripts", [])]
 
         module_paths: Dict[str, Path] = {}
         for module in config.get("modules"):
@@ -206,6 +211,7 @@ class Tutorial:
         self._start_container(self.image)
 
         try:
+            setup_scripts = {PurePath(file): file.read_text() for file in self.setup_scripts}
             modules = {PurePath(file): file.read_text() for file in self.module_paths}
             name_dictionary = self.name_dictionary.read_text()
             content_sources = [file.read_text() for file in self.content_sources]
@@ -213,6 +219,7 @@ class Tutorial:
             raise ConfigError(str(e))
 
         generated_puzzles: List[PuzzleData] = self._send(Message.SETUP, {
+            "setup_scripts": setup_scripts,
             "modules": modules,
             "puzzles": list(chain(*self.puzzle_templates)),
             "name_dictionary": name_dictionary,

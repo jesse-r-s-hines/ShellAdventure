@@ -248,4 +248,45 @@ class TestTutorialDocker:
             assert tutorial.solve_puzzle(chdir.id)[0] == True
             assert tutorial.solve_puzzle(checkcwd.id)[0] == True # cwd got changed back
 
-        
+    def test_setup_scripts(self, working_dir):
+        with TutorialDocker() as tutorial:
+            setup_tutorial(tutorial, working_dir,
+                modules = {PurePath("mypuzzles.py"): dedent(r"""
+                    from shell_adventure.api import *
+
+                    def puzzle():
+                        output = File("output.txt")
+                        output.write_text(output.read_text() + "generator\n")
+
+                        return Puzzle(question = f"WRONG", checker = lambda: False)
+                """)},
+                puzzles = ["mypuzzles.puzzle"],
+                setup_scripts = {
+                    PurePath("script.py"): dedent(r"""
+                        from shell_adventure.api import *
+                        import os, getpass, pwd
+
+                        rand().paragraphs(3) # check that this is not null
+                        output = File("output.txt").create()
+                        effective_user = pwd.getpwuid(os.geteuid()).pw_name
+                        output.write_text(f"python:{os.getcwd()}:{effective_user}:{getpass.getuser()}\n")
+                    """),
+                    PurePath("script2.py"): dedent(r"""
+                        from shell_adventure.api import *
+                        File("output.txt").write_text(File("output.txt").read_text() + "script2\n")
+                    """),
+                    PurePath("path/to/script.py"): dedent(r"""
+                        from shell_adventure.api import *
+                        File("output.txt").write_text(File("output.txt").read_text() + "script3\n")
+                    """),
+                },
+            )
+
+            output = working_dir / "output.txt"
+            assert output.read_text().splitlines() == [
+                f'python:{working_dir}:student:root',
+                'script2',
+                'script3',
+                'generator',
+            ]
+            assert (output.owner(), output.group()) == ("student", "student")

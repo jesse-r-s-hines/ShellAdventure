@@ -31,6 +31,7 @@ def setup_tutorial(tutorial: TutorialDocker, working_dir: Path, **setup):
     default_setup = {
         "home": working_dir,
         "user": None, # Default to container's user
+        "setup_scripts": {},
         "modules": {PurePath("puzzles.py"): SIMPLE_PUZZLES},
         "puzzles": ["puzzles.move"],
         "name_dictionary": "apple\nbanana\n",

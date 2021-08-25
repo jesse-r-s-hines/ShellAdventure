@@ -4,6 +4,7 @@ from pathlib import Path, PurePath, PurePosixPath;
 import subprocess, os, pwd, copy
 from multiprocessing.connection import Listener
 import importlib.util, inspect, traceback
+from itertools import chain
 import shell_adventure # For access to globals
 from shell_adventure.shared import messages
 from shell_adventure.shared.messages import Message
@@ -27,7 +28,7 @@ class TutorialDocker:
 
     modules: Dict[str, str]
     """
-    Map of the puzzle modules, filename on host mapped to file contents.
+    Map of the puzzle and setup_script modules, filename on host mapped to file contents.
     Use str instead of Path since host might be Windows or Linux and WindowsPath != PosixPath
     """
 
@@ -182,8 +183,8 @@ class TutorialDocker:
 
     ### Message actions, these functions can be called by sending a message over the connection
 
-    def setup(self, *, home: PathLike = None, user: str = None, modules: Dict[PurePath, str], puzzles: List[str],
-              name_dictionary: str, content_sources: List[str], send_checkers: bool) -> List[PuzzleData]:
+    def setup(self, *, home: PathLike = None, user: str = None, setup_scripts: Dict[PurePath, str], modules: Dict[PurePath, str],
+              puzzles: List[str], name_dictionary: str, content_sources: List[str], send_checkers: bool) -> List[PuzzleData]:
         """
         Initializes the tutorial with the given settings. Generates the puzzles in the modules. The
         initialization is done separate from the constructor so that it can be done after the connection
@@ -192,8 +193,13 @@ class TutorialDocker:
         # Unfortunately we have to have some package level variables allow File methods to access the RandomHelper and TutorialDocker
         rand = RandomHelper(name_dictionary, content_sources)
         self._common_setup(home, user, rand)
-        self.modules = {str(path): content for path, content in modules.items()}
+        self.modules = {str(path): content for path, content in chain(setup_scripts.items(), modules.items())}
 
+        try: # Run setup scripts
+            for path, script in setup_scripts.items(): self._create_module(path, script) # Execute the module
+        except Exception as e:
+            raise UserCodeError(f'Setup scripts failed:', tb_str = self._format_user_exc(e))
+    
         try: # Load modules
             modules_list = [self._create_module(path, code) for path, code in modules.items()]
         except Exception as e:

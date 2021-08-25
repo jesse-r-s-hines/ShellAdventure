@@ -27,6 +27,8 @@ class TestTutorialConfig:
                     user: user
                     command: sh
                     name: mytutorial
+                setup_scripts:
+                    - setup.py
                 modules:
                     - path/to/puzz1.py # Relative path
                     - {tmp_path / "puzz2.py"} # Absolute path
@@ -39,6 +41,7 @@ class TestTutorialConfig:
                 content_sources:
                     - content.txt
             """,
+            "setup.py": "File('A.txt').create()",
             "path/to/puzz1.py": SIMPLE_PUZZLES,
             "puzz2.py": SIMPLE_PUZZLES,
             "puzz3.py": SIMPLE_PUZZLES,
@@ -56,6 +59,7 @@ class TestTutorialConfig:
         assert tutorial.name_dictionary == tmp_path / "my_dictionary.txt"
         assert tutorial.content_sources == [tmp_path / "content.txt"]
 
+        assert [s for s in tutorial.setup_scripts] == [tmp_path / "setup.py"]
         assert [m for m in tutorial.module_paths] == [tmp_path / "path/to/puzz1.py", tmp_path / "puzz2.py", tmp_path / "puzz3.py"]
         assert [n.data for n in tutorial.puzzle_templates] == ["puzz1.move", "puzz2.move", "puzz3.move"]
 

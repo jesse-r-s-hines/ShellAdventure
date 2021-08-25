@@ -205,6 +205,42 @@ class TestIntegration:
             code, owner = run_command(tutorial, "stat -c '%U' A.txt", workdir="/")
             assert owner == "root"
 
+    def test_setup_scripts(self, tmp_path):
+        tutorial = create_tutorial(tmp_path, {
+            "config.yaml": """
+                setup_scripts:
+                    - dir/setup.py
+                modules:
+                    - puzzles.py
+                puzzles:
+                    - puzzles.puzzle:
+            """,
+            "puzzles.py": dedent(r"""
+                from shell_adventure.api import *
+
+                def puzzle():
+                    output = File("output.txt")
+                    output.write_text(output.read_text() + "generator\n")
+
+                    return Puzzle(
+                        question = f"WRONG",
+                        checker = lambda: False,
+                    )
+            """),
+            "dir/setup.py": dedent(r"""
+                from shell_adventure.api import *
+                import os, getpass, pwd
+
+                rand().paragraphs(3) # check that this is not null
+                effective_user = pwd.getpwuid(os.geteuid()).pw_name
+                File("output.txt").write_text(f"python:{os.getcwd()}:{effective_user}:{getpass.getuser()}\n")
+            """),
+        })
+
+        with tutorial:
+            exit_code, output = run_command(tutorial, "cat output.txt")
+            assert output.splitlines() == ['python:/home/student:student:root', 'generator']
+
     def test_exception(self, tmp_path: Path, check_containers):
         # Test that exceptions in the container get raised in the Tutorial
         tutorial = create_tutorial(tmp_path, {
