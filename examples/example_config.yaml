@@ -42,6 +42,13 @@ container_options:
   working_dir: "/home/student" # The directory the tutorial starts in. Default "/home/student"  in the "shell-adventure" image
   command: "bash" # The shell the student is using. Default "bash" in the "shell-adventure" image
 
+# Optional. A list of Python scripts which will be run before puzzles are generated.
+# Use setup scripts to create resources that will be accessible in all puzzle generators. Generally, you
+# should use a custom Docker image instead if you can, especially for slow operations like installing things,
+# since the setup script will run every time the tutorial is launched.
+setup_scripts:
+    - example_setup_script.py
+
 # Optional. Path to a dictionary file with one word on each line. The dictionary will be used by rand().name()
 # If omitted, a dictionary based on http://www.desiquintans.com/nounlist will be used
 name_dictionary: ../shell_adventure/host_side/name_dictionary.txt
