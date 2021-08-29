@@ -59,6 +59,8 @@ class ShellAdventureGUI(ThemedTk):
         scroll_frame.pack(side = tk.BOTTOM, expand = False, fill = tk.BOTH)
         self.update_puzzle_frame()
 
+        self.protocol("WM_DELETE_WINDOW", self.confirm_and_close)
+
         def update_loop():
             self.update_gui()
             self.after(250, update_loop)
@@ -290,9 +292,14 @@ class ShellAdventureGUI(ThemedTk):
         self.restart_callback()
         self.update_puzzle_frame()
 
+
     def finish_tutorial(self):
         messagebox.showinfo("Tutorial Complete!", "Congratulations! You have completed this tutorial!")
         self.destroy()
+
+    def confirm_and_close(self):
+        if messagebox.askokcancel("Exit", "Are you sure you want to exit the tutorial? All your progress will be lost."):
+            self.destroy()
 
     def report_callback_exception(self, exc, val, tb):
         """ Override. """
