@@ -14,10 +14,8 @@ Follow the instructions from the links above to install Python and Docker on you
 ```bash
 cd ShellAdventure
 
-# Install pip
-sudo apt install python3-pip
-# Install Dependencies
-sudo apt install python3-pil python3-pil.imagetk
+# Install pip and dependencies
+sudo apt install python3-pip python3-pil python3-pil.imagetk
 python3 -m pip install -r requirements.txt
 ```
 
