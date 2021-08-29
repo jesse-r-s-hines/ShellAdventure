@@ -282,13 +282,17 @@ class ShellAdventureGUI(ThemedTk):
 
             if solved:
                 self.update_puzzle_frame()
-                if self.tutorial.is_finished(): # then quit the tutorial
-                    self.destroy()
+                if self.tutorial.is_finished():
+                    self.finish_tutorial()
 
     def restart(self):
         self.tutorial.restart()
         self.restart_callback()
         self.update_puzzle_frame()
+
+    def finish_tutorial(self):
+        messagebox.showinfo("Tutorial Complete!", "Congratulations! You have completed this tutorial!")
+        self.destroy()
 
     def report_callback_exception(self, exc, val, tb):
         """ Override. """
