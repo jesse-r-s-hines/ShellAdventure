@@ -2,6 +2,7 @@
 import sys
 from textwrap import indent
 from shell_adventure.gui.main import ShellAdventureGUI
+from shell_adventure.gui.gui_widgets import standalone_fileselect
 from shell_adventure.host_side.tutorial import Tutorial
 from shell_adventure.shared.tutorial_errors import *
 
@@ -40,6 +41,11 @@ def launch(config_file: str):
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
+        config_file = standalone_fileselect(filetypes = [("YAML", ".yml"), ("YAML", ".yaml")])
+    else:
+        config_file = sys.argv[1]
+
+    if not config_file:
         exit("No tutorial config file given.")
 
-    launch(sys.argv[1])
+    launch(config_file)

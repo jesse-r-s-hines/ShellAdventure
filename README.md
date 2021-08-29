@@ -47,11 +47,13 @@ python3 -m pip install -r requirements.txt
 ```
 
 # Running
-Simply run the [`launch.py`](launch.py) Python script and pass it a path to a YAML config file to start the tutorial.
+To start the tutorial, simply run the [`launch.py`](launch.py) Python script and select your tutorial YAML config file in the file selection dialog.
+You can also pass the config file on the command line directly like so:
 ```bash
 python3 launch.py <config_file>
 ```
-This will launch the tutorial with the given configuration (see [below](#usage) for how to make a tutorial config file). It will generate any puzzles you specified and then place the student at `/home/student` in the docker container. The student will be shown the list of puzzles in small GUI detached from the terminal and can try to solve them.
+
+This will launch the tutorial with the given configuration (see [below](#usage) for how to make a tutorial config file). It will generate any puzzles you specified and then place the student at `/home/student` in the Docker container. The student will be shown the list of puzzles in small GUI detached from the terminal and can try to solve them.
 
 The first time you run *Shell Adventure* may take a while as it pulls the Docker image. 
 
@@ -231,7 +233,7 @@ RUN apt install -y hostnamectl
 USER student
 ```
 
-You can also make your own docker images from scratch if you want to use an entirely different distro of Linux for example. You need to make sure that Python3.7+ and the Python packages `dill` and `python-lorem` are installed in the container.
+You can also make your own Docker images from scratch if you want to use an entirely different distro of Linux for example. You need to make sure that Python3.7+ and the Python packages `dill` and `python-lorem` are installed in the container.
 
 Example:
 ```Dockerfile

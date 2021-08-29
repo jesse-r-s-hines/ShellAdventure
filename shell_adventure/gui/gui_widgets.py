@@ -1,6 +1,7 @@
 import re, webbrowser
 import tkinter as tk
 from tkinter import ttk, font
+from tkinter import filedialog
 
 class WrappingLabel(ttk.Label):
     """Label that automatically adjusts the wrap to the size"""
@@ -72,3 +73,11 @@ def popup_box(title: str, text: str):
 
     close_button = tk.Button(popup, text="OK", command = popup.destroy)
     close_button.pack(side = tk.BOTTOM)
+
+def standalone_fileselect(**options):
+    """ Creates a standalone tk window that shows a fileselect and returns the file. """
+    root = tk.Tk()
+    root.withdraw()
+    result = filedialog.askopenfilename(**options)
+    root.destroy()
+    return result
