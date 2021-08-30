@@ -33,7 +33,7 @@ class RandomHelper:
             # para_sentences = [re.findall(r".*?\.\s+", para, flags = re.DOTALL) for para in paragraphs]
             self._content_sources.append(paragraphs)
 
-        # A set of shared folders. random.folder() can use existing folders if they are shared.
+        # A set of shared folders. random._folder() can use existing folders if they are shared.
         self._shared_folders: Set[File] = set()
 
 
@@ -68,8 +68,10 @@ class RandomHelper:
         else:
             return lorem.get_paragraph(count = count, sep = "\n\n") + "\n"
 
-    def file(self, parent: PathLike, ext = None) -> File:
-        """ Creates a `File` with a random name. See `File.rand_file()` for more details. """
+    # === Files ===
+
+    def _file(self, parent: PathLike, ext = None) -> File:
+        """ Creates a `File` with a random name. You should use `File.rand_file()` instead of calling this method directly. """
         parent = File(parent).resolve()
         ext = "" if ext == None else f".{ext}"
         new_file = File("/") # garanteed to exist.
@@ -80,8 +82,8 @@ class RandomHelper:
 
         return new_file
 
-    def folder(self, parent: PathLike, depth: Union[int, Tuple[int, int]] = (1, 3), create_new_chance: float = 0.5) -> File:
-        """ Makes a `File` to a random folder under parent. See `File.random_shared_folder()` for more details. """
+    def _folder(self, parent: PathLike, depth: Union[int, Tuple[int, int]] = (1, 3), create_new_chance: float = 0.5) -> File:
+        """ Makes a `File` to a random folder under parent. You should use `File.random_shared_folder()` instead of calling this method directly. """
 
         if isinstance(depth, tuple): depth = random.randint(depth[0], depth[1])
         folder = File(parent).resolve()
@@ -95,15 +97,15 @@ class RandomHelper:
             # Add check for 1 since uniform() is an inclusive range
             roll = random.uniform(0, 1)
             if len(choices) == 0 or create_new_chance == 1 or roll < create_new_chance:
-                folder = self.file(folder) # create random file under folder
-                self.mark_shared(folder)
+                folder = self._file(folder) # create random file under folder
+                self._mark_shared(folder)
             else:
                 folder = File(random.choice(choices))
 
         return folder
 
-    def mark_shared(self, folder: PathLike):
-        """ Marks a folder as shared. The folder does not have to exist yet. """
+    def _mark_shared(self, folder: PathLike):
+        """ Marks a folder as shared. You should use `File.mark_shared()` instead of calling this method directly. """
         folder = File(folder)
         if folder.exists() and not folder.is_dir():
             raise RandomHelperException(f"Can't mark {folder} as shared, it already exists as a f. Can only mark folders as shared.")

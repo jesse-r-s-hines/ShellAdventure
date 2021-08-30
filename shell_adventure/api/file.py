@@ -107,7 +107,7 @@ class File(PosixPath):
         call `File.create()` or `mkdir()` on the file returned by `random_file()`. You can pass an extension which will be added
         to the random name. Will not create a file with a name that already exists.
         """
-        return shell_adventure.api.rand().file(self, ext = ext)
+        return shell_adventure.api.rand()._file(self, ext = ext)
 
     def random_shared_folder(self, depth: Union[int, Tuple[int, int]] = (1, 3), create_new_chance: float = 0.5) -> File:
         """
@@ -144,8 +144,8 @@ class File(PosixPath):
         >>> File("/").random_shared_folder(depth = [5, 6]) # Create a folder 5 or 6 levels under root
         File("/blueberry/lemon/watermellon/kiwi/strawberry")
         """
-        return shell_adventure.api.rand().folder(self, depth, create_new_chance)
+        return shell_adventure.api.rand()._folder(self, depth, create_new_chance)
 
     def mark_shared(self):
         """ Marks the a `File` as shared. `File` should be a directory, though it does not have to exist yet. """
-        shell_adventure.api.rand().mark_shared(self)
+        shell_adventure.api.rand()._mark_shared(self)

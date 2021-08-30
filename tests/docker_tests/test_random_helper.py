@@ -92,12 +92,12 @@ class TestRandomHelper:
     def test_random_folder_basic(self, working_dir: Path):
         random = RandomHelper("a\nb\nc\nd\ne")
 
-        file = random.folder(working_dir)
+        file = random._folder(working_dir)
         assert file in random._shared_folders
         assert working_dir in file.parents
         assert not file.exists()
 
-        file = random.folder(str(working_dir), depth = 2)
+        file = random._folder(str(working_dir), depth = 2)
         assert file in random._shared_folders
         assert file.parents[0] in random._shared_folders
         assert file.parents[1] not in random._shared_folders
@@ -105,84 +105,84 @@ class TestRandomHelper:
     def test_random_folder(self, working_dir: Path):
         random = RandomHelper("a\nb\nc\n")
 
-        folder1 = random.folder(working_dir, depth = 1)
+        folder1 = random._folder(working_dir, depth = 1)
         assert folder1.parent == working_dir
         assert folder1.name in ["a", "b", "c"]
         folder1.mkdir()
 
         # folder1 is empty so even with create_new_chance = 0 it will create a new path.
-        folder2 = random.folder(folder1, depth = 1, create_new_chance = 0)
+        folder2 = random._folder(folder1, depth = 1, create_new_chance = 0)
         assert folder2.parent == folder1
         assert folder2.name in ["a", "b", "c"]
         assert not folder2.exists()
 
         # will always choose folder1
-        folder3 = random.folder(working_dir, depth = 1, create_new_chance = 0)
+        folder3 = random._folder(working_dir, depth = 1, create_new_chance = 0)
         assert folder3 == folder1
 
     def test_random_folder_already_exists(self, working_dir: Path):
         random = RandomHelper("a\nb\n")
         (working_dir / "a").mkdir()
 
-        assert random.folder(working_dir, depth = 1, create_new_chance = 1).name == "b"
+        assert random._folder(working_dir, depth = 1, create_new_chance = 1).name == "b"
 
         with pytest.raises(RandomHelperException, match = "Out of unique names"):
-            random.folder(working_dir, depth = 1, create_new_chance = 1) # "a" already exists, "b" was generated.
+            random._folder(working_dir, depth = 1, create_new_chance = 1) # "a" already exists, "b" was generated.
 
     def test_random_folder_only_chooses_folders_on_disk(self, working_dir: Path):
         random = RandomHelper("\n".join(map(str, range(20))))
 
-        created_file = random.file(working_dir, "txt")
+        created_file = random._file(working_dir, "txt")
         created_file.touch()
-        created_folder = random.folder(working_dir, depth = 1)
+        created_folder = random._folder(working_dir, depth = 1)
         created_folder.mkdir()
-        uncreated_folder = random.folder(working_dir, depth = 1)
+        uncreated_folder = random._folder(working_dir, depth = 1)
 
         assert created_folder in random._shared_folders
         assert uncreated_folder in random._shared_folders
 
         for i in range(10): # Will not use the shared uncreated_folder
-            new = random.folder(working_dir, depth = 2, create_new_chance = 0)
+            new = random._folder(working_dir, depth = 2, create_new_chance = 0)
             assert new.parent == created_folder
 
     def test_mark_shared(self, working_dir: Path):
         random = RandomHelper("a\nb\nc\nd\ne")
 
-        random.mark_shared(working_dir)
+        random._mark_shared(working_dir)
         assert working_dir in random._shared_folders
 
         (working_dir / "file.txt").touch()
         with pytest.raises(RandomHelperException, match="Can only mark folders as shared"):
-            random.mark_shared(working_dir / "file.txt")
+            random._mark_shared(working_dir / "file.txt")
 
 
-        file1 = random.folder(working_dir, depth = 1)
+        file1 = random._folder(working_dir, depth = 1)
         assert file1.parent == working_dir
 
-        file2 = random.folder(file1, depth = 1, create_new_chance=0)
+        file2 = random._folder(file1, depth = 1, create_new_chance=0)
         assert file2.parent == file1
 
     def test_random_file(self, working_dir: Path):
         random = RandomHelper("a\nb\n")
 
-        file = random.file(working_dir)
+        file = random._file(working_dir)
         assert file.parent == working_dir
         assert file.name in ["a", "b"]
 
-        file = random.file(working_dir, "txt")
+        file = random._file(working_dir, "txt")
         assert file.name in ["a.txt", "b.txt"]
 
     def test_random_file_already_exists(self, working_dir: Path):
         random = RandomHelper("a\nb\n")
         (working_dir / "a").touch()
-        assert random.file(working_dir).name == "b"
+        assert random._file(working_dir).name == "b"
 
         with pytest.raises(RandomHelperException, match = "Out of unique names"):
-            random.file(working_dir) # "a" already exists, "b" was generated.
+            random._file(working_dir) # "a" already exists, "b" was generated.
 
         random = RandomHelper("a\nb\n")
         (working_dir / "a.txt").touch()
-        assert random.file(working_dir, ext = "txt").name == "b.txt"
+        assert random._file(working_dir, ext = "txt").name == "b.txt"
 
         with pytest.raises(RandomHelperException, match = "Out of unique names"):
-            random.file(working_dir) # "a.txt" already exists, "b" was generated.
+            random._file(working_dir) # "a.txt" already exists, "b" was generated.
