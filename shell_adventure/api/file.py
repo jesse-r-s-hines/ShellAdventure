@@ -17,7 +17,7 @@ class File(PosixPath):
         if shell_adventure.api._home: # Get home directory from tutorial
             return shell_adventure.api._home
         else: # Default to PosixPath
-            return PosixPath.home()
+            return File(PosixPath.home())
 
 
     # === Convenience Methods ===
