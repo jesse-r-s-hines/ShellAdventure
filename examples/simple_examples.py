@@ -6,7 +6,7 @@ from shell_adventure.api import *
 def cd(home: File):
     # Create a File to a random nested folder. The folder is not made on disk until we call mkdir
     dst = home.random_shared_folder()
-    dst.mkdir(parents = True) # Make the folder and its parents
+    dst.mkdir(parents = True, exist_ok = True) # Make the folder and its parents
 
     # The checker function can optionally have parameters.
     # "cwd" will be passed the current working directory of the student
