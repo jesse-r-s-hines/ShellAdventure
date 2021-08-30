@@ -45,7 +45,8 @@ container_options:
 # Optional. A list of Python scripts which will be run before puzzles are generated.
 # Use setup scripts to create resources that will be accessible in all puzzle generators. Generally, you
 # should use a custom Docker image instead if you can, especially for slow operations like installing things,
-# since the setup script will run every time the tutorial is launched.
+# since the setup script will run every time the tutorial is launched. Setup scripts can be used to make randomized
+# resources shared by all puzzles or to launch background processes.
 setup_scripts:
     - example_setup_script.py
 
