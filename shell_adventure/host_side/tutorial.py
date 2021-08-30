@@ -156,7 +156,11 @@ class Tutorial:
 
     def _send(self, message: Message, *args) -> Any:
         """ Sends a message to the container, and returns the response. If the container sent an exception, raise it. """
-        self._conn.send( (message, *args) )
+        try:
+            self._conn.send( (message, *args) )
+        except:
+            raise ContainerStoppedError("Tutorial container stopped unexpectedly.", container_logs = self.logs())
+
         try:
             response = self._conn.recv()
         except pickle.PicklingError as e:
