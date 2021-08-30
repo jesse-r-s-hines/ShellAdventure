@@ -12,7 +12,7 @@ class File(PosixPath):
     """
 
     @classmethod
-    def home(cls):
+    def home(cls) -> File:
         """ Return the home directory of the student. Equivalent to the "home" parameter in puzzle templates. """
         if shell_adventure.api._home: # Get home directory from tutorial
             return shell_adventure.api._home

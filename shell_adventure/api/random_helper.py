@@ -5,7 +5,10 @@ from .file import File
 from shell_adventure.shared.support import PathLike
 
 class RandomHelper:
-    """ RandomHelper is a class that generates random names, contents, and file paths. """
+    """
+    RandomHelper is a class that generates random names, contents, and file paths.
+    You can access an instance of `RandomHelper` in puzzle modules via the `shell_adventure.api.rand()` function.
+    """
 
     def __init__(self, name_dictionary: str, content_sources: List[str] = []):
         """
@@ -37,7 +40,7 @@ class RandomHelper:
         self._shared_folders: Set[File] = set()
 
 
-    def name(self):
+    def name(self) -> str:
         """ Returns a random word that can be used as a file name. The name is taken from the name_dictionary. """
         if len(self._name_dictionary) == 0:
             raise RandomHelperException("Out of unique names.")

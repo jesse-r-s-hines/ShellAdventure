@@ -32,7 +32,7 @@ def change_user(user: str, group: str = None):
         os.setegid(prev_user)
         os.seteuid(prev_group)
 
-def user_exists(user: str):
+def user_exists(user: str) -> bool:
     """ Returns True if the user exists (by their username) """
     try:
         pwd.getpwnam(user)
@@ -89,7 +89,7 @@ class Permissions:
         """
         return str(self.user) + str(self.group) + str(self.others)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Permissions({oct(int(self))})"
 
 class LinkedPermissions(Permissions):
@@ -153,11 +153,11 @@ class PermissionsGroup:
         else:
             raise NotImplementedError("You can only compare Permissions with other Permissions or with ints")
 
-    def __int__(self):
+    def __int__(self) -> int:
         """ Convert the `PermissionGroup` to an int by treating read/write/execute as bits. """
         return (self.read << 2) | (self.write << 1) | (self.execute)
 
-    def __str__(self):
+    def __str__(self) -> str:
         """ Convert the `PermissionGroup` to an str in "rwx" format, eg. "rw-" or "r--" """
         return ("r" if self.read else "-") + ("w" if self.write else "-") + ("x" if self.execute else "-")
 
