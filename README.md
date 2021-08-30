@@ -268,8 +268,8 @@ image: my-image
 
 The `restart_enabled` config option can be used to turn this off. If `restart_enabled` is `false`, the student can only do a hard restart of the tutorial which will regenerate the randomized puzzles.
 
-# API Docs
-You can use any of the standard Python libraries in your puzzle generation functions. The `shell_adventure.api` module also provides some helper classes, such as `File`, and `Permissions`. See [here](https://jessehines0.github.io/ShellAdventure/shell_adventure/api.html) for the full API documentation.
+# *ShellAdventure* API Docs
+You can use any of the standard Python libraries in your puzzle generation functions. The `shell_adventure.api` module also provides some helper classes, such as `File`, and `Permissions`. See [here](https://jessehines0.github.io/ShellAdventure/shell_adventure/api.html) for the documentation of the *ShellAdventure* API.
 
 # Examples
 See the [examples](examples) folder for complete examples of tutorial configuration and puzzle templates.
