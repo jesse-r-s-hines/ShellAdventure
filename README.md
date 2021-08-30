@@ -280,11 +280,13 @@ cd ShellAdventure
 python3 build_image.py
 ```
 
-### Building the Docker image fails with `invalid signature was encountered`
-If you get an error while building the container on the Raspberry Pi about `invalid signature was encountered` you may need to manually update libseccomp. Download the latest `libseccomp2_x.x.x-x_armhf.deb` from [here](http://ftp.us.debian.org/debian/pool/main/libs/libseccomp/) and
+### Launching the tutorial fails with `Fatal Python error: pyinit_main: can't initialize time`
+If you get an error about `Fatal Python error: pyinit_main: can't initialize time` on the Raspberry Pi you may need to manually update libseccomp. Download the latest `libseccomp2_x.x.x-x_armhf.deb` from [here](http://ftp.us.debian.org/debian/pool/main/libs/libseccomp/) and
 ```bash
 sudo apt install ./libseccomp2_x.x.x-x_armhf.deb
 ```
+
+If you are building the Docker image yourself, it will fail with `invalid signature was encountered` if libseccomp is out of date.
 
 # Running Tests
 The project uses [mypy](http://mypy-lang.org) to do static type checking on the code. The tests are split up into two groups, those that run host-side, and those that run in the default `shell-adventure` container. Both use [pytest](https://docs.pytest.org/en/6.2.x/).
