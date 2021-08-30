@@ -173,15 +173,6 @@
                         <li>
                                 <a class="function" href="#RandomHelper.paragraphs">paragraphs</a>
                         </li>
-                        <li>
-                                <a class="function" href="#RandomHelper.file">file</a>
-                        </li>
-                        <li>
-                                <a class="function" href="#RandomHelper.folder">folder</a>
-                        </li>
-                        <li>
-                                <a class="function" href="#RandomHelper.mark_shared">mark_shared</a>
-                        </li>
                 </ul>
 
             </li>
@@ -497,12 +488,12 @@ False or a string, the puzzle was not solved. Returning a string will show the s
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">home</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">home</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">File</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot; Return the home directory of the student. Equivalent to the &quot;home&quot; parameter in puzzle templates. &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">shell_adventure</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">_home</span><span class="p">:</span> <span class="c1"># Get home directory from tutorial</span>
             <span class="k">return</span> <span class="n">shell_adventure</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">_home</span>
         <span class="k">else</span><span class="p">:</span> <span class="c1"># Default to PosixPath</span>
-            <span class="k">return</span> <span class="n">PosixPath</span><span class="o">.</span><span class="n">home</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">File</span><span class="p">(</span><span class="n">PosixPath</span><span class="o">.</span><span class="n">home</span><span class="p">())</span>
 
 
     <span class="c1"># === Convenience Methods ===</span>
@@ -592,7 +583,7 @@ False or a string, the puzzle was not solved. Returning a string will show the s
 <span class="sd">        call `File.create()` or `mkdir()` on the file returned by `random_file()`. You can pass an extension which will be added</span>
 <span class="sd">        to the random name. Will not create a file with a name that already exists.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">shell_adventure</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">ext</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">shell_adventure</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span><span class="o">.</span><span class="n">_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">ext</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">random_shared_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">depth</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">create_new_chance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">File</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -629,11 +620,11 @@ False or a string, the puzzle was not solved. Returning a string will show the s
 <span class="sd">        &gt;&gt;&gt; File(&quot;/&quot;).random_shared_folder(depth = [5, 6]) # Create a folder 5 or 6 levels under root</span>
 <span class="sd">        File(&quot;/blueberry/lemon/watermellon/kiwi/strawberry&quot;)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">shell_adventure</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span><span class="o">.</span><span class="n">folder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="n">create_new_chance</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">shell_adventure</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span><span class="o">.</span><span class="n">_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="n">create_new_chance</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">mark_shared</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Marks the a `File` as shared. `File` should be a directory, though it does not have to exist yet. &quot;&quot;&quot;</span>
-        <span class="n">shell_adventure</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span><span class="o">.</span><span class="n">mark_shared</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">shell_adventure</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span><span class="o">.</span><span class="n">_mark_shared</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 </pre></div>
 
         </details>
@@ -660,18 +651,18 @@ Refer to pathlib documentation at <a href="https://docs.python.org/3/library/pat
                 <div class="decorator">@classmethod</div>
 
             <span class="def">def</span>
-            <span class="name">home</span><span class="signature">(cls)</span>:
+            <span class="name">home</span><span class="signature">(cls) -&gt; <a href="#file.File">shell_adventure.api.file.File</a></span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">home</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">home</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">File</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot; Return the home directory of the student. Equivalent to the &quot;home&quot; parameter in puzzle templates. &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">shell_adventure</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">_home</span><span class="p">:</span> <span class="c1"># Get home directory from tutorial</span>
             <span class="k">return</span> <span class="n">shell_adventure</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">_home</span>
         <span class="k">else</span><span class="p">:</span> <span class="c1"># Default to PosixPath</span>
-            <span class="k">return</span> <span class="n">PosixPath</span><span class="o">.</span><span class="n">home</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">File</span><span class="p">(</span><span class="n">PosixPath</span><span class="o">.</span><span class="n">home</span><span class="p">())</span>
 </pre></div>
 
         </details>
@@ -850,7 +841,7 @@ Eg.</p>
 <span class="sd">        call `File.create()` or `mkdir()` on the file returned by `random_file()`. You can pass an extension which will be added</span>
 <span class="sd">        to the random name. Will not create a file with a name that already exists.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">shell_adventure</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">ext</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">shell_adventure</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span><span class="o">.</span><span class="n">_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">ext</span><span class="p">)</span>
 </pre></div>
 
         </details>
@@ -912,7 +903,7 @@ to the random name. Will not create a file with a name that already exists.</p>
 <span class="sd">        &gt;&gt;&gt; File(&quot;/&quot;).random_shared_folder(depth = [5, 6]) # Create a folder 5 or 6 levels under root</span>
 <span class="sd">        File(&quot;/blueberry/lemon/watermellon/kiwi/strawberry&quot;)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">shell_adventure</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span><span class="o">.</span><span class="n">folder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="n">create_new_chance</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">shell_adventure</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span><span class="o">.</span><span class="n">_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="n">create_new_chance</span><span class="p">)</span>
 </pre></div>
 
         </details>
@@ -968,7 +959,7 @@ create_new_chance: float in [0, 1]. The percentage chance that a new folder will
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">mark_shared</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Marks the a `File` as shared. `File` should be a directory, though it does not have to exist yet. &quot;&quot;&quot;</span>
-        <span class="n">shell_adventure</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span><span class="o">.</span><span class="n">mark_shared</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">shell_adventure</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span><span class="o">.</span><span class="n">_mark_shared</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 </pre></div>
 
         </details>
@@ -1106,12 +1097,12 @@ it back when the context manager exits. Group will default to the group with the
 
         
             <span class="def">def</span>
-            <span class="name">user_exists</span><span class="signature">(user: str)</span>:
+            <span class="name">user_exists</span><span class="signature">(user: str) -&gt; bool</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">user_exists</span><span class="p">(</span><span class="n">user</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">user_exists</span><span class="p">(</span><span class="n">user</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot; Returns True if the user exists (by their username) &quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">pwd</span><span class="o">.</span><span class="n">getpwnam</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
@@ -1187,7 +1178,7 @@ it back when the context manager exits. Group will default to the group with the
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">)</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="p">)</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">others</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;Permissions({oct(int(self))})&quot;</span>
 </pre></div>
 
@@ -1412,11 +1403,11 @@ Eg.</p>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;You can only compare Permissions with other Permissions or with ints&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__int__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__int__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot; Convert the `PermissionGroup` to an int by treating read/write/execute as bits. &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">read</span> <span class="o">&lt;&lt;</span> <span class="mi">2</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">write</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot; Convert the `PermissionGroup` to an str in &quot;rwx&quot; format, eg. &quot;rw-&quot; or &quot;r--&quot; &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;r&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">read</span> <span class="k">else</span> <span class="s2">&quot;-&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="s2">&quot;w&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">write</span> <span class="k">else</span> <span class="s2">&quot;-&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="s2">&quot;x&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute</span> <span class="k">else</span> <span class="s2">&quot;-&quot;</span><span class="p">)</span>
 </pre></div>
@@ -1671,7 +1662,10 @@ user: 6, group: 3, others: 0</p>
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">RandomHelper</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot; RandomHelper is a class that generates random names, contents, and file paths. &quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    RandomHelper is a class that generates random names, contents, and file paths.</span>
+<span class="sd">    You can access an instance of `RandomHelper` in puzzle modules via the `shell_adventure.api.rand()` function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name_dictionary</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">content_sources</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1699,11 +1693,11 @@ user: 6, group: 3, others: 0</p>
             <span class="c1"># para_sentences = [re.findall(r&quot;.*?\.\s+&quot;, para, flags = re.DOTALL) for para in paragraphs]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_content_sources</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">paragraphs</span><span class="p">)</span>
 
-        <span class="c1"># A set of shared folders. random.folder() can use existing folders if they are shared.</span>
+        <span class="c1"># A set of shared folders. random._folder() can use existing folders if they are shared.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_shared_folders</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">File</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 
 
-    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot; Returns a random word that can be used as a file name. The name is taken from the name_dictionary. &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_name_dictionary</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">RandomHelperException</span><span class="p">(</span><span class="s2">&quot;Out of unique names.&quot;</span><span class="p">)</span>
@@ -1734,8 +1728,10 @@ user: 6, group: 3, others: 0</p>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">lorem</span><span class="o">.</span><span class="n">get_paragraph</span><span class="p">(</span><span class="n">count</span> <span class="o">=</span> <span class="n">count</span><span class="p">,</span> <span class="n">sep</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
 
-    <span class="k">def</span> <span class="nf">file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">PathLike</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="bp">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">File</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot; Creates a `File` with a random name. See `File.rand_file()` for more details. &quot;&quot;&quot;</span>
+    <span class="c1"># === Files ===</span>
+
+    <span class="k">def</span> <span class="nf">_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">PathLike</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="bp">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">File</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; Creates a `File` with a random name. You should use `File.rand_file()` instead of calling this method directly. &quot;&quot;&quot;</span>
         <span class="n">parent</span> <span class="o">=</span> <span class="n">File</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
         <span class="n">ext</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span> <span class="k">if</span> <span class="n">ext</span> <span class="o">==</span> <span class="bp">None</span> <span class="k">else</span> <span class="n">f</span><span class="s2">&quot;.{ext}&quot;</span>
         <span class="n">new_file</span> <span class="o">=</span> <span class="n">File</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="c1"># garanteed to exist.</span>
@@ -1746,8 +1742,8 @@ user: 6, group: 3, others: 0</p>
 
         <span class="k">return</span> <span class="n">new_file</span>
 
-    <span class="k">def</span> <span class="nf">folder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">PathLike</span><span class="p">,</span> <span class="n">depth</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">create_new_chance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">File</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot; Makes a `File` to a random folder under parent. See `File.random_shared_folder()` for more details. &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">PathLike</span><span class="p">,</span> <span class="n">depth</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">create_new_chance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">File</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; Makes a `File` to a random folder under parent. You should use `File.random_shared_folder()` instead of calling this method directly. &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">depth</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span> <span class="n">depth</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">depth</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">depth</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
         <span class="n">folder</span> <span class="o">=</span> <span class="n">File</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
@@ -1761,15 +1757,15 @@ user: 6, group: 3, others: 0</p>
             <span class="c1"># Add check for 1 since uniform() is an inclusive range</span>
             <span class="n">roll</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">choices</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">create_new_chance</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">roll</span> <span class="o">&lt;</span> <span class="n">create_new_chance</span><span class="p">:</span>
-                <span class="n">folder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span> <span class="c1"># create random file under folder</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">mark_shared</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span>
+                <span class="n">folder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span> <span class="c1"># create random file under folder</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_mark_shared</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">folder</span> <span class="o">=</span> <span class="n">File</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">choices</span><span class="p">))</span>
 
         <span class="k">return</span> <span class="n">folder</span>
 
-    <span class="k">def</span> <span class="nf">mark_shared</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">:</span> <span class="n">PathLike</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Marks a folder as shared. The folder does not have to exist yet. &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_mark_shared</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">:</span> <span class="n">PathLike</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Marks a folder as shared. You should use `File.mark_shared()` instead of calling this method directly. &quot;&quot;&quot;</span>
         <span class="n">folder</span> <span class="o">=</span> <span class="n">File</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">folder</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">folder</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
             <span class="k">raise</span> <span class="n">RandomHelperException</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Can&#39;t mark {folder} as shared, it already exists as a f. Can only mark folders as shared.&quot;</span><span class="p">)</span>
@@ -1778,7 +1774,8 @@ user: 6, group: 3, others: 0</p>
 
         </details>
 
-            <div class="docstring"><p>RandomHelper is a class that generates random names, contents, and file paths.</p>
+            <div class="docstring"><p>RandomHelper is a class that generates random names, contents, and file paths.
+You can access an instance of <code><a href="#RandomHelper">RandomHelper</a></code> in puzzle modules via the <code><a href="#rand">shell_adventure.api.rand()</a></code> function.</p>
 </div>
 
 
@@ -1817,7 +1814,7 @@ user: 6, group: 3, others: 0</p>
             <span class="c1"># para_sentences = [re.findall(r&quot;.*?\.\s+&quot;, para, flags = re.DOTALL) for para in paragraphs]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_content_sources</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">paragraphs</span><span class="p">)</span>
 
-        <span class="c1"># A set of shared folders. random.folder() can use existing folders if they are shared.</span>
+        <span class="c1"># A set of shared folders. random._folder() can use existing folders if they are shared.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_shared_folders</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">File</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 </pre></div>
 
@@ -1834,12 +1831,12 @@ name_dictionary is a string containing words, each on its own line.</p>
 
         
             <span class="def">def</span>
-            <span class="name">name</span><span class="signature">(self)</span>:
+            <span class="name">name</span><span class="signature">(self) -&gt; str</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot; Returns a random word that can be used as a file name. The name is taken from the name_dictionary. &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_name_dictionary</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">RandomHelperException</span><span class="p">(</span><span class="s2">&quot;Out of unique names.&quot;</span><span class="p">)</span>
@@ -1897,110 +1894,6 @@ If no content sources are provided or there isn't enough content to provide the 
 <p>paramaters:
     count: Either an int or a (min, max) tuple. If a tuple is given, will return a random number of paragraphs
            in the range, inclusive.</p>
-</div>
-
-
-                            </div>
-                            <div id="RandomHelper.file" class="classattr">
-                                        <div class="attr function"><a class="headerlink" href="#RandomHelper.file">#&nbsp;&nbsp</a>
-
-        
-            <span class="def">def</span>
-            <span class="name">file</span><span class="signature">(
-    self,
-    parent: Union[str, os.PathLike],
-    ext=None
-) -&gt; <a href="#file.File">shell_adventure.api.file.File</a></span>:
-    </div>
-
-                <details>
-            <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">PathLike</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="bp">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">File</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot; Creates a `File` with a random name. See `File.rand_file()` for more details. &quot;&quot;&quot;</span>
-        <span class="n">parent</span> <span class="o">=</span> <span class="n">File</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
-        <span class="n">ext</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span> <span class="k">if</span> <span class="n">ext</span> <span class="o">==</span> <span class="bp">None</span> <span class="k">else</span> <span class="n">f</span><span class="s2">&quot;.{ext}&quot;</span>
-        <span class="n">new_file</span> <span class="o">=</span> <span class="n">File</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="c1"># garanteed to exist.</span>
-
-        <span class="c1"># check if file already exists. This can happen if a hardcoded name happens to match the random one.</span>
-        <span class="k">while</span> <span class="n">new_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-            <span class="n">new_file</span> <span class="o">=</span> <span class="n">parent</span> <span class="o">/</span> <span class="n">f</span><span class="s2">&quot;{self.name()}{ext}&quot;</span>
-
-        <span class="k">return</span> <span class="n">new_file</span>
-</pre></div>
-
-        </details>
-
-            <div class="docstring"><p>Creates a <code><a href="#File">File</a></code> with a random name. See <code>File.rand_file()</code> for more details.</p>
-</div>
-
-
-                            </div>
-                            <div id="RandomHelper.folder" class="classattr">
-                                        <div class="attr function"><a class="headerlink" href="#RandomHelper.folder">#&nbsp;&nbsp</a>
-
-        
-            <span class="def">def</span>
-            <span class="name">folder</span><span class="signature">(
-    self,
-    parent: Union[str, os.PathLike],
-    depth: Union[int, Tuple[int, int]] = (1, 3),
-    create_new_chance: float = 0.5
-) -&gt; <a href="#file.File">shell_adventure.api.file.File</a></span>:
-    </div>
-
-                <details>
-            <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">folder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">PathLike</span><span class="p">,</span> <span class="n">depth</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">create_new_chance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">File</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot; Makes a `File` to a random folder under parent. See `File.random_shared_folder()` for more details. &quot;&quot;&quot;</span>
-
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">depth</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span> <span class="n">depth</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">depth</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">depth</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-        <span class="n">folder</span> <span class="o">=</span> <span class="n">File</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
-
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">depth</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">folder</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-                <span class="n">choices</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">folder</span><span class="o">.</span><span class="n">iterdir</span><span class="p">()</span> <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()</span> <span class="ow">and</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shared_folders</span><span class="p">]</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">choices</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="c1"># Create new shared folder if no choices or random chance succeeds.</span>
-            <span class="c1"># Add check for 1 since uniform() is an inclusive range</span>
-            <span class="n">roll</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">choices</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">create_new_chance</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">roll</span> <span class="o">&lt;</span> <span class="n">create_new_chance</span><span class="p">:</span>
-                <span class="n">folder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span> <span class="c1"># create random file under folder</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">mark_shared</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">folder</span> <span class="o">=</span> <span class="n">File</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">choices</span><span class="p">))</span>
-
-        <span class="k">return</span> <span class="n">folder</span>
-</pre></div>
-
-        </details>
-
-            <div class="docstring"><p>Makes a <code><a href="#File">File</a></code> to a random folder under parent. See <code><a href="#File.random_shared_folder">File.random_shared_folder()</a></code> for more details.</p>
-</div>
-
-
-                            </div>
-                            <div id="RandomHelper.mark_shared" class="classattr">
-                                        <div class="attr function"><a class="headerlink" href="#RandomHelper.mark_shared">#&nbsp;&nbsp</a>
-
-        
-            <span class="def">def</span>
-            <span class="name">mark_shared</span><span class="signature">(self, folder: Union[str, os.PathLike])</span>:
-    </div>
-
-                <details>
-            <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">mark_shared</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">:</span> <span class="n">PathLike</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Marks a folder as shared. The folder does not have to exist yet. &quot;&quot;&quot;</span>
-        <span class="n">folder</span> <span class="o">=</span> <span class="n">File</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">folder</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">folder</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="n">RandomHelperException</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Can&#39;t mark {folder} as shared, it already exists as a f. Can only mark folders as shared.&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_shared_folders</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">folder</span><span class="o">.</span><span class="n">resolve</span><span class="p">())</span>
-</pre></div>
-
-        </details>
-
-            <div class="docstring"><p>Marks a folder as shared. The folder does not have to exist yet.</p>
 </div>
 
 
