@@ -74,6 +74,8 @@ def popup_box(title: str, text: str):
     close_button = tk.Button(popup, text="OK", command = popup.destroy)
     close_button.pack(side = tk.BOTTOM)
 
+    popup.wait_window()
+
 def standalone_fileselect(**options):
     """ Creates a standalone tk window that shows a fileselect and returns the file. """
     root = tk.Tk()
