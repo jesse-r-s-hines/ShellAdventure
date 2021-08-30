@@ -152,6 +152,8 @@ class Puzzle:
         """
 ```
 
+You can add helper functions in puzzle modules by making private functions (beginning with an "_"). Private functions will not be treated as puzzles.
+
 ## Users and Permissions
 ### Changing User
 By default, your generator functions and checker functions are run as `root`, but with the `euid` and `egid` set as "student". This means that while you are technically `root`, files you create will be made as owned by `student` by default. You can switch your `euid` and `egid` back to `root` if you need to using the `change_user()` context manager:
