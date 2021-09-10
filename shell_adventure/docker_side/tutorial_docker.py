@@ -282,13 +282,14 @@ class TutorialDocker:
         """
         real_folder = Path(folder) # convert to real PosixPath
         assert real_folder.is_absolute()
-        # Convert to PurePosixPath since we are going to send it over to a system that may be Windows. And the file doesn't exist on host.
         try:
             files = []
             for file in real_folder.iterdir():
                 try:
                     # I was getting `PermissionError: Operation not permitted: '/proc/1/map_files/400000-423000'`. The file is a symlink, but the
                     # proc directory is special and stat gets confused. Resolving the link first fixes it.
+
+                    # Convert to PurePosixPath since we are going to send it over to a system that may be Windows. And the file doesn't exist on host.
                     files.append( (file.resolve().is_dir(), file.is_symlink(), PurePosixPath(file)) )
                 except:
                     pass # If something goes wrong (file doesn't exist anymore, special files in /proc, etc) just ignore it
