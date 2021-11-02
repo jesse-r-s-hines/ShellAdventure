@@ -13,36 +13,36 @@ def header(message: str):
 def run(command: List[str]):
     return subprocess.run(command, stdout=sys.stdout).returncode
 
+if __name__ == "__main__":
+    header("Building Images")
+    # Build the docker image locally (in case it has been modified locally since last release)
+    build_image.build_image()
+    # Build all the images in tests/docker_images
+    for dockerfile in PROJ_PATH.glob("tests/docker_images/Dockerfile.tests.*"):
+        tag = dockerfile.suffix[1:]
+        docker_helper.client.images.build(
+            path = str(PROJ_PATH / "tests/docker_images"),
+            dockerfile = str(dockerfile.name),
+            tag = f"shelladventure/tests:{tag}",
+            rm = True, # Remove intermediate containers
+        )
+    print("Done!", flush = True)
 
-header("Building Images")
-# Build the docker image locally (in case it has been modified locally since last release)
-build_image.build_image()
-# Build all the images in tests/docker_images
-for dockerfile in PROJ_PATH.glob("tests/docker_images/Dockerfile.tests.*"):
-    tag = dockerfile.suffix[1:]
-    docker_helper.client.images.build(
-        path = str(PROJ_PATH / "tests/docker_images"),
-        dockerfile = str(dockerfile.name),
-        tag = f"shelladventure/tests:{tag}",
-        rm = True, # Remove intermediate containers
-    )
-print("Done!", flush = True)
+    header("MyPy Analysis")
 
-header("MyPy Analysis")
+    if run(["mypy"]) != 0: exit(1) # quit if mypy fails
 
-if run(["mypy"]) != 0: exit(1) # quit if mypy fails
+    header("Tests in Docker Container")
+    # Also makes a ".coverage" report in cwd
+    dockerTests = run(["python3", "-m", "tests.run_docker_tests", *args])
 
-header("Tests in Docker Container")
-# Also makes a ".coverage" report in cwd
-dockerTests = run(["python3", "-m", "tests.run_docker_tests", *args])
+    header("Main Tests")
+    # Merge coverage report with report from container
+    mainTests = run(["python3", "-m", "pytest", "--cov", "--cov-report=", "--cov-append", *args])
 
-header("Main Tests")
-# Merge coverage report with report from container
-mainTests = run(["python3", "-m", "pytest", "--cov", "--cov-report=", "--cov-append", *args])
+    # Output html report
+    # Coverage reports are somewhat incomplete as we don't have a good way to track the code that gets run in the container
+    # during integration tests, since the container is launched and closed during the test.
+    run(["coverage", "html"])
 
-# Output html report
-# Coverage reports are somewhat incomplete as we don't have a good way to track the code that gets run in the container
-# during integration tests, since the container is launched and closed during the test.
-run(["coverage", "html"])
-
-exit(0 if dockerTests == 0 and mainTests == 0 else 1)
+    exit(0 if dockerTests == 0 and mainTests == 0 else 1)
