@@ -209,8 +209,8 @@ class ShellAdventureGUI(ThemedTk):
         self._add_tree_tag(folder, "loaded")
 
         # get old_files as dict of {path: is_open,...}
-        old_files = self.file_tree.get_children(folder)
-        old_files = {file: self.file_tree.item(file, option = "open") for file in old_files}
+        old_files_list = self.file_tree.get_children(folder)
+        old_files = {file_id: self.file_tree.item(file_id, option = "open") for file_id in old_files_list}
 
         # get new children
         new_files = self.tutorial.get_files(self._tree_node_to_path(folder))
@@ -231,8 +231,8 @@ class ShellAdventureGUI(ThemedTk):
                 file_text += " <--"
 
             if file_in_tree:
-                self.file_tree.item(file, text = file_text, tags = tags, image = file_icon) # modify existing item.
-                self.file_tree.move(file, folder, i)
+                self.file_tree.item(file_id, text = file_text, tags = tags, image = file_icon) # modify existing item.
+                self.file_tree.move(file_id, folder, i)
                 # Leave existing children. The will be modified when thw file is opened since the file is no longer tagged as loaded
             else:
                 self.file_tree.insert(folder, i, iid = file_id, text = file_text, tags = tags, image = file_icon)
@@ -246,14 +246,14 @@ class ShellAdventureGUI(ThemedTk):
                     self.file_tree.item(file_id, open = True) # open it
                     self.load_folder(file_id, was_open = file_was_open) # trigger update on the subfolder
                 elif not file_in_tree:
-                    self.file_tree.insert(file, tk.END, tags = ["dummy"]) # insert a dummy child so that is shows as "openable"
+                    self.file_tree.insert(file_id, tk.END, tags = ["dummy"]) # insert a dummy child so that is shows as "openable"
             else:
                 # if a folder has been converted into a file, we'd need to delete the children under it.
-                self.file_tree.delete(*self.file_tree.get_children(file))
+                self.file_tree.delete(*self.file_tree.get_children(file_id))
 
         # Delete any files from the tree that no longer exist
-        for file in old_files.keys():
-            self.file_tree.delete(file)
+        for file_id in old_files.keys():
+            self.file_tree.delete(file_id)
 
         if len(new_files) == 0:
             self.file_tree.insert(folder, tk.END, tags = ["dummy"]) # insert a dummy child so that is shows as "openable"
