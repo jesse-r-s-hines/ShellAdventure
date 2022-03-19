@@ -271,7 +271,7 @@ The `restart_enabled` config option can be used to turn this off. If `restart_en
 Note that restarting the tutorial only restores the filesystem state. So any files you created in setup scripts or puzzle generators will be restored, but processes will not be restarted. If your tutorial is relying on background processes, for instance starting a `mysql` server in a setup script, the process won't be restarted after a tutorial restart. You'll probably want to disable restart in these cases.
 
 # *ShellAdventure* API Docs
-You can use any of the standard Python libraries in your puzzle generation functions. The `shell_adventure.api` module also provides some helper classes, such as `File`, and `Permissions`. See [here](https://jessehines0.github.io/ShellAdventure/shell_adventure/api.html) for the documentation of the *ShellAdventure* API.
+You can use any of the standard Python libraries in your puzzle generation functions. The `shell_adventure.api` module also provides some helper classes, such as `File`, and `Permissions`. See [here](https://jesse-r-s-hines.github.io/ShellAdventure/shell_adventure/api.html) for the documentation of the *ShellAdventure* API.
 
 # Examples
 See the [examples](examples) folder for complete examples of tutorial configuration and puzzle templates.

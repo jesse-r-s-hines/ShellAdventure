@@ -129,7 +129,7 @@ class ShellAdventureGUI(ThemedTk):
             'Welcome to the Shell Adventure command line tutorial! Complete the list of puzzles by entering commands in '
             'the detached terminal window and then clicking "Solve" when you think you\'ve completed the puzzle.\n'
             '\n'
-            'Visit [GitHub](https://github.com/JesseHines0/ShellAdventure) for more documentation or to contribute!\n'
+            'Visit [GitHub](https://github.com/jesse-r-s-hines/ShellAdventure) for more documentation or to contribute!\n'
             '\n'
             'Credits:\n'
             '    Icons from [icons8](https://icons8.com)'
