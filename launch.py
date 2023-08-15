@@ -10,7 +10,7 @@ def launch(config_file: str):
     try:
         tutorial = Tutorial(config_file)
     except ConfigError as e:
-        exit(e)
+        exit(str(e))
 
     def log_and_exit(header: str, message, show_logs: bool = True):
         """ Print a header, error and exit. Optionally print container logs. """
@@ -26,7 +26,7 @@ def launch(config_file: str):
             tutorial.attach_to_shell()
             gui = ShellAdventureGUI(tutorial, restart_callback = tutorial.attach_to_shell)
     except (ConfigError, ContainerStartupError) as e: # Bash session hasn't started so we don't need to show header
-        exit(e)
+        exit(str(e))
     except ContainerError as e: # ContainerError has container logs already, so don't print them twice
         log_and_exit("An error occurred", e, show_logs = False)
     except UnhandledError as e: # Our code in the container broke

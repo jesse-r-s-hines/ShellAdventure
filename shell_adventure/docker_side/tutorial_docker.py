@@ -82,7 +82,7 @@ class TutorialDocker:
 
     def _get_templates_from_module(self, module: ModuleType) -> Dict[str, PuzzleTemplate]:
         """ Extracts puzzle template functions from a module as a map of {name: func} """
-        templates = {}
+        templates: Dict[str, PuzzleTemplate] = {}
         for func_name, func in inspect.getmembers(module, inspect.isfunction):
             # Exclude imported functions, lambdas, and private functions
             if func.__module__ == module.__name__ and func.__name__ != "<lambda>" and not func_name.startswith("_"):
