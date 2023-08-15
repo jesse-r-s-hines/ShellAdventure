@@ -74,7 +74,7 @@ class ShellAdventureGUI(ThemedTk):
         """ Returns a map of icons. """
         icons = {} # We have to save the icons or tkinter will let the image get garbage collected
         for file in (PKG_PATH / "icons").glob("*.png"):
-            img = Image.open(file).resize((16, 16), Image.ANTIALIAS)
+            img = Image.open(file).resize((16, 16), Image.ADAPTIVE)
             icons[file.stem] = ImageTk.PhotoImage(img)
         return icons
 
