@@ -1,9 +1,9 @@
-docker
-six # TODO Required for "docker" module. We can remove this after the next release. See https://github.com/docker/docker-py/issues/2842
-pyaml
-ttkthemes
-Pillow
-dill
-deepmerge
+docker==6.1.3
+six==1.16.0 # TODO Required for "docker" module. We can remove this after the next release. See https://github.com/docker/docker-py/issues/2842
+PyYAML==6.0.1
+ttkthemes==3.2.2
+Pillow==9.5.0
+dill==0.3.7
+deepmerge==1.1.0
 yamale>=3.0.7
-python-lorem # This is only used inside the docker container, but require it so that is shows up for people developing puzzle templates
+python-lorem==1.3.0.post1 # This is only used inside the docker container, but require it so that is shows up for people developing puzzle templates
