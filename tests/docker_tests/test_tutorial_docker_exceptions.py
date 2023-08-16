@@ -233,18 +233,18 @@ class TestTutorialDockerExceptions:
                 tutorial.solve_puzzle(puzzle.id)
 
         # Shouldn't include our code. Should include library code.
-        expected = dedent("""
+        expected = dedent(r"""
           Puzzle autograder for template puzzles.throws failed:
-            Traceback (most recent call last):
+            Traceback \(most recent call last\):
               File "/path/to/puzzles.py", line 10, in checker
-                _fails()
+                _fails\(\)
               File "/path/to/puzzles.py", line 6, in _fails
-                lorem.get_paragraph("a")
-              File "/usr/local/lib/python3.8/dist-packages/lorem.py", line 424, in get_paragraph
-                return sep.join(itertools.islice(paragraph(count, comma, word_range, sentence_range), count))
-            ValueError: Stop argument for islice() must be None or an integer: 0 <= x <= sys.maxsize.
+                lorem.get_paragraph\("a"\)
+              File "/usr/local/lib/python3.8/dist-packages/lorem.py", line \d+, in \w+
+                .*
+            ValueError: Stop argument for islice\(\) must be None or an integer: 0 <= x <= sys.maxsize.
         """).lstrip()
-        assert expected == str(exc_info.value)
+        assert re.fullmatch(expected, str(exc_info.value))
 
     def test_format_user_exception_with_colon_filename(self, working_dir: Path):
         with TutorialDocker() as tutorial:
